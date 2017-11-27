@@ -5,3 +5,4 @@ photos/*
 db/*.db
 data/*
 www/.well-known
+*.swp
