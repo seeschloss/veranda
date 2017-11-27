@@ -1,0 +1,108 @@
+body {
+	font-family: sans-serif;
+	font-size: 10pt;
+}
+
+#plants {
+	display: inline-flex;
+	flex-direction: row;
+}
+
+#plants svg {
+	opacity: 0;
+	transition: opacity 200ms;
+}
+
+#plants ul {
+	opacity: 0.2;
+	transition: opacity 200ms;
+}
+
+#plants:hover svg, #plants:hover ul {
+	opacity: 1;
+}
+
+#plants svg {
+	pointer-events: none;
+	shape-rendering: geometricPrecision;
+}
+
+.plant-link-shadow {
+	fill: none;
+	stroke: black;
+	stroke-width: 1px;
+}
+
+.plant-link {
+	fill: none;
+	stroke: lightgrey;
+	stroke-width: 2px;
+}
+
+#plants ul {
+	list-style-type: none;
+	padding-left: 15px;
+}
+
+#plants li {
+	margin-bottom: 12px;
+}
+
+.axis--x line {
+	opacity: 0.1;
+}
+
+.axis--x-2 .domain {
+	display: none;
+}
+
+.axis--y line {
+	opacity: 0.1;
+}
+
+#home img#photo-boite {
+	max-height: 350px;
+}
+
+video#video-boite {
+	max-height: 350px;
+}
+
+svg#hourly {
+	width: 100%;
+}
+
+#admin img#photo-boite {
+	max-height: 600px;
+}
+
+canvas#drawing-canvas {
+	cursor: crosshair;
+}
+
+rect.plant {
+	stroke-width: 2px;
+	stroke: black;
+	fill: transparent;
+  cursor: pointer;
+}
+
+rect.plant:hover {
+	stroke: white;
+}
+
+#plant-popup {
+  position: absolute;
+  background: white;
+  border: 1px solid grey;
+}
+
+#plant-form {
+  display: none;
+  vertical-align: top;
+}
+
+#plant-form.displayed {
+  display: inline-block;
+}
+

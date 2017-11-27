@@ -1,0 +1,7 @@
+app-logs/*
+cfg/config.inc.php
+logs/*
+photos/*
+db/*.db
+data/*
+www/.well-known

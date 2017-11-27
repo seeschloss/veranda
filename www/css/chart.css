@@ -1,0 +1,12 @@
+.axis--x.lines line {
+	opacity: 0.1;
+}
+
+.axis--y.lines line {
+	opacity: 0.1;
+}
+
+.axis--x.labels.days path {
+	display: none;
+}
+
