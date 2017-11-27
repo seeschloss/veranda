@@ -376,6 +376,8 @@ class Device extends Record {
 	}
 
 	function check_temperature() {
+		$this->parameters = $this->parameters();
+
 		if (isset($this->parameters['sensor']['id']) and $this->parameters['sensor']['id']) {
 			$this->parameters = $this->parameters();
 
@@ -384,9 +386,9 @@ class Device extends Record {
 
 			$value = $sensor->data_at(time());
 
-			if ($value < $this->parameters['sensor']['min']) {
+			if ($value['value'] < $this->parameters['sensor']['min']) {
 				return "on";
-			} else if ($value > $this->parameters['sensor']['max']) {
+			} else if ($value['value'] > $this->parameters['sensor']['max']) {
 				return "off";
 			}
 		}
