@@ -14,6 +14,7 @@ class Router {
 		$this->theme = $theme;
 
 		$this->routes = [
+			'/data/device/([0-9]+)' => [$this, 'handle_device_data'],
 			'/data/sensor/([0-9]+)' => [$this, 'handle_sensor_data'],
 			'/data/place/([0-9]+)/photo' => [$this, 'handle_place_photo'],
 
@@ -579,6 +580,24 @@ HTML;
 		} else {
 			print $this->theme->html();
 		}
+
+		return true;
+	}
+
+	public function handle_device_data($parts, $get, $post) {
+		$device_id = (int)$parts[3];
+
+		$device = new Device();
+		if ($device->load(['id' => $device_id])) {
+			$this->theme->content_file = 'device.api.php';
+			$this->theme->content_env = ['device' => $device];
+		} else {
+			http_response_code(404);
+			$this->theme->content = '';
+		}
+
+		header('Content-Type: application/json;charset=UTF-8');
+		print $this->theme->bare();
 
 		return true;
 	}

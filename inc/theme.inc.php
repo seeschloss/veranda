@@ -90,6 +90,12 @@ HTML;
 HTML;
 		}, Sensor::select()));
 
+		$devices_list = implode("", array_map(function($device) {
+			return <<<HTML
+				<li><a href="/device/{$device->id}">{$device->name}</a></li>
+HTML;
+		}, Device::select([], 'name')));
+
 		return <<<HTML
 	<ul>
 		<li><a href="/">Home</a></li>
@@ -104,6 +110,10 @@ HTML;
 		<li class="submenu">
 			<a href="/sensors">Sensors</a>
 			<input id="submenu-sensors" type="checkbox" class="handle" /><label for="submenu-sensors"></label><ul>{$sensors_list}</ul>
+		</li>
+		<li class="submenu">
+			<a href="/devices">Devices</a>
+			<input id="submenu-devices" type="checkbox" class="handle" /><label for="submenu-devices"></label><ul>{$devices_list}</ul>
 		</li>
 		<li><a href="/photos">Photos</a></li>
 		<li class='admin-login'><a href="/admin">Log in</a></li>

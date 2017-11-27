@@ -69,7 +69,30 @@ class Update {
 			self::to_17();
 		}
 
+		if (!$db->query('SELECT COUNT(*) FROM devices_state')) {
+			self::to_18();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_18() {
+		echo "18. Create table `devices_state`\n";
+
+		$db = new DB();
+		$db->query(
+			'CREATE TABLE devices_state (
+				id INTEGER PRIMARY KEY,
+				device_id INTEGER,
+				place_id INTEGER,
+				state TEXT,
+				timestamp INTEGER
+			);'
+		);
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_17() {

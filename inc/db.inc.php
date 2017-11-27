@@ -97,6 +97,13 @@ class DB {
 				updated INTEGER,
 				created INTEGER
 			);',
+			'CREATE TABLE devices_state (
+				id INTEGER PRIMARY KEY,
+				device_id INTEGER,
+				place_id INTEGER,
+				state TEXT,
+				timestamp INTEGER
+			);',
 		];
 	}
 

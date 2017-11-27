@@ -313,6 +313,7 @@ form.dl-form > dl > dd > select {
 	flex: 1;
 }
 
+form.dl-form > dl > dd > input[type="radio"],
 form.dl-form > dl > dd > input[type="checkbox"] {
 	flex: 0;
 	flex-basis: 1em;
@@ -325,6 +326,10 @@ form.dl-form > dl > dd > .form-element-suffix {
 	flex: 1;
 	align-self: center;
 	margin-left: 1ex;
+}
+
+form.dl-form > dl > dd > .form-element-suffix input {
+	max-width: 40px;
 }
 
 form.dl-form .actions {
