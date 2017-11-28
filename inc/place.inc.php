@@ -13,32 +13,43 @@ class Place extends Record {
 
 	static function grid_row_header_admin() {
 		return [
-			'name' => 'Name',
-			'type' => 'Type',
-			'condition' => 'Condition',
+			'name' => __('Name'),
+			'type' => __('Type'),
+			'condition' => __('Condition'),
 		];
 	}
 
 	function grid_row_admin() {
-		$conditions = [];
+		if ($this->id) {
+			$conditions = [];
 
-		$sensors = Sensor::select(['place_id' => $this->id]);
-		foreach ($sensors as $sensor) {
-			$conditions[] = $sensor->value_text();
+			$sensors = Sensor::select(['place_id' => $this->id]);
+			foreach ($sensors as $sensor) {
+				$conditions[] = $sensor->value_text();
+			}
+
+			return [
+				'name' => "<a href='/admin/place/{$this->id}'>{$this->name}</a>",
+				'type' => _a('place-types', $this->type),
+				'condition' => join(' ', $conditions),
+			];
+		} else {
+			return [
+				'name' => [
+					'value' => "<a href='/admin/place/{$this->id}'>".__('Add a new place')."</a>",
+					'attributes' => [
+						'colspan' => 3,
+					],
+				],
+			];
 		}
-
-		return [
-			'name' => "<a href='/admin/place/{$this->id}'>{$this->name}</a>",
-			'type' => $this->type,
-			'condition' => join(' ', $conditions),
-		];
 	}
 
 	static function grid_row_header() {
 		return [
-			'name' => 'Name',
-			'type' => 'Type',
-			'condition' => 'Condition',
+			'name' => __('Name'),
+			'type' => __('Type'),
+			'condition' => __('Condition'),
 		];
 	}
 
@@ -52,7 +63,7 @@ class Place extends Record {
 
 		return [
 			'name' => "<a href='/place/{$this->id}'>{$this->name}</a>",
-			'type' => $this->type,
+			'type' => _a('place-types', $this->type),
 			'condition' => join(' ', $conditions),
 		];
 	}
@@ -90,32 +101,27 @@ class Place extends Record {
 		$form->fields['name']->type = "text";
 		$form->fields['name']->name = "place[name]";
 		$form->fields['name']->value = $this->name;
-		$form->fields['name']->label = "Name";
+		$form->fields['name']->label = __("Name");
 
 		$form->fields['type'] = new HTML_Select("place-type");
 		$form->fields['type']->name = "place[type]";
 		$form->fields['type']->value = $this->type;
-		$form->fields['type']->options = [
-			'outside' => "Outside",
-			'greenhouse' => "Greenhouse",
-			'growbox' => "Growbox",
-			'inside' => "Inside",
-		];
-		$form->fields['type']->label = "Type";
+		$form->fields['type']->options = _a('place-types');
+		$form->fields['type']->label = __("Type");
 
 		$form->fields['public'] = new HTML_Input_Checkbox("place-public");
 		$form->fields['public']->name = "place[public]";
 		$form->fields['public']->value = $this->public;
-		$form->fields['public']->label = "Public";
+		$form->fields['public']->label = __("Public");
 
 		$form->fields['comment'] = new HTML_Textarea("place-comment");
 		$form->fields['comment']->name = "place[comment]";
 		$form->fields['comment']->value = $this->comment;
-		$form->fields['comment']->label = "Comment";
+		$form->fields['comment']->label = __("Comment");
 
 		$form->actions['save'] = new HTML_Button("place-save");
 		$form->actions['save']->name = "action";
-		$form->actions['save']->label = "Save";
+		$form->actions['save']->label = __("Save");
 
 		if ($this->id > 0) {
 			$form->actions['save']->value = "update";
@@ -125,9 +131,9 @@ class Place extends Record {
 
 		$form->actions['delete'] = new HTML_Button_Confirm("place-delete");
 		$form->actions['delete']->name = "action";
-		$form->actions['delete']->label = "Delete";
+		$form->actions['delete']->label = __("Delete");
 		$form->actions['delete']->value = "delete";
-		$form->actions['delete']->confirmation = "Are you sure you want to delete this place?";
+		$form->actions['delete']->confirmation = __("Are you sure you want to delete this place?");
 
 		return $form->html();
 	}

@@ -7,7 +7,6 @@ $table->header = Plant::grid_row_header_admin();
 $table->rows = array_map(function($plant) { return $plant->grid_row_admin(); }, $plants);
 
 $new_plant = new Plant();
-$new_plant->name = "Add a new plant";
 $table->rows[] = $new_plant->grid_row_admin();
 
 ?>

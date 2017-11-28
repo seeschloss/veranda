@@ -11,8 +11,8 @@ class Dashboard_Photo extends Record {
 
 	static function grid_row_header_admin() {
 		return [
-			'name' => 'Title',
-			'size' => 'Size',
+			'name' => __('Title'),
+			'size' => __('Size'),
 		];
 	}
 
@@ -20,12 +20,12 @@ class Dashboard_Photo extends Record {
 		if ($this->id) {
 			return [
 				'place' => "<a href='/admin/dashboard-photo/{$this->id}'>{$this->place()->name}</a>",
-				'size' => $this->size,
+				'size' => _a('dashboard-sizes', $this->size),
 			];
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/dashboard-photo/{$this->id}'>Add a new photo</a>",
+					'value' => "<a href='/admin/dashboard-photo/{$this->id}'>".__('Add a new photo')."</a>",
 					'attributes' => ['colspan' => 2],
 				],
 			];
@@ -60,21 +60,17 @@ class Dashboard_Photo extends Record {
 		$form->fields['place_id']->name = "dashboard_photo[place_id]";
 		$form->fields['place_id']->value = $this->place_id;
 		$form->fields['place_id']->options = $places_with_photos;
-		$form->fields['place_id']->label = "Place";
+		$form->fields['place_id']->label = __("Place");
 
 		$form->fields['size'] = new HTML_Select("dashboard-photo-size");
 		$form->fields['size']->name = "dashboard_photo[size]";
 		$form->fields['size']->value = $this->size;
-		$form->fields['size']->options = [
-			'large' => "Large",
-			'medium' => "Medium",
-			'small' => "Small",
-		];
-		$form->fields['size']->label = "Size";
+		$form->fields['size']->options = _a('dashboard-sizes');
+		$form->fields['size']->label = __("Size");
 
 		$form->actions['save'] = new HTML_Button("dashboard-photo-save");
 		$form->actions['save']->name = "action";
-		$form->actions['save']->label = "Save";
+		$form->actions['save']->label = __("Save");
 
 		if ($this->id > 0) {
 			$form->actions['save']->value = "update";
@@ -84,9 +80,9 @@ class Dashboard_Photo extends Record {
 
 		$form->actions['delete'] = new HTML_Button_Confirm("dashboard-photo-delete");
 		$form->actions['delete']->name = "action";
-		$form->actions['delete']->label = "Delete";
+		$form->actions['delete']->label = __("Delete");
 		$form->actions['delete']->value = "delete";
-		$form->actions['delete']->confirmation = "Are you sure you want to remove this photo from the dashboard?";
+		$form->actions['delete']->confirmation = __("Are you sure you want to remove this photo from the dashboard?");
 
 		return $form->html();
 	}

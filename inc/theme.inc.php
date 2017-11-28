@@ -5,7 +5,6 @@ class Theme {
 
 	public $topbar = "";
 	public $content = "";
-	public $footer = "";
 
 	public $content_file = null;
 	public $content_env = [];
@@ -19,6 +18,14 @@ class Theme {
 
 	function title() {
 		return $this->title;
+	}
+
+	function topbar() {
+		$topbar = <<<HTML
+			<h1><a href="/">Véranda</a></h1>
+HTML;
+
+		return $topbar;
 	}
 
 	function sidebar_admin() {
@@ -49,24 +56,24 @@ HTML;
 		return <<<HTML
 	<ul>
 		<li class="submenu">
-			<a href="/admin/plants">Plants</a>
+			<a href="/admin/plants">{$GLOBALS['__']('Plants')}</a>
 			<input id="submenu-plants" type="checkbox" class="handle" /><label for="submenu-plants"></label><ul>{$plants_list}</ul>
 		</li>
 		<li class="submenu">
-			<a href="/admin/places">Places</a>
+			<a href="/admin/places">{$GLOBALS['__']('Places')}</a>
 			<input id="submenu-places" type="checkbox" class="handle" /><label for="submenu-places"></label><ul>{$places_list}</ul>
 		</li>
 		<li class="submenu">
-			<a href="/admin/sensors">Sensors</a>
+			<a href="/admin/sensors">{$GLOBALS['__']('Sensors')}</a>
 			<input id="submenu-sensors" type="checkbox" class="handle" /><label for="submenu-sensors"></label><ul>{$sensors_list}</ul>
 		</li>
 		<li class="submenu">
-			<a href="/admin/devices">Devices</a>
+			<a href="/admin/devices">{$GLOBALS['__']('Devices')}</a>
 			<input id="submenu-devices" type="checkbox" class="handle" /><label for="submenu-devices"></label><ul>{$devices_list}</ul>
 		</li>
-		<li><a href="/admin/photos">Photos</a></li>
-		<li><a href="/admin/dashboard">Dashboard</a></li>
-		<li class='admin-logout'><a href="https://logout@veranda.seos.fr/admin/logout">Logout</a></li>
+		<li><a href="/admin/photos">{$GLOBALS['__']('Photos')}</a></li>
+		<li><a href="/admin/dashboard">{$GLOBALS['__']('Dashboard')}</a></li>
+		<li class='admin-logout'><a href="https://logout@veranda.seos.fr/admin/logout">{$GLOBALS['__']('Logout')}</a></li>
 	</ul>
 HTML;
 	}
@@ -98,25 +105,25 @@ HTML;
 
 		return <<<HTML
 	<ul>
-		<li><a href="/">Home</a></li>
+		<li><a href="/">{$GLOBALS['__']('Home')}</a></li>
 		<li class="submenu">
-			<a href="/plants">Plants</a>
+			<a href="/plants">{$GLOBALS['__']('Plants')}</a>
 			<input id="submenu-plants" type="checkbox" class="handle" /><label for="submenu-plants"></label><ul>{$plants_list}</ul>
 		</li>
 		<li class="submenu">
-			<a href="/places">Places</a>
+			<a href="/places">{$GLOBALS['__']('Places')}</a>
 			<input id="submenu-places" type="checkbox" class="handle" /><label for="submenu-places"></label><ul>{$places_list}</ul>
 		</li>
 		<li class="submenu">
-			<a href="/sensors">Sensors</a>
+			<a href="/sensors">{$GLOBALS['__']('Sensors')}</a>
 			<input id="submenu-sensors" type="checkbox" class="handle" /><label for="submenu-sensors"></label><ul>{$sensors_list}</ul>
 		</li>
 		<li class="submenu">
-			<a href="/devices">Devices</a>
+			<a href="/devices">{$GLOBALS['__']('Devices')}</a>
 			<input id="submenu-devices" type="checkbox" class="handle" /><label for="submenu-devices"></label><ul>{$devices_list}</ul>
 		</li>
-		<li><a href="/photos">Photos</a></li>
-		<li class='admin-login'><a href="/admin">Log in</a></li>
+		<li><a href="/photos">{$GLOBALS['__']('Photos')}</a></li>
+		<li class='admin-login'><a href="/admin">{$GLOBALS['__']('Log in')}</a></li>
 	</ul>
 HTML;
 	}
@@ -133,6 +140,16 @@ HTML;
 		return $sidebar;
 	}
 
+	function footer() {
+		$footer = <<<HTML
+			<a href="mailto:see@seos.fr">see@seos.fr</a> &mdash;
+			<a href="https://ssz.fr">ssz.fr</a> &mdash;
+			<span class="location">Lille / 50.585, 3.4525</span>
+HTML;
+
+		return $footer;
+	}
+
 	function html() {
 		$html = <<<HTML
 <!DOCTYPE html>
@@ -145,12 +162,12 @@ HTML;
 		{$this->head}
 	</head>
 	<body>
-		<div id="topbar">{$this->topbar}</div>
+		<div id="topbar">{$this->topbar()}</div>
 		<div id="middle">
 			<div id="sidebar">{$this->sidebar()}</div>
 			<div id="content-box">
 				<div id="content">{$this->content_string()}</div>
-				<div id="footer">{$this->footer}</div>
+				<div id="footer">{$this->footer()}</div>
 			</div>
 		</div>
 	</body>

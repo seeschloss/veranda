@@ -14,9 +14,9 @@ class Chart extends Record {
 
 	static function grid_row_header_admin() {
 		return [
-			'name' => 'Title',
-			'type' => 'Type',
-			'period' => 'Period',
+			'name' => __('Title'),
+			'type' => __('Type'),
+			'period' => __('Period'),
 		];
 	}
 
@@ -24,13 +24,13 @@ class Chart extends Record {
 		if ($this->id) {
 			return [
 				'title' => "<a href='/admin/chart/{$this->id}'>{$this->title}</a>",
-				'type' => $this->type,
-				'period' => $this->period,
+				'type' => _a('chart-types', $this->type),
+				'period' => _a('chart-periods', $this->period),
 			];
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/chart/{$this->id}'>{$this->title}</a>",
+					'value' => "<a href='/admin/chart/{$this->id}'>".__("Add a new chart")."</a>",
 					'attributes' => ['colspan' => 3],
 				],
 			];
@@ -50,42 +50,29 @@ class Chart extends Record {
 		$form->fields['title']->type = "text";
 		$form->fields['title']->name = "chart[title]";
 		$form->fields['title']->value = $this->title;
-		$form->fields['title']->label = "Title";
+		$form->fields['title']->label = __("Title");
 
 		$form->fields['type'] = new HTML_Select("chart-type");
 		$form->fields['type']->name = "chart[type]";
 		$form->fields['type']->value = $this->type;
-		$form->fields['type']->options = [
-			'min-max' => "Min-max bar chart",
-			'line' => "Line chart",
-		];
-		$form->fields['type']->label = "Type";
+		$form->fields['type']->options = _a('chart-types');
+		$form->fields['type']->label = __("Type");
 
 		$form->fields['period'] = new HTML_Select("chart-period");
 		$form->fields['period']->name = "chart[period]";
 		$form->fields['period']->value = $this->period;
-		$form->fields['period']->options = [
-			'1-day' => "1 day",
-			'1-week' => "1 week",
-			'2-weeks' => "2 weeks",
-			'1-month' => "1 month",
-			'all' => "All data",
-		];
-		$form->fields['period']->label = "Period";
+		$form->fields['period']->options = _a('chart-periods');
+		$form->fields['period']->label = __("Period");
 
 		$form->fields['size'] = new HTML_Select("chart-size");
 		$form->fields['size']->name = "chart[size]";
 		$form->fields['size']->value = $this->size;
-		$form->fields['size']->options = [
-			'large' => "Large",
-			'medium' => "Medium",
-			'small' => "Small",
-		];
-		$form->fields['size']->label = "Size";
+		$form->fields['size']->options = _a('dashboard-sizes');
+		$form->fields['size']->label = __("Size");
 
 		$form->actions['save'] = new HTML_Button("chart-save");
 		$form->actions['save']->name = "action";
-		$form->actions['save']->label = "Save";
+		$form->actions['save']->label = __("Save");
 
 		if ($this->id > 0) {
 			$form->actions['save']->value = "update";
@@ -95,9 +82,9 @@ class Chart extends Record {
 
 		$form->actions['delete'] = new HTML_Button_Confirm("chart-delete");
 		$form->actions['delete']->name = "action";
-		$form->actions['delete']->label = "Delete";
+		$form->actions['delete']->label = __("Delete");
 		$form->actions['delete']->value = "delete";
-		$form->actions['delete']->confirmation = "Are you sure you want to delete this chart?";
+		$form->actions['delete']->confirmation = __("Are you sure you want to delete this chart?");
 
 		return $form;
 	}
@@ -114,7 +101,7 @@ class Chart extends Record {
 		$sensors = Sensor::select();
 
 		$form->parameters['sensors'] = [
-			'label' => "Sensors to display",
+			'label' => __("Sensors to display"),
 			'value' => "",
 		];
 

@@ -7,7 +7,6 @@ $table->header = Device::grid_row_header_admin();
 $table->rows = array_map(function($device) { return $device->grid_row_admin(); }, $devices);
 
 $new_device = new Device();
-$new_device->name = "Add a new device";
 $table->rows[] = $new_device->grid_row_admin();
 
 ?>

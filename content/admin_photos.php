@@ -7,7 +7,6 @@ $table->header = Photo::grid_row_header_admin();
 $table->rows = array_map(function($photo) { return $photo->grid_row_admin(); }, $photos);
 
 $new_photo = new Photo();
-$new_photo->name = "Add a new photo";
 $table->rows[] = $new_photo->grid_row_admin_new();
 
 ?>

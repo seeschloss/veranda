@@ -48,6 +48,11 @@ html, body {
 	font-weight: normal;
 }
 
+body {
+	display: flex;
+	flex-direction: column;
+}
+
 a {
 	color: #4C4747;
 }
@@ -57,19 +62,45 @@ a:hover {
 }
 
 #topbar {
+	flex: 0;
+	background-color: #5C5757;
+	z-index: 3;
+	box-shadow: 180px 0 3px 2px rgba(0, 0, 0, 0.4);
+	color: rgba(255, 255, 255, 0.9);
+}
+
+#topbar h1 {
+	margin: 5px 1em;
+}
+
+#topbar h1 a {
+	text-decoration: none;
+	color: inherit;
 }
 
 #footer {
 	min-height: 30px;
 	background-color: #4C4747;
 	flex-basis: 30px;
+	line-height: 30px;
+	padding: 0 1ex;
+	color: rgba(255, 255, 255, 0.9);
+}
+
+#footer a {
+	color: rgba(255, 255, 255, 0.7);
+}
+
+#footer .location {
+	font-size: 95%;
+	font-feature-settings: "onum";
 }
 
 #middle {
 	display: flex;
 	flex-direction: row;
 	align-items: stretch;
-	min-height: 100%;
+	flex-basis: 100%;
 }
 
 #content {

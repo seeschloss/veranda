@@ -14,11 +14,11 @@ class Sensor extends Record {
 
 	static function grid_row_header_admin() {
 		return [
-			'name' => 'Name',
-			'place' => 'Place',
-			'type' => 'Type',
-			'value' => 'Value',
-			'updated' => 'Last update',
+			'name' => __('Name'),
+			'place' => __('Place'),
+			'type' => __('Type'),
+			'value' => __('Value'),
+			'updated' => __('Last update'),
 		];
 	}
 
@@ -52,13 +52,13 @@ class Sensor extends Record {
 					$last_updated_string = $lag->format("%ss");
 				}
 			} else {
-				$last_updated_string = "never";
+				$last_updated_string = __("never");
 			}
 
 			return [
 				'name' => "<a href='/admin/sensor/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
-				'type' => $this->type,
+				'type' => _a('sensor-types', $this->type),
 				'value' => $this->value_text(),
 				'updated' => [
 					'value' => $last_updated_string,
@@ -70,7 +70,7 @@ class Sensor extends Record {
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/sensor/{$this->id}'>{$this->name}</a>",
+					'value' => "<a href='/admin/sensor/{$this->id}'>".__('Add a new sensor')."</a>",
 					'attributes' => ['colspan' => 5],
 				],
 			];
@@ -79,11 +79,11 @@ class Sensor extends Record {
 
 	static function grid_row_header() {
 		return [
-			'name' => 'Name',
-			'place' => 'Place',
-			'type' => 'Type',
-			'value' => 'Value',
-			'updated' => 'Last update',
+			'name' => __('Name'),
+			'place' => __('Place'),
+			'type' => __('Type'),
+			'value' => __('Value'),
+			'updated' => __('Last update'),
 		];
 	}
 
@@ -117,13 +117,13 @@ class Sensor extends Record {
 					$last_updated_string = $lag->format("%ss");
 				}
 			} else {
-				$last_updated_string = "never";
+				$last_updated_string = __("never");
 			}
 
 			return [
 				'name' => "<a href='/sensor/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
-				'type' => $this->type,
+				'type' => _a('sensor-types', $this->type),
 				'value' => $this->value_text(),
 				'updated' => [
 					'value' => $last_updated_string,
@@ -161,32 +161,28 @@ class Sensor extends Record {
 		$form->fields['place_id']->name = "sensor[place_id]";
 		$form->fields['place_id']->value = $this->place_id;
 		$form->fields['place_id']->options = array_map(function($place) { return $place->name; }, Place::select());
-		$form->fields['place_id']->label = "Place";
+		$form->fields['place_id']->label = __("Place");
 
 		$form->fields['name'] = new HTML_Input("sensor-name");
 		$form->fields['name']->type = "text";
 		$form->fields['name']->name = "sensor[name]";
 		$form->fields['name']->value = $this->name;
-		$form->fields['name']->label = "Name";
+		$form->fields['name']->label = __("Name");
 
 		$form->fields['type'] = new HTML_Select("sensor-type");
 		$form->fields['type']->name = "sensor[type]";
 		$form->fields['type']->value = $this->type;
-		$form->fields['type']->options = [
-			'temperature' => "Temperature",
-			'humidity' => "Humidity",
-			'brightness' => "Brightness",
-		];
-		$form->fields['type']->label = "Type";
+		$form->fields['type']->options = _a('sensor-types');
+		$form->fields['type']->label = __("Type");
 
 		$form->fields['comment'] = new HTML_Textarea("sensor-comment");
 		$form->fields['comment']->name = "sensor[comment]";
 		$form->fields['comment']->value = $this->comment;
-		$form->fields['comment']->label = "Comment";
+		$form->fields['comment']->label = __("Comment");
 
 		$form->actions['save'] = new HTML_Button("sensor-save");
 		$form->actions['save']->name = "action";
-		$form->actions['save']->label = "Save";
+		$form->actions['save']->label = __("Save");
 
 		if ($this->id > 0) {
 			$form->actions['save']->value = "update";
@@ -196,9 +192,9 @@ class Sensor extends Record {
 
 		$form->actions['delete'] = new HTML_Button_Confirm("sensor-delete");
 		$form->actions['delete']->name = "action";
-		$form->actions['delete']->label = "Delete";
+		$form->actions['delete']->label = __("Delete");
 		$form->actions['delete']->value = "delete";
-		$form->actions['delete']->confirmation = "Are you sure you want to delete this sensor?";
+		$form->actions['delete']->confirmation = __("Are you sure you want to delete this sensor?");
 
 		return $form->html();
 	}

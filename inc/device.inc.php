@@ -14,11 +14,11 @@ class Device extends Record {
 
 	static function grid_row_header_admin() {
 		return [
-			'name' => 'Name',
-			'place' => 'Place',
-			'type' => 'Type',
-			'state' => 'State',
-			'updated' => 'Last update',
+			'name' => __('Name'),
+			'place' => __('Place'),
+			'type' => __('Type'),
+			'state' => __('State'),
+			'updated' => __('Last update'),
 		];
 	}
 
@@ -49,13 +49,13 @@ class Device extends Record {
 					$last_updated_string = $lag->format("%ss");
 				}
 			} else {
-				$last_updated_string = "never";
+				$last_updated_string = __("never");
 			}
 
 			return [
 				'name' => "<a href='/admin/device/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
-				'type' => $this->type,
+				'type' => _a('device-types', $this->type),
 				'state' => $this->state_at(time())['state'],
 				'updated' => [
 					'value' => $last_updated_string,
@@ -67,7 +67,7 @@ class Device extends Record {
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/device/{$this->id}'>{$this->name}</a>",
+					'value' => "<a href='/admin/device/{$this->id}'>".__('Add a new device')."</a>",
 					'attributes' => ['colspan' => 5],
 				],
 			];
@@ -76,11 +76,11 @@ class Device extends Record {
 
 	static function grid_row_header() {
 		return [
-			'name' => 'Name',
-			'place' => 'Place',
-			'type' => 'Type',
-			'state' => 'State',
-			'updated' => 'Last update',
+			'name' => __('Name'),
+			'place' => __('Place'),
+			'type' => __('Type'),
+			'state' => __('State'),
+			'updated' => __('Last update'),
 		];
 	}
 
@@ -111,13 +111,13 @@ class Device extends Record {
 					$last_updated_string = $lag->format("%ss");
 				}
 			} else {
-				$last_updated_string = "never";
+				$last_updated_string = __("never");
 			}
 
 			return [
 				'name' => "<a href='/device/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
-				'type' => $this->type,
+				'type' => _a('device-types', $this->type),
 				'state' => $this->state_at(time())['state'],
 				'updated' => [
 					'value' => $last_updated_string,
@@ -155,27 +155,24 @@ class Device extends Record {
 		$form->fields['place_id']->name = "device[place_id]";
 		$form->fields['place_id']->value = $this->place_id;
 		$form->fields['place_id']->options = array_map(function($place) { return $place->name; }, Place::select());
-		$form->fields['place_id']->label = "Place";
+		$form->fields['place_id']->label = __("Place");
 
 		$form->fields['name'] = new HTML_Input("device-name");
 		$form->fields['name']->type = "text";
 		$form->fields['name']->name = "device[name]";
 		$form->fields['name']->value = $this->name;
-		$form->fields['name']->label = "Name";
+		$form->fields['name']->label = __("Name");
 
 		$form->fields['type'] = new HTML_Select("device-type");
 		$form->fields['type']->name = "device[type]";
 		$form->fields['type']->value = $this->type;
-		$form->fields['type']->options = [
-			'heating' => "Heating",
-			'lighting' => "Lighting",
-		];
-		$form->fields['type']->label = "Type";
+		$form->fields['type']->options = _a('device-types');
+		$form->fields['type']->label = __("Type");
 
 		$form->fields['comment'] = new HTML_Textarea("device-comment");
 		$form->fields['comment']->name = "device[comment]";
 		$form->fields['comment']->value = $this->comment;
-		$form->fields['comment']->label = "Comment";
+		$form->fields['comment']->label = __("Comment");
 
 		switch ($this->type) {
 			case "heating":
@@ -190,7 +187,7 @@ class Device extends Record {
 
 		$form->actions['save'] = new HTML_Button("device-save");
 		$form->actions['save']->name = "action";
-		$form->actions['save']->label = "Save";
+		$form->actions['save']->label = __("Save");
 
 		if ($this->id > 0) {
 			$form->actions['save']->value = "update";
@@ -200,9 +197,9 @@ class Device extends Record {
 
 		$form->actions['delete'] = new HTML_Button_Confirm("device-delete");
 		$form->actions['delete']->name = "action";
-		$form->actions['delete']->label = "Delete";
+		$form->actions['delete']->label = __("Delete");
 		$form->actions['delete']->value = "delete";
-		$form->actions['delete']->confirmation = "Are you sure you want to delete this device?";
+		$form->actions['delete']->confirmation = __("Are you sure you want to delete this device?");
 
 		return $form->html();
 	}
@@ -213,7 +210,7 @@ class Device extends Record {
 		$sensors = Sensor::select(['type' => 'temperature', 'place_id' => $this->place_id]);
 
 		$form->parameters['sensor'] = [
-			'label' => "Sensor to use",
+			'label' => __("Sensor to use"),
 			'value' => "",
 		];
 
@@ -221,7 +218,7 @@ class Device extends Record {
 		$form->parameters['sensor-0']->type = "radio";
 		$form->parameters['sensor-0']->name = "device[sensor][id]";
 		$form->parameters['sensor-0']->value = 0;
-		$form->parameters['sensor-0']->label = "None";
+		$form->parameters['sensor-0']->label = __("None");
 		if (!isset($this->parameters['sensor']) or !$this->parameters['sensor']['id']) {
 			$form->parameters['sensor-0']->attributes['checked'] = "checked";
 		}
@@ -263,7 +260,7 @@ class Device extends Record {
 		$this->parameters = $this->parameters();
 
 		$form->parameters['period'] = [
-			'label' => "Lighting period",
+			'label' => __("Lighting period"),
 			'value' => "",
 		];
 
@@ -271,13 +268,13 @@ class Device extends Record {
 		$form->parameters['period-start']->type = "time";
 		$form->parameters['period-start']->name = "device[period][start]";
 		$form->parameters['period-start']->value = date('H:i:s', $this->parameters['period']['start']);
-		$form->parameters['period-start']->label = "Turn on at";
+		$form->parameters['period-start']->label = __("Turn on at");
 
 		$form->parameters['period-stop'] = new HTML_Input("device-period-stop");
 		$form->parameters['period-stop']->type = "time";
 		$form->parameters['period-stop']->name = "device[period][stop]";
 		$form->parameters['period-stop']->value = date('H:i:s', $this->parameters['period']['stop']);
-		$form->parameters['period-stop']->label = "Turn off at";
+		$form->parameters['period-stop']->label = __("Turn off at");
 
 		return $form;
 	}

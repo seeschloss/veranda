@@ -14,9 +14,9 @@ class Photo extends Record {
 
 	static function grid_row_header_admin() {
 		return [
-			'place' => 'Place',
-			'timestamp' => 'Date',
-			'link' => 'Link',
+			'place' => __('Place'),
+			'timestamp' => __('Date'),
+			'link' => __('Link'),
 		];
 	}
 
@@ -31,7 +31,7 @@ class Photo extends Record {
 	function grid_row_admin_new() {
 		return [
 			'place' => [
-				'value' => "<a href='/admin/photo/0'>Add a new photo</a>",
+				'value' => "<a href='/admin/photo/0'>".__('Add a new photo')."</a>",
 				'attributes' => [
 					'colspan' => 3,
 				],
@@ -41,9 +41,9 @@ class Photo extends Record {
 
 	static function grid_row_header() {
 		return [
-			'place' => 'Place',
-			'timestamp' => 'Date',
-			'link' => 'Link',
+			'place' => __('Place'),
+			'timestamp' => __('Date'),
+			'link' => __('Link'),
 		];
 	}
 

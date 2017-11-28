@@ -22,11 +22,11 @@ class Plant extends Record {
 
 	static function grid_row_header_admin() {
 		return [
-			'name' => 'Name',
-			'place' => 'Place',
-			'planted' => 'Planted',
-			'latin_name' => 'Latin name',
-			'last_watered' => 'Watered',
+			'name' => __('Name'),
+			'place' => __('Place'),
+			'planted' => __('Planted'),
+			'latin_name' => __('Latin name'),
+			'last_watered' => __('Watered'),
 		];
 	}
 
@@ -44,20 +44,20 @@ class Plant extends Record {
 
 				$last_watered_string = "";
 				if ($lag->d > 0) {
-					$last_watered_string = $lag->format("%dd, %hh ago");
+					$last_watered_string = __('%s ago', $lag->format("%dd, %hh"));
 
 					if ($lag->d >= 10) {
 						$last_watered_class = "alert";
 					}
 				} else if ($lag->h > 0) {
-					$last_watered_string = $lag->format("%hh ago");
+					$last_watered_string = __('%s ago', $lag->format("%hh"));
 					$could_be_watered = false;
 				} else {
 					$last_watered_string .= "now";
 					$could_be_watered = false;
 				}
 			} else {
-				$last_watered_string = "never";
+				$last_watered_string = __("never");
 			}
 
 
@@ -96,7 +96,7 @@ HTML;
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/plant/{$this->id}'>{$this->name}</a>",
+					'value' => "<a href='/admin/plant/{$this->id}'>".__('Add a new plant')."</a>",
 					'attributes' => ['colspan' => 5],
 				],
 			];
@@ -105,11 +105,11 @@ HTML;
 
 	static function grid_row_header() {
 		return [
-			'name' => 'Name',
-			'place' => 'Place',
-			'planted' => 'Planted',
-			'latin_name' => 'Latin name',
-			'last_watered' => 'Watered',
+			'name' => __('Name'),
+			'place' => __('Place'),
+			'planted' => __('Planted'),
+			'latin_name' => __('Latin name'),
+			'last_watered' => __('Watered'),
 		];
 	}
 
@@ -127,20 +127,20 @@ HTML;
 
 				$last_watered_string = "";
 				if ($lag->d > 0) {
-					$last_watered_string = $lag->format("%dd, %hh ago");
+					$last_watered_string = __('%s ago', $lag->format("%dd, %hh"));
 
 					if ($lag->d >= 10) {
 						$last_watered_class = "alert";
 					}
 				} else if ($lag->h > 0) {
-					$last_watered_string = $lag->format("%hh ago");
+					$last_watered_string = __('%s ago', $lag->format("%hh"));
 					$could_be_watered = false;
 				} else {
 					$last_watered_string .= "now";
 					$could_be_watered = false;
 				}
 			} else {
-				$last_watered_string = "never";
+				$last_watered_string = __("never");
 			}
 
 			return [
@@ -184,7 +184,7 @@ HTML;
 		$form->fields['place_id']->name = "plant[place_id]";
 		$form->fields['place_id']->value = $this->place_id;
 		$form->fields['place_id']->options = array_map(function($place) { return $place->name; }, Place::select());
-		$form->fields['place_id']->label = "Place";
+		$form->fields['place_id']->label = __("Place");
 
 		if ($photo = $this->place()->photo_at(time())) {
 			$form->fields['place_id']->suffix = "<a class='button modal' href='/admin/plant/{$this->id}/locate'>Locate plant on photo</a>";
@@ -194,28 +194,28 @@ HTML;
 		$form->fields['name']->type = "text";
 		$form->fields['name']->name = "plant[name]";
 		$form->fields['name']->value = $this->name;
-		$form->fields['name']->label = "Name";
+		$form->fields['name']->label = __("Name");
 
 		$form->fields['latin_name'] = new HTML_Input("plant-latin-name");
 		$form->fields['latin_name']->type = "text";
 		$form->fields['latin_name']->name = "plant[latin_name]";
 		$form->fields['latin_name']->value = $this->latin_name;
-		$form->fields['latin_name']->label = "Latin name";
+		$form->fields['latin_name']->label = __("Latin name");
 
 		$form->fields['planted'] = new HTML_Input("plant-planted");
 		$form->fields['planted']->type = "date";
 		$form->fields['planted']->name = "plant[planted]";
 		$form->fields['planted']->value = date("Y-m-d", $this->planted);
-		$form->fields['planted']->label = "Planting date";
+		$form->fields['planted']->label = __("Planting date");
 
 		$form->fields['comment'] = new HTML_Textarea("plant-comment");
 		$form->fields['comment']->name = "plant[comment]";
 		$form->fields['comment']->value = $this->comment;
-		$form->fields['comment']->label = "Comment";
+		$form->fields['comment']->label = __("Comment");
 
 		$form->actions['save'] = new HTML_Button("plant-save");
 		$form->actions['save']->name = "action";
-		$form->actions['save']->label = "Save";
+		$form->actions['save']->label = __("Save");
 		if ($this->id > 0) {
 			$form->actions['save']->value = "update";
 		} else {
@@ -224,9 +224,9 @@ HTML;
 
 		$form->actions['delete'] = new HTML_Button_Confirm("plant-delete");
 		$form->actions['delete']->name = "action";
-		$form->actions['delete']->label = "Delete";
+		$form->actions['delete']->label = __("Delete");
 		$form->actions['delete']->value = "delete";
-		$form->actions['delete']->confirmation = "Are you sure you want to delete this plant?";
+		$form->actions['delete']->confirmation = __("Are you sure you want to delete this plant?");
 
 		return $form->html();
 	}
