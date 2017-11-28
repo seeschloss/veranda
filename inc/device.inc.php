@@ -207,6 +207,13 @@ class Device extends Record {
 	function form_heating($form) {
 		$this->parameters = $this->parameters();
 
+		$form->parameters['power'] = new HTML_Input("device-power");
+		$form->parameters['power']->type = "number";
+		$form->parameters['power']->name = "device[power]";
+		$form->parameters['power']->value = $this->parameters['power'];
+		$form->parameters['power']->label = __("Power");
+		$form->parameters['power']->suffix = "W";
+
 		$sensors = Sensor::select(['type' => 'temperature', 'place_id' => $this->place_id]);
 
 		$form->parameters['sensor'] = [
@@ -306,6 +313,7 @@ class Device extends Record {
 
 		switch ($this->type) {
 			case "heating":
+				$this->from_form_parameters_power($data);
 				$this->from_form_parameters_sensor($data);
 				break;
 			case "lighting":
@@ -313,6 +321,14 @@ class Device extends Record {
 				break;
 			default:
 				break;
+		}
+	}
+
+	function from_form_parameters_power($data) {
+		$this->parameters = $this->parameters();
+
+		if (isset($data['power'])) {
+			$this->parameters['power'] = (float)$data['power'];
 		}
 	}
 
