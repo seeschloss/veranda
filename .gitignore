@@ -6,3 +6,5 @@ db/*.db
 data/*
 www/.well-known
 *.swp
+www/*.webm
+www/*.jpg
