@@ -168,6 +168,7 @@ class Device extends Record {
 		$form->fields['type']->value = $this->type;
 		$form->fields['type']->options = [
 			'heating' => "Heating",
+			'lighting' => "Lighting",
 		];
 		$form->fields['type']->label = "Type";
 
@@ -179,6 +180,9 @@ class Device extends Record {
 		switch ($this->type) {
 			case "heating":
 				$form = $this->form_heating($form);
+				break;
+			case "lighting":
+				$form = $this->form_lighting($form);
 				break;
 			default:
 				break;
@@ -234,6 +238,7 @@ class Device extends Record {
 
 			$input_min = new HTML_Input("device-sensor-{$sensor->id}-min");
 			$input_min->type = "number";
+			$input_min->attributes['step'] = "0.1";
 			$input_min->name = "device[sensor][min]";
 			if (isset($this->parameters['sensor']) and $this->parameters['sensor']['id'] == $sensor->id) {
 				$input_min->value = $this->parameters['sensor']['min'];
@@ -242,6 +247,7 @@ class Device extends Record {
 
 			$input_max = new HTML_Input("device-sensor-{$sensor->id}-min");
 			$input_max->type = "number";
+			$input_max->attributes['step'] = "0.1";
 			$input_max->name = "device[sensor][max]";
 			if (isset($this->parameters['sensor']) and $this->parameters['sensor']['id'] == $sensor->id) {
 				$input_max->value = $this->parameters['sensor']['max'];
@@ -249,6 +255,29 @@ class Device extends Record {
 
 			$form->parameters['sensor-'.$sensor->id]->suffix = "min ".$input_min->element()."°C &mdash; max ".$input_max->element()."°C";
 		}
+
+		return $form;
+	}
+
+	function form_lighting($form) {
+		$this->parameters = $this->parameters();
+
+		$form->parameters['period'] = [
+			'label' => "Lighting period",
+			'value' => "",
+		];
+
+		$form->parameters['period-start'] = new HTML_Input("device-period-start");
+		$form->parameters['period-start']->type = "time";
+		$form->parameters['period-start']->name = "device[period][start]";
+		$form->parameters['period-start']->value = date('H:i:s', $this->parameters['period']['start']);
+		$form->parameters['period-start']->label = "Turn on at";
+
+		$form->parameters['period-stop'] = new HTML_Input("device-period-stop");
+		$form->parameters['period-stop']->type = "time";
+		$form->parameters['period-stop']->name = "device[period][stop]";
+		$form->parameters['period-stop']->value = date('H:i:s', $this->parameters['period']['stop']);
+		$form->parameters['period-stop']->label = "Turn off at";
 
 		return $form;
 	}
@@ -282,6 +311,9 @@ class Device extends Record {
 			case "heating":
 				$this->from_form_parameters_sensor($data);
 				break;
+			case "lighting":
+				$this->from_form_parameters_lighting($data);
+				break;
 			default:
 				break;
 		}
@@ -295,6 +327,17 @@ class Device extends Record {
 				'id' => $data['sensor']['id'],
 				'min' => (float)$data['sensor']['min'],
 				'max' => (float)$data['sensor']['max'],
+			];
+		}
+	}
+
+	function from_form_parameters_lighting($data) {
+		$this->parameters = $this->parameters();
+
+		if (isset($data['period']) and is_array($data['period'])) {
+			$this->parameters['period'] = [
+				'start' => strtotime("1970-01-01 {$data['period']['start']}"),
+				'stop' => strtotime("1970-01-01 {$data['period']['stop']}"),
 			];
 		}
 	}
@@ -372,6 +415,8 @@ class Device extends Record {
 		switch ($this->type) {
 			case "heating":
 				return $this->check_temperature();
+			case "lighting":
+				return $this->check_period();
 			default:
 				return "nop";
 		}
@@ -381,8 +426,6 @@ class Device extends Record {
 		$this->parameters = $this->parameters();
 
 		if (isset($this->parameters['sensor']['id']) and $this->parameters['sensor']['id']) {
-			$this->parameters = $this->parameters();
-
 			$sensor = new Sensor();
 			$sensor->load(['id' => $this->parameters['sensor']['id']]);
 
@@ -392,6 +435,29 @@ class Device extends Record {
 				return "on";
 			} else if ($value['value'] > $this->parameters['sensor']['max']) {
 				return "off";
+			}
+		}
+
+		return "nop";
+	}
+
+	function check_period() {
+		$this->parameters = $this->parameters();
+
+		if (isset($this->parameters['period']['start']) and $this->parameters['period']['start'] and
+		    isset($this->parameters['period']['stop']) and $this->parameters['period']['stop']) {
+
+			$time_now = date('H') * 3600 + date('i') * 60 + date('s');
+			$state_now = $this->state_at(time())['state'];
+
+			if ($time_now >= $this->parameters['period']['start'] and $time_now < $this->parameters['period']['stop']) {
+				if ($state_now != 'on') {
+					return 'on';
+				}
+			} else {
+				if ($state_now != 'off') {
+					return 'off';
+				}
 			}
 		}
 
