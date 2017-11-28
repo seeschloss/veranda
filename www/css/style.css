@@ -389,6 +389,10 @@ textarea, input, button, a.button {
 	padding: 6px 9px;
 }
 
+.inactive {
+	color: rgba(25, 0, 0, 0.5);
+}
+
 .alert {
 	color: rgb(200, 0, 0);
 }

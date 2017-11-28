@@ -79,6 +79,8 @@ class Device extends Record {
 			'name' => 'Name',
 			'place' => 'Place',
 			'type' => 'Type',
+			'state' => 'State',
+			'updated' => 'Last update',
 		];
 	}
 

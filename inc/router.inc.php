@@ -46,6 +46,8 @@ class Router {
 			'/places' => [$this, 'show_places'],
 			'/sensor/([0-9]+)' => [$this, 'show_sensor'],
 			'/sensors' => [$this, 'show_sensors'],
+			'/device/([0-9]+)' => [$this, 'show_device'],
+			'/devices' => [$this, 'show_devices'],
 			'/dashboard' => [$this, 'show_dashboard'],
 
 			'/' => [$this, 'show_dashboard'],
@@ -65,6 +67,8 @@ class Router {
 
 		if (strpos($uri, '/admin') === 0) {
 			$this->auth_admin($uri);
+		} else if (strpos($uri, '/data') === 0) {
+			$this->auth_api();
 		}
 
 		foreach ($this->routes as $pattern => $function) {
@@ -507,6 +511,19 @@ HTML;
 		return true;
 	}
 
+	public function show_devices($parts, $get, $post) {
+		$this->theme->content_file = 'devices.php';
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
 	public function show_photos($parts, $get, $post) {
 		$this->theme->content_file = 'photos.php';
 
@@ -582,6 +599,44 @@ HTML;
 		}
 
 		return true;
+	}
+
+	public function show_device($parts, $get, $post) {
+		$this->theme->content_file = 'device.php';
+
+		$device_id = (int)$parts[2];
+
+		$device = new Device();
+		$device->load(['id' => $device_id]);
+
+		$this->theme->content_env = ['device' => $device];
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
+	function auth_api() {
+		$submitted_api_key = "";
+		if (isset($_REQUEST['key'])) {
+			$submitted_api_key = $_REQUEST['key'];
+		}
+
+		if (isset($_SERVER['HTTP_X_API_KEY'])) {
+			$submitted_api_key = $_SERVER['HTTP_X_API_KEY'];
+		}
+
+		if (!empty($GLOBALS['config']['api-key'])) {
+			if ($GLOBALS['config']['api-key'] != $submitted_api_key) {
+				header('HTTP/1.0 403 Forbidden');
+				die();
+			}
+		}
 	}
 
 	public function handle_device_data($parts, $get, $post) {

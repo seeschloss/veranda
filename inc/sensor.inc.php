@@ -34,7 +34,10 @@ class Sensor extends Record {
 				$lag = $last_update->diff(new DateTime());
 
 				$last_updated_string = "";
-				if ($lag->d > 0) {
+				if ($lag->m > 0) {
+					$last_updated_string = $last_update->format("Y-m-d");
+					$last_updated_class = "inactive";
+				} else if ($lag->d > 0) {
 					$last_updated_string = $lag->format("%dd, %hh, %im, %ss");
 					$last_updated_class = "alert";
 				} else if ($lag->h > 0) {
@@ -96,7 +99,10 @@ class Sensor extends Record {
 				$lag = $last_update->diff(new DateTime());
 
 				$last_updated_string = "";
-				if ($lag->d > 0) {
+				if ($lag->m > 0) {
+					$last_updated_string = $last_update->format("Y-m-d");
+					$last_updated_class = "inactive";
+				} else if ($lag->d > 0) {
 					$last_updated_string = $lag->format("%dd, %hh, %im, %ss");
 					$last_updated_class = "alert";
 				} else if ($lag->h > 0) {
