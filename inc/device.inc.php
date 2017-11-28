@@ -267,13 +267,13 @@ class Device extends Record {
 		$form->parameters['period-start'] = new HTML_Input("device-period-start");
 		$form->parameters['period-start']->type = "time";
 		$form->parameters['period-start']->name = "device[period][start]";
-		$form->parameters['period-start']->value = date('H:i:s', $this->parameters['period']['start']);
+		$form->parameters['period-start']->value = gmdate('H:i:s', $this->parameters['period']['start']);
 		$form->parameters['period-start']->label = __("Turn on at");
 
 		$form->parameters['period-stop'] = new HTML_Input("device-period-stop");
 		$form->parameters['period-stop']->type = "time";
 		$form->parameters['period-stop']->name = "device[period][stop]";
-		$form->parameters['period-stop']->value = date('H:i:s', $this->parameters['period']['stop']);
+		$form->parameters['period-stop']->value = gmdate('H:i:s', $this->parameters['period']['stop']);
 		$form->parameters['period-stop']->label = __("Turn off at");
 
 		return $form;
@@ -332,9 +332,11 @@ class Device extends Record {
 		$this->parameters = $this->parameters();
 
 		if (isset($data['period']) and is_array($data['period'])) {
+			list($start_h, $start_m) = explode(':', $data['period']['start']);
+			list($stop_h, $stop_m) = explode(':', $data['period']['stop']);
 			$this->parameters['period'] = [
-				'start' => strtotime("1970-01-01 {$data['period']['start']}"),
-				'stop' => strtotime("1970-01-01 {$data['period']['stop']}"),
+				'start' => $start_h * 3600 + $start_m * 60,
+				'stop' => $stop_h * 3600 + $stop_m * 60
 			];
 		}
 	}
@@ -444,7 +446,7 @@ class Device extends Record {
 		if (isset($this->parameters['period']['start']) and $this->parameters['period']['start'] and
 		    isset($this->parameters['period']['stop']) and $this->parameters['period']['stop']) {
 
-			$time_now = date('H') * 3600 + date('i') * 60 + date('s');
+			$time_now = gmdate('H') * 3600 + gmdate('i') * 60 + gmdate('s');
 			$state_now = $this->state_at(time())['state'];
 
 			if ($time_now >= $this->parameters['period']['start'] and $time_now < $this->parameters['period']['stop']) {

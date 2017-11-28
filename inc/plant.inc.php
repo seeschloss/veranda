@@ -51,7 +51,10 @@ class Plant extends Record {
 					}
 				} else if ($lag->h > 0) {
 					$last_watered_string = __('%s ago', $lag->format("%hh"));
-					$could_be_watered = false;
+
+					if ($lag->h < 12) {
+						$could_be_watered = false;
+					}
 				} else {
 					$last_watered_string .= "now";
 					$could_be_watered = false;
