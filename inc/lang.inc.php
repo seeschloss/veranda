@@ -13,12 +13,17 @@ class Lang {
 			$lang = "fr";
 		}
 
+		if (isset($_SESSION['lang'])) {
+			$lang = $_SESSION['lang'];
+		}
+
 		if (isset($_REQUEST['lang'])) {
 			$lang = $_REQUEST['lang'];
 		}
 
 		$lang_file = __DIR__.'/../lang/'.$lang.'.lang.php';
 		if (file_exists($lang_file)) {
+			$_SESSION['lang'] = $lang;
 			return $lang_file;
 		}
 
