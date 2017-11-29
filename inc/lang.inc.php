@@ -9,7 +9,7 @@ class Lang {
 	public static function lang_file() {
 		$lang = "en";
 
-		if (strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'], 'fr') !== false) {
+		if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) and strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'], 'fr') !== false) {
 			$lang = "fr";
 		}
 
