@@ -1,8 +1,6 @@
 <?php
 
 class Theme {
-	public $title = "Véranda";
-
 	public $topbar = "";
 	public $content = "";
 
@@ -22,7 +20,7 @@ class Theme {
 
 	function topbar() {
 		$topbar = <<<HTML
-			<h1><a href="{$GLOBALS['config']['base_path']}/">Véranda</a></h1>
+			<h1><a href="{$GLOBALS['config']['base_path']}/">{$GLOBALS['config']['title']}</a></h1>
 HTML;
 
 		return $topbar;
