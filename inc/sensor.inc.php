@@ -373,11 +373,15 @@ class Sensor extends Record {
 	}
 
 	function chart() {
+		return $this->chart_line("1-week").$this->chart_minmax("all");
+	}
+
+	function chart_line($period = "1-week") {
 		$chart = new Chart();
 		$chart->id = "sensor-{$this->id}-line";
 		$chart->title = $this->name;
 		$chart->size = "large";
-		$chart->period = "1-week";
+		$chart->period = $period;
 		$chart->type = "line";
 		$chart->parameters = [
 			'sensors' => [
@@ -388,13 +392,15 @@ class Sensor extends Record {
 			]
 		];
 
-		$html = $chart->html();
+		return $chart->html();
+	}
 
+	function chart_minmax($period = "all") {
 		$chart = new Chart();
 		$chart->id = "sensor-{$this->id}-minmax";
 		$chart->title = $this->name;
 		$chart->size = "large";
-		$chart->period = "all";
+		$chart->period = $period;
 		$chart->type = "min-max";
 		$chart->parameters = [
 			'sensors' => [
@@ -405,8 +411,6 @@ class Sensor extends Record {
 			]
 		];
 
-		$html .= $chart->html();
-
-		return $html;
+		return $chart->html();
 	}
 }

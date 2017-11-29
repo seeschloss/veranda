@@ -293,35 +293,47 @@ var chart_line_display = function(id, title, raw_data) {
 			"shortMonths": ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
 		});
 
-		var hours_interval = d3.timeHour.every(6);
 		if (x.domain()[1] - x.domain()[0] < 3600 * 24 * 2 * 1000) {
-			hours_interval = d3.timeHour.every(1);
+			g.append("g")
+				.attr("class", "axis axis--x labels hours")
+				.attr("transform", "translate(0," + height + ")")
+				.call(d3.axisBottom(x)
+					.tickFormat(function(d) { return locale.format("%Hh%M")(d) })
+				 );
+
+			g.append("g")
+				.attr("class", "axis axis--x lines")
+				.attr("transform", "translate(0," + height + ")")
+				.call(d3.axisBottom(x)
+					.tickSize((height - margin.top) * -1)
+					.ticks(d3.timeMinute.every(5))
+					.tickFormat("")
+				 );
+		} else {
+			g.append("g")
+				.attr("class", "axis axis--x labels hours")
+				.attr("transform", "translate(0," + height + ")")
+				.call(d3.axisBottom(x)
+					.ticks(d3.timeHour.every(6))
+					.tickFormat(function(d) { return locale.format("%Hh")(d) })
+				 );
+			g.append("g")
+				.attr("class", "axis axis--x labels days")
+				.attr("transform", "translate(0," + (height + 16) + ")")
+				.call(d3.axisBottom(x)
+					.ticks(d3.timeHour.every(12).filter(d => d.getHours() > 0)).tickSize(0)
+					.tickFormat(function(d) { return d.getHours() > 0 ? locale.format("%a %d")(d) : "" })
+				 );
+
+			g.append("g")
+				.attr("class", "axis axis--x lines")
+				.attr("transform", "translate(0," + height + ")")
+				.call(d3.axisBottom(x)
+					.tickSize((height - margin.top) * -1)
+					.ticks(d3.timeHour.every(4))
+					.tickFormat("")
+				 );
 		}
-
-		g.append("g")
-			.attr("class", "axis axis--x labels hours")
-			.attr("transform", "translate(0," + height + ")")
-			.call(d3.axisBottom(x)
-				.ticks(hours_interval)
-				.tickFormat(function(d) { return locale.format("%Hh")(d) })
-			 );
-
-		g.append("g")
-			.attr("class", "axis axis--x labels days")
-			.attr("transform", "translate(0," + (height + 16) + ")")
-			.call(d3.axisBottom(x)
-				.ticks(d3.timeHour.every(12).filter(d => d.getHours() > 0)).tickSize(0)
-				.tickFormat(function(d) { return d.getHours() > 0 ? locale.format("%a %d")(d) : "" })
-			 );
-
-		g.append("g")
-			.attr("class", "axis axis--x lines")
-			.attr("transform", "translate(0," + height + ")")
-			.call(d3.axisBottom(x)
-				.tickSize((height - margin.top) * -1)
-				.ticks(d3.timeHour.every(4))
-				.tickFormat("")
-			 );
 
 
 		y_scales.values().forEach((scale, i) => {

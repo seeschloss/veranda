@@ -570,7 +570,7 @@ class Device extends Record {
 		$html = $this->chart();
 
 		if (!empty($this->parameters['sensor']['id']) and $sensor = new Sensor() and $sensor->load(['id' => $this->parameters['sensor']['id']])) {
-			$html .= $sensor->chart();
+			$html .= $sensor->chart_line("1-day");
 		}
 
 		return $html;
