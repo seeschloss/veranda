@@ -32,5 +32,6 @@ if (isset($_POST['action']) and isset($_POST['device'])) {
 <link rel="stylesheet" href="<?= $GLOBALS['config']['base_path'] ?>/css/chart.css" />
 <div id="device">
   <?= $device->form() ?>
+  <?= $device->details() ?>
 </div>
 

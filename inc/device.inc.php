@@ -576,12 +576,29 @@ class Device extends Record {
 		return $html;
 	}
 
+	function details_lighting() {
+		$this->parameters = $this->parameters();
+
+		$html = "";
+
+		$html = $this->chart();
+
+		if (!empty($this->parameters['sensor']['id']) and $sensor = new Sensor() and $sensor->load(['id' => $this->parameters['sensor']['id']])) {
+			$html .= $sensor->chart();
+		}
+
+		return $html;
+	}
+
 	function details() {
 		$html = "";
 
 		switch ($this->type) {
 			case "heating":
 				$html .= $this->details_heating();
+				break;
+			case "lighting":
+				$html .= $this->details_lighting();
 				break;
 		}
 
