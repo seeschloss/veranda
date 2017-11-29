@@ -13,5 +13,5 @@ $table->rows[] = $new_plant->grid_row_admin();
 <div id="admin-plants">
   <?= $table->html(); ?>
 </div>
-<script src="/form.js"></script>
+<script src="<?= $GLOBALS['config']['base_path'] ?>/form.js"></script>
 

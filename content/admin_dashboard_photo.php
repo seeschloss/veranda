@@ -5,7 +5,7 @@ if (isset($_POST['action']) and isset($_POST['dashboard_photo'])) {
       $dashboard_photo = new Dashboard_Photo();
       $dashboard_photo->from_form($_POST['dashboard_photo']);
       if ($dashboard_photo->insert()) {
-        header("Location: /admin/dashboard-photo/".$dashboard_photo->id);
+        header("Location: {$GLOBALS['config']['base_path']}/admin/dashboard-photo/".$dashboard_photo->id);
         die();
       }
       break;
@@ -13,14 +13,14 @@ if (isset($_POST['action']) and isset($_POST['dashboard_photo'])) {
       $dashboard_photo = new Dashboard_Photo();
       $dashboard_photo->from_form($_POST['dashboard_photo']);
       $dashboard_photo->update();
-      header("Location: /admin/dashboard-photo/".$dashboard_photo->id);
+      header("Location: {$GLOBALS['config']['base_path']}/admin/dashboard-photo/".$dashboard_photo->id);
       die();
       break;
     case 'delete':
       $dashboard_photo = new Dashboard_Photo();
       if ($dashboard_photo->load(['id' => $_POST['dashboard_photo']['id']])) {
         $dashboard_photo->delete();
-        header("Location: /admin");
+        header("Location: {$GLOBALS['config']['base_path']}/admin");
         die();
       }
       break;

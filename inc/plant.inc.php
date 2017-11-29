@@ -85,7 +85,7 @@ class Plant extends Record {
 HTML;
 
 			return [
-				'name' => "<a href='/admin/plant/{$this->id}'>{$this->name}</a>",
+				'name' => "<a href='{$GLOBALS['config']['base_path']}/admin/plant/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
 				'planted' => $this->planted > 0 ? date('Y-m-d', $this->planted) : "",
 				'latin_name' => $this->latin_name,
@@ -99,7 +99,7 @@ HTML;
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/plant/{$this->id}'>".__('Add a new plant')."</a>",
+					'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/plant/{$this->id}'>".__('Add a new plant')."</a>",
 					'attributes' => ['colspan' => 5],
 				],
 			];
@@ -147,7 +147,7 @@ HTML;
 			}
 
 			return [
-				'name' => "<a href='/plant/{$this->id}'>{$this->name}</a>",
+				'name' => "<a href='{$GLOBALS['config']['base_path']}/plant/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
 				'planted' => $this->planted > 0 ? date('Y-m-d', $this->planted) : "",
 				'latin_name' => "<a href='https://en.wikipedia.org/wiki/{$this->latin_name}'>{$this->latin_name}</a>",
@@ -161,7 +161,7 @@ HTML;
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/plant/{$this->id}'>{$this->name}</a>",
+					'value' => "<a href='{$GLOBALS['config']['base_path']}/plant/{$this->id}'>{$this->name}</a>",
 					'attributes' => ['colspan' => 5],
 				],
 			];
@@ -190,7 +190,7 @@ HTML;
 		$form->fields['place_id']->label = __("Place");
 
 		if ($photo = $this->place()->photo_at(time())) {
-			$form->fields['place_id']->suffix = "<a class='button modal' href='/admin/plant/{$this->id}/locate'>Locate plant on photo</a>";
+			$form->fields['place_id']->suffix = "<a class='button modal' href='{$GLOBALS['config']['base_path']}/admin/plant/{$this->id}/locate'>Locate plant on photo</a>";
 		}
 
 		$form->fields['name'] = new HTML_Input("plant-name");

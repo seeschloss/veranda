@@ -5,7 +5,7 @@ if (isset($_POST['action']) and isset($_POST['chart'])) {
       $chart = new Chart();
       $chart->from_form($_POST['chart']);
       if ($chart->insert()) {
-        header("Location: /admin/chart/".$chart->id);
+        header("Location: {$GLOBALS['config']['base_path']}/admin/chart/".$chart->id);
         die();
       }
       break;
@@ -13,14 +13,14 @@ if (isset($_POST['action']) and isset($_POST['chart'])) {
       $chart = new Chart();
       $chart->from_form($_POST['chart']);
       $chart->update();
-      header("Location: /admin/chart/".$chart->id);
+      header("Location: {$GLOBALS['config']['base_path']}/admin/chart/".$chart->id);
       die();
       break;
     case 'delete':
       $chart = new Chart();
       if ($chart->load(['id' => $_POST['chart']['id']])) {
         $chart->delete();
-        header("Location: /admin");
+        header("Location: {$GLOBALS['config']['base_path']}/admin");
         die();
       }
       break;

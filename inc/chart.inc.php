@@ -23,14 +23,14 @@ class Chart extends Record {
 	function grid_row_admin() {
 		if ($this->id) {
 			return [
-				'title' => "<a href='/admin/chart/{$this->id}'>{$this->title}</a>",
+				'title' => "<a href='{$GLOBALS['config']['base_path']}/admin/chart/{$this->id}'>{$this->title}</a>",
 				'type' => _a('chart-types', $this->type),
 				'period' => _a('chart-periods', $this->period),
 			];
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/chart/{$this->id}'>".__("Add a new chart")."</a>",
+					'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/chart/{$this->id}'>".__("Add a new chart")."</a>",
 					'attributes' => ['colspan' => 3],
 				],
 			];

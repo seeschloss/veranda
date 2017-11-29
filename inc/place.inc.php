@@ -29,14 +29,14 @@ class Place extends Record {
 			}
 
 			return [
-				'name' => "<a href='/admin/place/{$this->id}'>{$this->name}</a>",
+				'name' => "<a href='{$GLOBALS['config']['base_path']}/admin/place/{$this->id}'>{$this->name}</a>",
 				'type' => _a('place-types', $this->type),
 				'condition' => join(' ', $conditions),
 			];
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/place/{$this->id}'>".__('Add a new place')."</a>",
+					'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/place/{$this->id}'>".__('Add a new place')."</a>",
 					'attributes' => [
 						'colspan' => 3,
 					],
@@ -62,7 +62,7 @@ class Place extends Record {
 		}
 
 		return [
-			'name' => "<a href='/place/{$this->id}'>{$this->name}</a>",
+			'name' => "<a href='{$GLOBALS['config']['base_path']}/place/{$this->id}'>{$this->name}</a>",
 			'type' => _a('place-types', $this->type),
 			'condition' => join(' ', $conditions),
 		];

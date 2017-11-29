@@ -22,16 +22,16 @@ class Photo extends Record {
 
 	function grid_row_admin() {
 		return [
-			'place' => "<a href='/admin/place/{$this->place_id}/photos'>{$this->place()->name}</a>",
+			'place' => "<a href='{$GLOBALS['config']['base_path']}/admin/place/{$this->place_id}/photos'>{$this->place()->name}</a>",
 			'timestamp' => date("r", $this->timestamp),
-			'link' => "<a href='/photo/{$this->place_id}/{$this->id}'>/photo/{$this->place_id}/{$this->id}</a>",
+			'link' => "<a href='{$GLOBALS['config']['base_path']}/photo/{$this->place_id}/{$this->id}'>/photo/{$this->place_id}/{$this->id}</a>",
 		];
 	}
 
 	function grid_row_admin_new() {
 		return [
 			'place' => [
-				'value' => "<a href='/admin/photo/0'>".__('Add a new photo')."</a>",
+				'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/photo/0'>".__('Add a new photo')."</a>",
 				'attributes' => [
 					'colspan' => 3,
 				],
@@ -51,7 +51,7 @@ class Photo extends Record {
 		return [
 			'place' => $this->place()->name,
 			'timestamp' => date("r", $this->timestamp),
-			'link' => "<a href='/photo/{$this->place_id}/{$this->id}'>/photo/{$this->place_id}/{$this->id}</a>",
+			'link' => "<a href='{$GLOBALS['config']['base_path']}/photo/{$this->place_id}/{$this->id}'>/photo/{$this->place_id}/{$this->id}</a>",
 		];
 	}
 

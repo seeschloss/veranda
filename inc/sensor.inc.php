@@ -56,7 +56,7 @@ class Sensor extends Record {
 			}
 
 			return [
-				'name' => "<a href='/admin/sensor/{$this->id}'>{$this->name}</a>",
+				'name' => "<a href='{$GLOBALS['config']['base_path']}/admin/sensor/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
 				'type' => _a('sensor-types', $this->type),
 				'value' => $this->value_text(),
@@ -70,7 +70,7 @@ class Sensor extends Record {
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/sensor/{$this->id}'>".__('Add a new sensor')."</a>",
+					'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/sensor/{$this->id}'>".__('Add a new sensor')."</a>",
 					'attributes' => ['colspan' => 5],
 				],
 			];
@@ -121,7 +121,7 @@ class Sensor extends Record {
 			}
 
 			return [
-				'name' => "<a href='/sensor/{$this->id}'>{$this->name}</a>",
+				'name' => "<a href='{$GLOBALS['config']['base_path']}/sensor/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
 				'type' => _a('sensor-types', $this->type),
 				'value' => $this->value_text(),
@@ -135,7 +135,7 @@ class Sensor extends Record {
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/sensor/{$this->id}'>{$this->name}</a>",
+					'value' => "<a href='{$GLOBALS['config']['base_path']}/sensor/{$this->id}'>{$this->name}</a>",
 					'attributes' => ['colspan' => 5],
 				],
 			];

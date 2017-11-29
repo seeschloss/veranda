@@ -14,7 +14,7 @@ if (isset($_POST['action']) and isset($_POST['plant'])) {
       $plant = new Plant();
       $plant->from_form($_POST['plant']);
       if ($plant->insert()) {
-        header("Location: /admin/plant/".$plant->id);
+        header("Location: {$GLOBALS['config']['base_path']}/admin/plant/".$plant->id);
       }
       break;
     case 'update':
@@ -26,7 +26,7 @@ if (isset($_POST['action']) and isset($_POST['plant'])) {
       $plant = new Plant();
       if ($plant->load(['id' => $_POST['plant']['id']])) {
         $plant->delete();
-        header("Location: /admin");
+        header("Location: {$GLOBALS['config']['base_path']}/admin");
       }
       break;
   }
@@ -39,6 +39,5 @@ if (isset($_POST['action']) and isset($_POST['plant'])) {
 <div id="plant-photo">
   <?= $plant->photo() ?>
 </div>
-<script src="/admin.js"></script>
-<script src="/modal.js"></script>
-
+<script src="<?= $GLOBALS['config']['base_path'] ?>/admin.js"></script>
+<script src="<?= $GLOBALS['config']['base_path'] ?>/modal.js"></script>

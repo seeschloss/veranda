@@ -19,13 +19,13 @@ class Dashboard_Photo extends Record {
 	function grid_row_admin() {
 		if ($this->id) {
 			return [
-				'place' => "<a href='/admin/dashboard-photo/{$this->id}'>{$this->place()->name}</a>",
+				'place' => "<a href='{$GLOBALS['config']['base_path']}/admin/dashboard-photo/{$this->id}'>{$this->place()->name}</a>",
 				'size' => _a('dashboard-sizes', $this->size),
 			];
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/dashboard-photo/{$this->id}'>".__('Add a new photo')."</a>",
+					'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/dashboard-photo/{$this->id}'>".__('Add a new photo')."</a>",
 					'attributes' => ['colspan' => 2],
 				],
 			];
@@ -184,7 +184,7 @@ class Dashboard_Photo extends Record {
             data-box-y='{$plant->box_y}'
             data-box-width='{$plant->box_width}'
             data-box-height='{$plant->box_height}'
-            ><a href='/plant/{$plant->id}'>{$plant->name}</a></li>";
+            ><a href='{$GLOBALS['config']['base_path']}/plant/{$plant->id}'>{$plant->name}</a></li>";
         }
 		$plants_list .= "</ul>";
 

@@ -6,7 +6,7 @@ if (isset($_POST['action']) and isset($_POST['device'])) {
       $device->from_form($_POST['device']);
       var_dump($device);
       if ($device->insert()) {
-        header("Location: /admin/device/".$device->id);
+        header("Location: {$GLOBALS['config']['base_path']}/admin/device/".$device->id);
       }
       break;
     case 'update':
@@ -18,7 +18,7 @@ if (isset($_POST['action']) and isset($_POST['device'])) {
       $device = new Device();
       if ($device->load(['id' => $_POST['device']['id']])) {
         $device->delete();
-        header("Location: /admin");
+        header("Location: {$GLOBALS['config']['base_path']}/admin");
       }
       break;
   }
@@ -26,10 +26,10 @@ if (isset($_POST['action']) and isset($_POST['device'])) {
 
 ?>
 <script src="https://d3js.org/d3.v4.min.js"></script>
-<script src="/suncalc.js"></script>
-<script src="/dashboard.js"></script>
-<script src="/chart.js"></script>
-<link rel="stylesheet" href="/css/chart.css" />
+<script src="<?= $GLOBALS['config']['base_path'] ?>/suncalc.js"></script>
+<script src="<?= $GLOBALS['config']['base_path'] ?>/dashboard.js"></script>
+<script src="<?= $GLOBALS['config']['base_path'] ?>/chart.js"></script>
+<link rel="stylesheet" href="<?= $GLOBALS['config']['base_path'] ?>/css/chart.css" />
 <div id="device">
   <?= $device->form() ?>
 </div>

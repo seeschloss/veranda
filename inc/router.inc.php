@@ -63,6 +63,8 @@ class Router {
 	}
 
 	public function handle($uri, $get, $post) {
+		$uri = str_replace($GLOBALS['config']['base_path'], '', $uri);
+
 		$uri = strtok($uri, '?');
 
 		if (strpos($uri, '/admin') === 0) {
@@ -84,7 +86,7 @@ class Router {
 		$htpasswd = __DIR__.'/../cfg/htpasswd';
 
 		if (!isset($_SERVER['PHP_AUTH_USER'])) {
-			header('WWW-Authenticate: Basic realm="Veranda"');
+			header('WWW-Authenticate: Basic realm="'.utf8_decode($GLOBALS['config']['title']).'"');
 			header('HTTP/1.0 401 Unauthorized');
 			echo 'You need to be authentified to view this section';
 			exit;
@@ -102,7 +104,7 @@ class Router {
 HTML;
 			} else {
 				header('HTTP/1.0 401 Unauthorized');
-				header('WWW-Authenticate: Basic realm="Veranda"');
+				header('WWW-Authenticate: Basic realm="'.utf8_decode($GLOBALS['config']['title']).'"');
 			}
 			die();
 		} else {
@@ -133,7 +135,7 @@ HTML;
 	public function handle_admin_logout($parts, $get, $post) {
 		$this->theme->content = '';
 
-		header("Location: /");
+		header("Location: {$GLOBALS['config']['base_path']}/");
 
 		return true;
 	}

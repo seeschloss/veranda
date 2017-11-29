@@ -5,7 +5,7 @@ if (isset($_POST['action']) and isset($_POST['photo'])) {
       $photo = new Photo();
       $photo->from_form($_POST['photo'], $_FILES['photo']);
       if ($photo->insert()) {
-        header("Location: /admin/photo/".$photo->id);
+        header("Location: {$GLOBALS['config']['base_path']}/admin/photo/".$photo->id);
         die();
       }
       break;
@@ -13,7 +13,7 @@ if (isset($_POST['action']) and isset($_POST['photo'])) {
       $photo = new Photo();
       if ($photo->load(['id' => $_POST['photo']['id']])) {
         $photo->delete();
-        header("Location: /admin");
+        header("Location: {$GLOBALS['config']['base_path']}/admin");
         die();
       }
       break;

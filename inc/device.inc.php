@@ -53,7 +53,7 @@ class Device extends Record {
 			}
 
 			return [
-				'name' => "<a href='/admin/device/{$this->id}'>{$this->name}</a>",
+				'name' => "<a href='{$GLOBALS['config']['base_path']}/admin/device/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
 				'type' => _a('device-types', $this->type),
 				'state' => $this->state_at(time())['state'],
@@ -67,7 +67,7 @@ class Device extends Record {
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/admin/device/{$this->id}'>".__('Add a new device')."</a>",
+					'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/device/{$this->id}'>".__('Add a new device')."</a>",
 					'attributes' => ['colspan' => 5],
 				],
 			];
@@ -115,7 +115,7 @@ class Device extends Record {
 			}
 
 			return [
-				'name' => "<a href='/device/{$this->id}'>{$this->name}</a>",
+				'name' => "<a href='{$GLOBALS['config']['base_path']}/device/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
 				'type' => _a('device-types', $this->type),
 				'state' => $this->state_at(time())['state'],
@@ -129,7 +129,7 @@ class Device extends Record {
 		} else {
 			return [
 				'name' => [
-					'value' => "<a href='/device/{$this->id}'>{$this->name}</a>",
+					'value' => "<a href='{$GLOBALS['config']['base_path']}/device/{$this->id}'>{$this->name}</a>",
 					'attributes' => ['colspan' => 5],
 				],
 			];
