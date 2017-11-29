@@ -2,6 +2,7 @@
 
 class Sensor extends Record {
 	public static $table = "sensors";
+	public static $relations = ['place_id' => 'Place'];
 
 	public $id = 0;
 	public $place_id = 0;

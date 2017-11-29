@@ -1,6 +1,6 @@
 <?php // vim: ft=html:et:sw=2:sts=2:ts=2
 
-$sensors = Sensor::select();
+$sensors = Sensor::select(['places.public' => 1]);
 
 $table = new Html_Table();
 $table->header = Sensor::grid_row_header();

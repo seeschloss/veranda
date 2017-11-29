@@ -2,6 +2,7 @@
 
 class Photo extends Record {
 	public static $table = "photos";
+	public static $relations = ['place_id' => 'Place'];
 	public static $directory = __DIR__.'/../photos';
 
 	public $id;
@@ -357,10 +358,10 @@ class Photo extends Record {
 		return "<img src='/photo/{$this->place_id}/{$this->id}' />";
 	}
 
-	static function select_latest_by_place() {
+	static function select_latest_by_place($conditions = []) {
 		$latest_photos = [];
 
-		foreach (Place::select() as $place) {
+		foreach (Place::select($conditions) as $place) {
 			if ($latest_photo = $place->photo_at(time())) {
 				$latest_photos[] = $latest_photo;
 			}

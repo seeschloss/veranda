@@ -7,5 +7,6 @@
 <link rel="stylesheet" href="<?= $GLOBALS['config']['base_path'] ?>/css/chart.css" />
 <div id="device">
   <h1><?= $device->name ?></h1>
+  <?= $device->details() ?>
 </div>
 

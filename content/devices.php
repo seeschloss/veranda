@@ -1,6 +1,6 @@
 <?php // vim: ft=html:et:sw=2:sts=2:ts=2
 
-$devices = Device::select();
+$devices = Device::select(['places.public' => 1]);
 
 $table = new Html_Table();
 $table->header = Device::grid_row_header();

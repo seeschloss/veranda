@@ -1,15 +1,10 @@
 <?php // vim: ft=html:et:sw=2:sts=2:ts=2
 
-$photos = Photo::select_latest_by_place();
+$photos = Photo::select_latest_by_place(['places.public' => 1]);
 
 $table = new Html_Table();
 $table->header = Photo::grid_row_header();
-
-foreach ($photos as $photo) {
-  if ($photo->place()->public) {
-    $table->rows[] = $photo->grid_row();
-  }
-}
+$table->rows = array_map(function($photo) { return $photo->grid_row(); }, $photos);
 
 ?>
 <div id="photos">

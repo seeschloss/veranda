@@ -2,6 +2,7 @@
 
 class Device extends Record {
 	public static $table = "devices";
+	public static $relations = ['place_id' => 'Place'];
 
 	public $id = 0;
 	public $place_id = 0;
