@@ -293,11 +293,16 @@ var chart_line_display = function(id, title, raw_data) {
 			"shortMonths": ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
 		});
 
+		var hours_interval = d3.timeHour.every(6);
+		if (x.domain()[1] - x.domain()[0] < 3600 * 24 * 2 * 1000) {
+			hours_interval = d3.timeHour.every(1);
+		}
+
 		g.append("g")
 			.attr("class", "axis axis--x labels hours")
 			.attr("transform", "translate(0," + height + ")")
 			.call(d3.axisBottom(x)
-				.ticks(d3.timeHour.every(6))
+				.ticks(hours_interval)
 				.tickFormat(function(d) { return locale.format("%Hh")(d) })
 			 );
 
@@ -320,7 +325,11 @@ var chart_line_display = function(id, title, raw_data) {
 
 
 		y_scales.values().forEach((scale, i) => {
-			if (scale.type == "humidity") {
+			if (scale.unit === undefined) {
+				scale.scale = d3.scaleOrdinal()
+					.range([height*0.66, margin.top + height*0.33])
+					.domain([0, 1]);
+			} else if (scale.type == "humidity") {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])
 					.domain([0, 100]);
@@ -348,7 +357,7 @@ var chart_line_display = function(id, title, raw_data) {
 						.attr("y", 6)
 						.attr("dy", "0.71em")
 						.attr("fill", "#000")
-						.text(scale.type + " (" + scale.unit + ")");
+						.text(scale.type + (scale.unit ? " (" + scale.unit + ")" : ""));
 
 				g.append("g")
 					.attr("class", "axis axis--y lines axis-" + scale.type)
@@ -364,7 +373,7 @@ var chart_line_display = function(id, title, raw_data) {
 						.attr("y", 6)
 						.attr("dy", "0.71em")
 						.attr("fill", "#000")
-						.text(scale.type + " (" + scale.unit + ")");
+						.text(scale.type + (scale.unit ? " (" + scale.unit + ")" : ""));
 			}
 		})
 

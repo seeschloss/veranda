@@ -540,4 +540,51 @@ class Device extends Record {
 
 		return 0;
 	}
+
+	function chart() {
+		$chart = new Chart();
+		$chart->id = "device-{$this->id}-line";
+		$chart->title = $this->name;
+		$chart->size = "large";
+		$chart->period = "1-day";
+		$chart->type = "line";
+		$chart->parameters = [
+			'devices' => [
+				$this->id => [
+					'id' => $this->id,
+					'color' => '#2F2F2F',
+				],
+			]
+		];
+
+		$html = $chart->html();
+
+		return $html;
+	}
+
+	function details_heating() {
+		$this->parameters = $this->parameters();
+
+		$html = "";
+
+		$html = $this->chart();
+
+		if (!empty($this->parameters['sensor']['id']) and $sensor = new Sensor() and $sensor->load(['id' => $this->parameters['sensor']['id']])) {
+			$html .= $sensor->chart();
+		}
+
+		return $html;
+	}
+
+	function details() {
+		$html = "";
+
+		switch ($this->type) {
+			case "heating":
+				$html .= $this->details_heating();
+				break;
+		}
+
+		return $html;
+	}
 }

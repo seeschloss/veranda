@@ -95,13 +95,13 @@ HTML;
 			return <<<HTML
 				<li><a href="{$GLOBALS['config']['base_path']}/sensor/{$sensor->id}">{$sensor->name}</a></li>
 HTML;
-		}, Sensor::select()));
+		}, Sensor::select(['places.public' => 1])));
 
 		$devices_list = implode("", array_map(function($device) {
 			return <<<HTML
 				<li><a href="{$GLOBALS['config']['base_path']}/device/{$device->id}">{$device->name}</a></li>
 HTML;
-		}, Device::select([], 'name')));
+		}, Device::select(['places.public' => 1], 'name')));
 
 		return <<<HTML
 	<ul>

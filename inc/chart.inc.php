@@ -308,7 +308,7 @@ class Chart extends Record {
 		foreach ($sensors as $sensor) {
 			$data[$sensor->id] = [
 				'label' => $sensor->name,
-				'type' => $sensor->type,
+				'type' => _a('sensor-types', $sensor->type),
 				'unit' => $sensor->unit(),
 				'place' => $sensor->place()->name,
 				'color' => $this->parameters['sensors'][$sensor->id]['color'],
@@ -319,10 +319,35 @@ class Chart extends Record {
 		return $data;
 	}
 
+	function devices_data() {
+		$data = [];
+
+		$devices = Device::select(['id' => array_map(function($device) { return $device['id']; }, $this->parameters['devices'])]);
+
+		$start = $this->data_start();
+		$stop = time();
+
+		foreach ($devices as $device) {
+			$data[$device->id] = [
+				'label' => $device->name,
+				'type' => _a('device-types', $device->type),
+				'place' => $device->place()->name,
+				'color' => $this->parameters['devices'][$device->id]['color'],
+				'values' => array_map(function($state) { return $state == "on" ? 1 : 0; }, $device->state_between($start, $stop)),
+			];
+		}
+
+		return $data;
+	}
+
 	function html() {
 		$old_serialize_precision = ini_get('serialize_precision');
 		ini_set('serialize_precision', 8);
-		$data_json = json_encode($this->sensors_data());
+		if (isset($this->parameters['sensors'])) {
+			$data_json = json_encode($this->sensors_data());
+		} else {
+			$data_json = json_encode($this->devices_data());
+		}
 		ini_set('serialize_precision', $old_serialize_precision);
 
 		$html = "";

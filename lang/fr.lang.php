@@ -90,6 +90,7 @@ $__['Sensors'] = "Capteurs";
 $__['Size'] = "Taille";
 $__['Small'] = "Petit";
 $__['State'] = "État";
+$__['state'] = "état";
 $__['Temperature'] = "Température";
 $__['Title'] = "Titre";
 $__['Turn off at'] = "Éteindre à";
