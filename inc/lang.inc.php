@@ -1,43 +1,76 @@
 <?php
 
-function _a() {
-	if (!isset($GLOBALS['_t'])) {
-		require __DIR__.'/../lang/fr.lang.php';
-		$GLOBALS['_a'] = $___;
-		$GLOBALS['_t'] = $__;
+class Lang {
+	public static $translated_arrays = [];
+	public static $translated_strings = [];
+
+	private static $initialized = false;
+
+	public static function lang_file() {
+		$lang = "en";
+
+		if (strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'], 'fr') !== false) {
+			$lang = "fr";
+		}
+
+		if (isset($_REQUEST['lang'])) {
+			$lang = $_REQUEST['lang'];
+		}
+
+		$lang_file = __DIR__.'/../lang/'.$lang.'.lang.php';
+		if (file_exists($lang_file)) {
+			return $lang_file;
+		}
+
+		return __DIR__.'/../lang/en.lang.php';
 	}
 
-
-	$args = func_get_args();
-	$string = array_shift($args);
-
-	if (isset($GLOBALS['_a'][$string])) {
-		if (count($args)) {
-			return $GLOBALS['_a'][$string][$args[0]];
-		} else {
-			return $GLOBALS['_a'][$string];
+	public static function init() {
+		if (!static::$initialized) {
+			require self::lang_file();
+			static::$translated_arrays = $___;
+			static::$translated_strings = $__;
+			static::$initialized = true;
 		}
-	} else {
-		return $string;
+	}
+
+	public static function translated_array() {
+		static::init();
+
+		$args = func_get_args();
+		$string = array_shift($args);
+
+		if (isset(static::$translated_arrays[$string])) {
+			if (count($args)) {
+				return static::$translated_arrays[$string][$args[0]];
+			} else {
+				return static::$translated_arrays[$string];
+			}
+		} else {
+			return $string;
+		}
+	}
+
+	public static function translated_string() {
+		static::init();
+
+		$args = func_get_args();
+		$string = array_shift($args);
+
+		if (isset(static::$translated_strings[$string])) {
+			return call_user_func_array('sprintf', array_merge([static::$translated_strings[$string]], $args));
+		} else {
+			return $string;
+		}
 	}
 }
 
+function _a() {
+	return call_user_func_array('Lang::translated_array', func_get_args());
+}
+
 function __() {
-	if (!isset($GLOBALS['_t'])) {
-		require __DIR__.'/../lang/fr.lang.php';
-		$GLOBALS['_a'] = $___;
-		$GLOBALS['_t'] = $__;
-	}
-
-
-	$args = func_get_args();
-	$string = array_shift($args);
-
-	if (isset($GLOBALS['_t'][$string])) {
-		return call_user_func_array('sprintf', array_merge([$GLOBALS['_t'][$string]], $args));
-	} else {
-		return $string;
-	}
+	return call_user_func_array('Lang::translated_string', func_get_args());
 }
 
 $__ = '__';

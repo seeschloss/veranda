@@ -1,6 +1,6 @@
 <?php
 
-class Lang {
+class Lang_CLI {
 	function __construct() {
 	}
 
@@ -194,5 +194,5 @@ EOT;
 }
 
 array_shift($argv);
-$lang = new Lang();
+$lang = new Lang_CLI();
 echo $lang->lang($argv);
