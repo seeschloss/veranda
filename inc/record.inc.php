@@ -127,13 +127,13 @@ abstract class Record {
 					list($field, $condition) = explode(' ', $field, 2);
 				}
 
-				if (preg_match("/^[a-z_]\+/", $field)) {
+				if (preg_match("/^[a-z_]+$/", $field)) {
 					$field = "`".static::$table."`.`{$field}`";
 				}
 
 				$query_where[] = "{$field} {$condition} {$value}";
 			} else {
-				if (preg_match("/^[a-z_]\+ /", $value)) {
+				if (preg_match("/^[a-z_] $/", $value)) {
 					$query_where[] = '`'.static::$table.'`.'.$value;
 				} else {
 					$query_where[] = $value;
