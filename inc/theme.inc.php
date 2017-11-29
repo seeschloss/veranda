@@ -15,12 +15,12 @@ class Theme {
 	}
 
 	function title() {
-		return $this->title;
+		return $GLOBALS['config']['title'];
 	}
 
 	function topbar() {
 		$topbar = <<<HTML
-			<h1><a href="{$GLOBALS['config']['base_path']}/">{$GLOBALS['config']['title']}</a></h1>
+			<h1><a href="{$GLOBALS['config']['base_path']}/">{$this->title()}</a></h1>
 HTML;
 
 		return $topbar;
