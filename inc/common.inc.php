@@ -8,6 +8,7 @@ require_once dirname(__FILE__).'/record.inc.php';
 require_once dirname(__FILE__).'/html.inc.php';
 require_once dirname(__FILE__).'/crypto.inc.php';
 require_once dirname(__FILE__).'/lang.inc.php';
+require_once dirname(__FILE__).'/calendar.inc.php';
 
 require_once dirname(__FILE__).'/theme.inc.php';
 require_once dirname(__FILE__).'/site.inc.php';

@@ -98,4 +98,5 @@ $__['Turn on at'] = "Turn on at";
 $__['Type'] = "Type";
 $__['Value'] = "Value";
 $__['Watered'] = "Watered";
+$__['Watered: %s'] = "Watered: %s";
 $__['Place'] = "Place";

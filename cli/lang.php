@@ -91,6 +91,8 @@ EOT;
 				$messages[] = $this->_lang_add_to_file($file, $string, $translations[$language_spec]);
 			} else if (isset($translations[$language])) {
 				$messages[] = $this->_lang_add_to_file($file, $string, $translations[$language]);
+			} else if ($language == "en") {
+				$messages[] = $this->_lang_add_to_file($file, $string, $string);
 			} else if ($translation = $this->_lang_ask_interactively("en", $language_spec, $string)) {
 				$messages[] = $this->_lang_add_to_file($file, $string, $translation);
 			} else {

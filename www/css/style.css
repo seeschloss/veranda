@@ -629,6 +629,103 @@ svg.dashboard-element {
 	width: 100%;
 }
 
+#calendar > section {
+	margin: 0 10%;
+}
+
+#calendar > section {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+#calendar h1 {
+	flex-basis: 100%;
+	text-align: center;
+}
+
+#calendar .month {
+	flex-basis: 30%;
+	width: 30%;
+	margin: 1em 1.5% 5px 1.5%;
+}
+
+#calendar .month .weekend {
+	background-color: rgba(0, 0, 0, 0.3);
+}
+
+#calendar .month th,
+#calendar .month td {
+	padding: 1ex 3% 1ex 3px;
+	text-align: right;
+}
+
+#calendar thead .month-name th {
+	text-align: left;
+}
+
+#calendar td.event {
+	background-color: rgba(255, 50, 0, 0.2);
+	cursor: pointer;
+}
+
+#calendar ul.events {
+	display: none;
+}
+
+#calendar td:hover {
+	position: relative;
+}
+
+#calendar td:hover ul.events {
+	display: block;
+	position: absolute;
+	background: white;
+	border: 1px solid grey;
+	list-style-type: none;
+	padding: 1ex;
+	white-space: nowrap;
+	z-index: 2;
+	top: 0;
+	text-align: left;
+	cursor: default;
+	box-sizing: border-box;
+}
+
+@media screen and (max-width: 1280px) {
+	#calendar > section {
+		margin: 0;
+	}
+
+	#calendar .month th,
+	#calendar .month td {
+		padding: 3px 2% 3px 3px;
+	}
+}
+
+@media screen and (max-width: 768px) {
+	#calendar > section {
+		justify-content: space-around;
+		min-width: 300px;
+	}
+
+	#calendar .month {
+		flex-basis: 100%;
+		width: 100%;
+		max-width: 400px;
+	}
+
+	#calendar .month th,
+	#calendar .month td {
+		padding-top: 1ex;
+		padding-bottom: 1ex;
+	}
+}
+
+#calendar .month.complementaire {
+	width: 20%;
+}
+
 @font-face {
   font-family: "Roboto";
   src: local(Roboto Thin), url("../fonts/roboto/Roboto-Thin.woff2") format("woff2"), url("../fonts/roboto/Roboto-Thin.woff") format("woff");

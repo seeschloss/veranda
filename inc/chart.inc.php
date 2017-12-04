@@ -308,7 +308,8 @@ class Chart extends Record {
 		foreach ($sensors as $sensor) {
 			$data[$sensor->id] = [
 				'label' => $sensor->name,
-				'type' => _a('sensor-types', $sensor->type),
+				'axis-label' => _a('sensor-types', $sensor->type),
+				'type' => $sensor->type,
 				'unit' => $sensor->unit(),
 				'place' => $sensor->place()->name,
 				'color' => $this->parameters['sensors'][$sensor->id]['color'],
@@ -330,6 +331,7 @@ class Chart extends Record {
 		foreach ($devices as $device) {
 			$data[$device->id] = [
 				'label' => $device->name,
+				'axis-label' => _a('device-types', $device->type),
 				'type' => _a('device-types', $device->type),
 				'place' => $device->place()->name,
 				'color' => $this->parameters['devices'][$device->id]['color'],

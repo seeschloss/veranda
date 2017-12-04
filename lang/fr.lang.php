@@ -98,4 +98,5 @@ $__['Turn on at'] = "Allumer à";
 $__['Type'] = "Type";
 $__['Value'] = "Valeur";
 $__['Watered'] = "Arrosée";
+$__['Watered: %s'] = "Arrosage : %s";
 $__['Place'] = "Lieu";

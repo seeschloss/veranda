@@ -136,7 +136,7 @@ abstract class Record {
 				if (preg_match("/^[a-z_] $/", $value)) {
 					$query_where[] = '`'.static::$table.'`.'.$value;
 				} else {
-					$query_where[] = $value;
+					$query_where[] = '('.$value.')';
 				}
 			}
 		}

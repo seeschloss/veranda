@@ -207,7 +207,7 @@ var chart_line_display = function(id, title, raw_data) {
 	let svg = d3.select('#' + id);
 
 	var create_chart = function() {
-		let margin = {top: 20, right: 40, bottom: 50, left: 20},
+		let margin = {top: 20, right: 40, bottom: 50, left: 30},
 			width = +svg.node().getBoundingClientRect().width - margin.left - margin.right,
 			height = +svg.node().getBoundingClientRect().height - margin.top - margin.bottom,
 			g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -233,6 +233,7 @@ var chart_line_display = function(id, title, raw_data) {
 
 				y_scales.set(sensor_data.type, {
 					type: sensor_data.type,
+					axislabel: sensor_data['axis-label'],
 					unit: sensor_data.unit
 				});
 
@@ -369,7 +370,7 @@ var chart_line_display = function(id, title, raw_data) {
 						.attr("y", 6)
 						.attr("dy", "0.71em")
 						.attr("fill", "#000")
-						.text(scale.type + (scale.unit ? " (" + scale.unit + ")" : ""));
+						.text(scale.axislabel + (scale.unit ? " (" + scale.unit + ")" : ""));
 
 				g.append("g")
 					.attr("class", "axis axis--y lines axis-" + scale.type)
@@ -385,7 +386,7 @@ var chart_line_display = function(id, title, raw_data) {
 						.attr("y", 6)
 						.attr("dy", "0.71em")
 						.attr("fill", "#000")
-						.text(scale.type + (scale.unit ? " (" + scale.unit + ")" : ""));
+						.text(scale.axislabel + (scale.unit ? " (" + scale.unit + ")" : ""));
 			}
 		})
 

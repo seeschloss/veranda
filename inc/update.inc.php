@@ -73,7 +73,22 @@ class Update {
 			self::to_18();
 		}
 
+		if (!$db->query('SELECT place_id FROM videos LIMIT 1')) {
+			self::to_19();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_19() {
+		echo "19. Add place_id to table `videos`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE videos ADD place_id INTEGER');
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_18() {

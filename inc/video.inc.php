@@ -2,9 +2,11 @@
 
 class Video extends Record {
 	public static $table = "videos";
+	public static $relations = ['place_id' => 'Place'];
 	public static $directory = __DIR__.'/../photos';
 
 	public $id;
+	public $place_id;
 	public $start = 0;
 	public $stop = 0;
 	public $path = "";
@@ -147,7 +149,7 @@ class Video extends Record {
 
 		`/usr/bin/ffmpeg -y -safe 0 \
 			-f concat -i "{$playlist}" -vsync vfr \
-			-c:v vp9 -crf 30 -b:v 0 {$vf} {$filter} -threads 8 -pix_fmt yuv420p \
+			-c:v vp8 -crf 30 -b:v 0 {$vf} {$filter} -threads 8 -pix_fmt yuv420p \
 			-r {$this->fps} \
 			"{$path}"`;
 
@@ -164,6 +166,7 @@ class Video extends Record {
 		$db = new DB();
 
 		$fields = [
+			'place_id' => (int)$this->place_id,
 			'start' => (int)$this->start,
 			'stop' => (int)$this->stop,
 			'path' => $db->escape($this->path),

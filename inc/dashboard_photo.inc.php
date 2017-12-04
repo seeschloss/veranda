@@ -188,6 +188,14 @@ class Dashboard_Photo extends Record {
         }
 		$plants_list .= "</ul>";
 
+		$videos = Video::select(['place_id' => $this->place_id, "quality != 'hd'"], "start DESC, id DESC", 1);
+		if (count($videos)) {
+			$video = array_shift($videos);
+			$link = "<a href='{$GLOBALS['config']['base_path']}/video/{$video->place_id}/{$video->id}'><img src='{$GLOBALS['config']['base_path']}/photo/{$photo->place_id}/{$photo->id}' /></a>";
+		} else {
+			$link = "<img src='{$GLOBALS['config']['base_path']}/photo/{$photo->place_id}/{$photo->id}' />";
+		}
+
 		return <<<HTML
 			<div id="dashboard-photo-{$this->id}" style="flex-basis: {$basis};" class="dashboard-element dashboard-photo">
 				<table>
@@ -195,7 +203,7 @@ class Dashboard_Photo extends Record {
 						<th colspan="2" class="photo-place">{$this->place()->name}</th>
 					</tr>
 					<tr class="photo-with-legend">
-						<td><img src="/photo/{$photo->place_id}/{$photo->id}" /></td>
+						<td>{$link}</td>
 						<td>{$plants_list}</td>
 					</tr>
 				</table>

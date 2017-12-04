@@ -158,40 +158,6 @@ class Photo extends Record {
 		return $directory.'/'.$filename;
 	}
 
-	static function path_near($timestamp, $suffix = "") {
-		$directory = self::$directory.'/'.date('Y-m-d', $timestamp);
-
-		if (!file_exists($directory)) {
-			return "";
-		}
-
-		$filename = date('Y-m-d@H:i:s', $timestamp);
-		if ($suffix) {
-			$filename .= '-'.$suffix;
-		}
-		$filename .= '.jpg';
-
-		$path = $directory.'/'.$filename;
-
-		if (file_exists($path)) {
-			return $path;
-		}
-
-		$filename = date('Y-m-d@H:i:??', $timestamp);
-		if ($suffix) {
-			$filename .= '-'.$suffix;
-		}
-		$filename .= '.jpg';
-
-		$path = glob($directory.'/'.$filename);
-
-		if (count($path)) {
-			return $path[0];
-		}
-
-		return "";
-	}
-
 	static function white_balance($path, $reference, $destination) {
 		$histmatch = __DIR__.'/../cli/histmatch';
 		`{$histmatch} -c rgb "{$reference}" "{$path}" "{$destination}"`;
@@ -211,42 +177,15 @@ class Photo extends Record {
 		return file_exists($destination);
 	}
 
-	static function photos_between($start, $stop, $suffix = "") {
-		$photos = [];
-
-		for ($timestamp = $start; $timestamp <= $stop; $timestamp = strtotime("+1 minute", $timestamp)) {
-			$path = self::$directory.'/'.date('Y-m-d', $timestamp).'/'.date('Y-m-d@H:i:??', $timestamp);
-			if ($suffix) {
-				$path .= '-'.$suffix;
-			}
-			$path .= '.jpg';
-			$path = glob($path);
-
-			if (count($path)) {
-				$photos[] = $path[0];
-			}
-		}
-
-		return $photos;
-	}
-
-	function latest_night_photos($suffix = "") {
-		$span = "-15 minutes";
-
-		if (date('H', $this->timestamp) > 12) {
-			$night_start = max(strtotime('today 18:00:00', $this->timestamp), strtotime($span, $this->timestamp));
-		} else {
-			$night_start = strtotime($span, $this->timestamp);
-		}
-
-		return static::photos_between($night_start, $this->timestamp, $suffix);
-	}
-
 	function save_balanced() {
-		$yesterday_midday_photo = self::path_near(strtotime("yesterday 12:00:00", $this->timestamp));
-
-		if ($yesterday_midday_photo) {
-			self::white_balance($this->path('original'), $yesterday_midday_photo, $this->path('balanced'));
+		$photos = Photo::select([
+			'place_id' => $this->place_id,
+			'timestamp BETWEEN '.strtotime("yesterday 12:00:00", $this->timestamp).' AND '.strtotime("yesterday 13:00:00", $this->timestamp),
+		], 'timestamp ASC', 1);
+		
+		if (count($photos)) {
+			$yesterday_midday_photo = array_shift($photos);
+			self::white_balance($this->path('original'), $yesterday_midday_photo->path('original'), $this->path('balanced'));
 			$this->path_balanced = realpath($this->path('balanced'));
 		}
 
@@ -254,7 +193,14 @@ class Photo extends Record {
 	}
 
 	function save_averaged() {
-		if (static::average($this->latest_night_photos("balanced"), $this->path('averaged'))) {
+		$latest_night_photos = array_map(function($photo) {
+			return $photo->path('balanced');
+		}, Photo::select([
+			'place_id' => $this->place_id,
+			'timestamp < '.$this->timestamp,
+		], 'timestamp DESC', 3));
+
+		if (static::average($latest_night_photos, $this->path('averaged'))) {
 			$this->path_averaged = realpath($this->path('averaged'));
 		}
 

@@ -52,12 +52,13 @@ switch ($args[1]) {
 	case "video":
 		if ($args[2] == "total") {
 			$video = new Video();
+			$video->place_id = 1;
 			$video->fps = 50;
 			$video->start = 0;
 			$video->stop = time();
 			$video->set_filename("boite-total");
 			$video->photos = array_filter(
-				array_values(Photo::select(['period != "nuit" OR path_balanced != ""'], 'timestamp ASC')),
+				array_values(Photo::select(['place_id' => 1, 'period != "nuit" OR path_balanced != ""'], 'timestamp ASC')),
 				function($key) {
 					return $key % 10 == 0;
 				},
@@ -73,12 +74,13 @@ switch ($args[1]) {
 			symlink($video->path, $GLOBALS['config']['latest-complete-video']['path']);
 		} else if ($args[2] == "total-legend") {
 			$video = new Video();
+			$video->place_id = 1;
 			$video->fps = 50;
 			$video->start = 0;
 			$video->stop = time();
 			$video->set_filename("boite-legend");
 			$video->photos = array_filter(
-				array_values(Photo::select(['period != "nuit" OR path_balanced != ""'], 'timestamp ASC')),
+				array_values(Photo::select(['place_id' => 1, 'period != "nuit" OR path_balanced != ""'], 'timestamp ASC')),
 				function($key) {
 					return $key % 10 == 0;
 				},
@@ -94,9 +96,15 @@ switch ($args[1]) {
 		} else {
 			$timestamp = $args[2];
 			$video = new Video();
+			$video->place_id = 1;
 			$video->fps = 10;
 			$video->start = strtotime("today midnight UTC", $timestamp);
 			$video->stop = $timestamp;
+			$video->photos = Photo::select([
+				'place_id' => 1,
+				'period != "nuit" OR path_balanced != ""',
+				'timestamp BETWEEN '.(int)$video->start.' AND '.(int)$video->stop,
+			], 'timestamp ASC');
 			$video->make();
 			$video->insert();
 
@@ -107,10 +115,16 @@ switch ($args[1]) {
 
 			$timestamp = $args[2];
 			$video = new Video();
+			$video->place_id = 1;
 			$video->fps = 10;
 			$video->quality = "hd";
 			$video->start = strtotime("today midnight UTC", $timestamp);
 			$video->stop = $timestamp;
+			$video->photos = Photo::select([
+				'place_id' => 1,
+				'period != "nuit" OR path_balanced != ""',
+				'timestamp BETWEEN '.(int)$video->start.' AND '.(int)$video->stop,
+			], 'timestamp ASC');
 			$video->make();
 			$video->insert();
 

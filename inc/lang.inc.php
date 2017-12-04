@@ -65,7 +65,7 @@ class Lang {
 		if (isset(static::$translated_strings[$string])) {
 			return call_user_func_array('sprintf', array_merge([static::$translated_strings[$string]], $args));
 		} else {
-			return $string;
+			return call_user_func_array('sprintf', array_merge([$string], $args));
 		}
 	}
 }

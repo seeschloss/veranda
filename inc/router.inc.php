@@ -38,6 +38,7 @@ class Router {
 
 			'/water' => [$this, 'show_water'],
 
+			'/video/([0-9]+)/([0-9]+)' => [$this, 'show_video'],
 			'/photo/([0-9]+)/([0-9]+)' => [$this, 'show_photo'],
 			'/photos/?' => [$this, 'show_photos'],
 			'/plant/([0-9]+)' => [$this, 'show_plant'],
@@ -48,6 +49,7 @@ class Router {
 			'/sensors' => [$this, 'show_sensors'],
 			'/device/([0-9]+)' => [$this, 'show_device'],
 			'/devices' => [$this, 'show_devices'],
+			'/calendar' => [$this, 'show_calendar'],
 			'/dashboard' => [$this, 'show_dashboard'],
 
 			'/' => [$this, 'show_dashboard'],
@@ -142,6 +144,19 @@ HTML;
 
 	public function show_dashboard($parts, $get, $post) {
 		$this->theme->content_file = 'dashboard.php';
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
+	public function show_calendar($parts, $get, $post) {
+		$this->theme->content_file = 'calendar.php';
 
 		if ($this->json) {
 			header('Content-Type: application/json;charset=UTF-8');
@@ -467,6 +482,24 @@ HTML;
 			header("Content-Type: image/jpeg");
 			header("Content-Length: ".filesize($photo->best_quality()));
 			readfile($photo->best_quality());
+		} else {
+			http_response_code(404);
+		}
+		
+		return true;
+	}
+
+	public function show_video($parts, $get, $post) {
+		$place_id = (int)$parts[2];
+		$video_id = (int)$parts[3];
+
+		$video = new Video();
+		$video->load(['id' => $video_id]);
+
+		if ($video->place_id == $place_id) {
+			header("Content-Type: video/webm");
+			header("Content-Length: ".filesize($video->path));
+			readfile($video->path);
 		} else {
 			http_response_code(404);
 		}
