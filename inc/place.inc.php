@@ -232,4 +232,8 @@ class Place extends Record {
 
 		return null;
 	}
+
+	function period($timestamp) {
+		return Time::period($timestamp);
+	}
 }

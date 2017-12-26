@@ -77,7 +77,121 @@ class Update {
 			self::to_19();
 		}
 
+		if (!$db->query('SELECT COUNT(*) FROM plant_notes')) {
+			self::to_20();
+		}
+
+		if ($db->value('SELECT COUNT(*) FROM photos WHERE period=\'\'') > 0) {
+			self::to_21();
+		}
+
+		if (!$db->query('SELECT COUNT(*) FROM alerts')) {
+			self::to_22();
+		}
+
+		if (!$db->query('SELECT name FROM alerts LIMIT 1')) {
+			self::to_23();
+		}
+
+		if (!$db->query('SELECT battery FROM sensors_data')) {
+			self::to_24();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_24() {
+		echo "24. Add battery to table `sensors_data`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE sensors_data ADD battery REAL');
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+	}
+
+	static function to_23() {
+		echo "23. Add name to table `alerts`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE alerts ADD name TEXT');
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+	}
+
+	static function to_22() {
+		echo "22. Create tables `alerts` and `alert_event`\n";
+
+		$db = new DB();
+		$db->query(
+			'CREATE TABLE alerts (
+				id INTEGER PRIMARY KEY,
+				type TEXT,
+				dest TEXT,
+				sensor_id INTEGER,
+				min INTEGER,
+				max INTEGER,
+				timeout INTEGER,
+				updated INTEGER,
+				created INTEGER
+			);'
+		);
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+
+		$db->query(
+			'CREATE TABLE alert_events (
+				id INTEGER PRIMARY KEY,
+				alert_id INTEGER,
+				status TEXT,
+				value REAL,
+				timestamp INTEGER
+			);'
+		);
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+	}
+
+	static function to_21() {
+		echo "21. Set period to older photos\n";
+
+		$db = new DB();
+		$db->query("BEGIN TRANSACTION");
+
+		foreach (Photo::select(['period' => '']) as $photo) {
+			$photo->period = $photo->place()->period($photo->timestamp);
+			$photo->update();
+		}
+
+		$db->query("END TRANSACTION");
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+	}
+
+	static function to_20() {
+		echo "20. Create table `plant_notes`\n";
+
+		$db = new DB();
+		$db->query(
+			'CREATE TABLE plant_notes (
+				id INTEGER PRIMARY KEY,
+				plant_id INTEGER,
+				note TEXT,
+				timestamp INTEGER
+			);'
+		);
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_19() {
@@ -331,13 +445,13 @@ class Update {
 			$basename = basename($simple_path, '.jpg');
 			$photo->timestamp = DateTime::createFromFormat("Y-m-d@H:i:s", $basename)->getTimestamp();
 
-			$hour = date('H', $photo->timestamp);
+			$hour = gmdate('H', $photo->timestamp);
 			if ($hour == 6 || $hour == 18) {
-				$photo->period = "aube";
+				$photo->period = "twilight";
 			} else if ($hour < 6 || $hour > 18) {
-				$photo->period = "nuit";
+				$photo->period = "night";
 			} else {
-				$photo->period = "jour";
+				$photo->period = "day";
 			}
 
 			$original_path = str_replace('.jpg', '-original.jpg', $simple_path);

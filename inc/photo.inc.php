@@ -18,14 +18,16 @@ class Photo extends Record {
 			'place' => __('Place'),
 			'timestamp' => __('Date'),
 			'link' => __('Link'),
+			'link-original' => __('Original'),
 		];
 	}
 
 	function grid_row_admin() {
 		return [
 			'place' => "<a href='{$GLOBALS['config']['base_path']}/admin/place/{$this->place_id}/photos'>{$this->place()->name}</a>",
-			'timestamp' => date("r", $this->timestamp),
+			'timestamp' => gmdate("r", $this->timestamp),
 			'link' => "<a href='{$GLOBALS['config']['base_path']}/photo/{$this->place_id}/{$this->id}'>/photo/{$this->place_id}/{$this->id}</a>",
+			'link-original' => "<a href='{$GLOBALS['config']['base_path']}/photo/{$this->place_id}/{$this->id}/original'>/photo/{$this->place_id}/{$this->id}/original</a>",
 		];
 	}
 
@@ -51,7 +53,7 @@ class Photo extends Record {
 	function grid_row() {
 		return [
 			'place' => $this->place()->name,
-			'timestamp' => date("r", $this->timestamp),
+			'timestamp' => gmdate("r", $this->timestamp),
 			'link' => "<a href='{$GLOBALS['config']['base_path']}/photo/{$this->place_id}/{$this->id}'>/photo/{$this->place_id}/{$this->id}</a>",
 		];
 	}
@@ -75,9 +77,9 @@ class Photo extends Record {
 		$form->fields['period']->name = "photo[period]";
 		$form->fields['period']->value = $this->period;
 		$form->fields['period']->options = [
-			'jour' => 'Day',
-			'aube' => 'Twilight',
-			'nuit' => 'Night',
+			'day' => 'Day',
+			'twilight' => 'Twilight',
+			'night' => 'Night',
 		];
 		$form->fields['period']->label = "Period";
 		$form->fields['period']->suffix = "Twilight and night photos will be white-balanced if possible";
@@ -143,13 +145,13 @@ class Photo extends Record {
 	}
 
 	function path($suffix = "") {
-		$directory = self::$directory.'/'.date('Y-m-d', $this->timestamp);
+		$directory = self::$directory.'/'.gmdate('Y-m-d', $this->timestamp);
 
 		if (!file_exists($directory)) {
 			mkdir($directory);
 		}
 
-		$filename = $this->place_id.'-'.date('Y-m-d@H:i:s', $this->timestamp);
+		$filename = $this->place_id.'-'.gmdate('Y-m-d@H:i:s', $this->timestamp);
 		if ($suffix) {
 			$filename .= '-'.$suffix;
 		}
@@ -185,7 +187,7 @@ class Photo extends Record {
 		
 		if (count($photos)) {
 			$yesterday_midday_photo = array_shift($photos);
-			self::white_balance($this->path('original'), $yesterday_midday_photo->path('original'), $this->path('balanced'));
+			self::white_balance($this->path('original'), $yesterday_midday_photo->path_original, $this->path('balanced'));
 			$this->path_balanced = realpath($this->path('balanced'));
 		}
 
@@ -210,7 +212,7 @@ class Photo extends Record {
 	function save_file($data) {
 		date_default_timezone_set("UTC");
 		switch ($this->period) {
-			case "aube":
+			case "twilight":
 				self::write_to($this->path('original'), $data);
 				$this->path_original = realpath($this->path('original'));
 
@@ -224,7 +226,7 @@ class Photo extends Record {
 				}
 				break;
 
-			case "nuit":
+			case "night":
 				self::write_to($this->path('original'), $data);
 				$this->path_original = realpath($this->path('original'));
 
@@ -243,7 +245,7 @@ class Photo extends Record {
 				}
 				break;
 
-			case "jour":
+			case "day":
 			default:
 				self::write_to($this->path(), $data);
 				$this->path_original = realpath($this->path());
@@ -300,8 +302,49 @@ class Photo extends Record {
 		return $this->id;
 	}
 
+	function update() {
+		$db = new DB();
+
+		$fields = [
+			'timestamp' => (int)$this->timestamp,
+			'place_id' => (int)$this->place_id,
+			'period' => $db->escape($this->period),
+			'path_original' => $db->escape($this->path_original),
+			'path_balanced' => $db->escape($this->path_balanced),
+			'path_averaged' => $db->escape($this->path_averaged),
+		];
+
+		$query = 'UPDATE photos SET ' . implode(', ', array_map(function($k, $v) { return $k . '=' . $v; }, array_keys($fields), $fields)) .
+		         ' WHERE id = '.(int)$this->id;
+
+		$db->query($query);
+
+		return $this->id;
+	}
+
 	function html() {
 		return "<img src='/photo/{$this->place_id}/{$this->id}' />";
+	}
+
+	function brightness() {
+		$original = imagecreatefromjpeg($this->path_original);
+
+		$width = imagesx($original);
+		$height = imagesy($original);
+
+		$step = 10;
+		$sum = 0;
+		for ($x = 0; $x < $width; $x += $step) {
+			for ($y = 0; $y < $height; $y += $step) {
+				$color = imagecolorat($original, $x, $y);
+				$r = ($color >> 16) & 0xFF;
+				$g = ($color >> 8) & 0xFF;
+				$b = $color & 0xFF;
+				$sum += ($r + $g + $b) / 3;
+			}
+		}
+
+		return $sum / ($x/$step * $y/$step);
 	}
 
 	static function select_latest_by_place($conditions = []) {
@@ -314,6 +357,22 @@ class Photo extends Record {
 		}
 
 		return $latest_photos;
+	}
+
+	static function select_monotonous($interval, $conditions = [], $order = null, $limit = null) {
+		$all_photos = self::select($conditions, $order, $limit);
+
+		$photos = [];
+
+		$last_photo = null;
+		foreach ($all_photos as $photo) {
+			if (!$last_photo or ($photo->timestamp - $last_photo->timestamp) > $interval) {
+				$photos[$photo->id] = $photo;
+				$last_photo = $photo;
+			}
+		}
+
+		return $photos;
 	}
 }
 

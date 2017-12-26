@@ -38,6 +38,7 @@ class DB {
 			);',
 			'CREATE TABLE videos (
 				id INTEGER PRIMARY KEY,
+				place_id INTEGER,
 				start INTEGER,
 				stop INTEGER,
 				path TEXT,
@@ -68,6 +69,7 @@ class DB {
 				sensor_id INTEGER,
 				place_id INTEGER,
 				value REAL,
+				battery REAL,
 				timestamp INTEGER
 			);',
 			'CREATE TABLE charts (
@@ -102,6 +104,31 @@ class DB {
 				device_id INTEGER,
 				place_id INTEGER,
 				state TEXT,
+				timestamp INTEGER
+			);',
+			'CREATE TABLE plant_notes (
+				id INTEGER PRIMARY KEY,
+				plant_id INTEGER,
+				note TEXT,
+				timestamp INTEGER
+			);',
+			'CREATE TABLE alerts (
+				id INTEGER PRIMARY KEY,
+				name TEXT,
+				type TEXT,
+				dest TEXT,
+				sensor_id INTEGER,
+				min INTEGER,
+				max INTEGER,
+				timeout INTEGER,
+				updated INTEGER,
+				created INTEGER
+			);',
+			'CREATE TABLE alert_events (
+				id INTEGER PRIMARY KEY,
+				alert_id INTEGER,
+				status TEXT,
+				value REAL,
 				timestamp INTEGER
 			);',
 		];

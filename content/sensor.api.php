@@ -6,13 +6,15 @@ if (!isset($_REQUEST['value'])) {
   http_response_code(400);
 } else {
   $timestamp = isset($_REQUEST['timestamp']) ? (int)$_REQUEST['timestamp'] : time();
-  if ($sensor->record_data($_REQUEST['value'], $timestamp)) {
+  $battery = isset($_REQUEST['battery']) ? (float)$_REQUEST['battery'] : null;
+  if ($sensor->record_data($_REQUEST['value'], $timestamp, $battery)) {
     http_response_code(202);
     $response = [
       'sensor_id' => $sensor->id,
       'sensor_name' => $sensor->name,
       'value' => (float)$_REQUEST['value'],
       'timestamp' => (int)$timestamp,
+      'battery' => (float)$battery,
     ];
   } else {
     http_response_code(500);

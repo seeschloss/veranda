@@ -32,6 +32,13 @@ if (isset($_POST['action']) and isset($_POST['plant'])) {
   }
 }
 
+if (isset($_POST['action']) and $_POST['action'] == 'insert-note' and isset($_POST['plant_note'])) {
+  $note = new Plant_Note();
+  if ($note->from_form($_POST['plant_note'])) {
+    $note->insert();
+  }
+}
+
 ?>
 <div id="plant">
   <?= $plant->form() ?>

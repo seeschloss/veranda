@@ -281,7 +281,7 @@ class Sensor extends Record {
 		return true;
 	}
 
-	function record_data($value, $timestamp) {
+	function record_data($value, $timestamp, $battery = null) {
 		$db = new DB();
 
 		$fields = [
@@ -289,10 +289,11 @@ class Sensor extends Record {
 			'place_id' => (int)$this->place_id,
 			'value' => (float)$value,
 			'timestamp' => $timestamp,
+			'battery' => $battery === null ? 'NULL' : (float)$battery,
 		];
 
-		$query = 'INSERT INTO sensors_data (' . implode(',', array_keys($fields)) . ') '.
-		                           'VALUES (' . implode(',', array_values($fields)) . ')';
+		$query = 'INSERT OR IGNORE INTO sensors_data (' . implode(',', array_keys($fields)) . ') '.
+		                                     'VALUES (' . implode(',', array_values($fields)) . ')';
 
 		$db->query($query);
 
@@ -341,9 +342,22 @@ class Sensor extends Record {
 				return '%';
 			case 'brightness':
 				return 'lux';
+			case 'rx-power':
+				return 'dBm';
+			case 'weight':
+				return 'Kg';
 			default:
 				return '';
 		}
+	}
+
+	function value_at($timestamp) {
+		$data = $this->data_at($timestamp);
+		if ($data) {
+			return $data['value'];
+		}
+
+		return null;
 	}
 
 	function value_text() {

@@ -69,6 +69,10 @@ var chart_min_max_display = function(id, title, raw_data) {
 			d3.min(data, sensor => d3.min(sensor.values, point => point.date)) - 12*3600*1000,
 			+new Date() + 24*3600*1000
 		]);
+		var bands = d3.timeDay.every(1).range(
+			d3.min(data, sensor => d3.min(sensor.values, point => point.date)) - 12*3600*1000,
+			+new Date() + 24*3600*1000
+		);
 
 		let legend_offset_x = 0;
 		let legend_offset_y = 0;
@@ -164,7 +168,7 @@ var chart_min_max_display = function(id, title, raw_data) {
 			}
 		})
 
-		var bandWidth = (width/(data[0].values.length+1)) * 0.75;
+		var bandWidth = (width/bands.length) * 0.75;
 
 		data.forEach((sensor, i) => {
 			let bar = g.selectAll(".bar.sensor-" + sensor.id)

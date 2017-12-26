@@ -285,12 +285,16 @@ class Chart extends Record {
 	function data_start() {
 		switch ($this->period) {
 			case '1-day':
+			case '1 day':
 				return strtotime('today midnight');
 			case '1-week':
+			case '1 week':
 				return strtotime('-7 days midnight');
 			case '2-weeks':
+			case '2 weeks':
 				return strtotime('-15 days midnight');
 			case '1-month':
+			case '1 month':
 				return strtotime('-31 days midnight');
 			case 'all':
 				return 0;

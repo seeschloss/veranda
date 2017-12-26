@@ -20,6 +20,45 @@ class Plant extends Record {
 	public $created = 0;
 	public $updated = 0;
 
+	static function filter($filters) {
+		$fields = [];
+
+		if (isset($filters['place_id']) and $filters['place_id'] > 0) {
+			$fields['place_id'] = (int)$filters['place_id'];
+		}
+
+		if (isset($filters['name'])) {
+			$db = new DB();
+
+			$fields[] = '(LOWER(name) LIKE '.$db->escape('%'.mb_strtolower($filters['name']).'%')
+			           . ' OR LOWER(latin_name) LIKE '.$db->escape('%'.mb_strtolower($filters['name']).'%').')';
+		}
+
+		return self::select($fields);
+	}
+
+	static function filters() {
+		$filters = [];
+
+		$filters['place_id'] = new HTML_Select("plant-place-id");
+		$filters['place_id']->name = "plant[place_id]";
+		$filters['place_id']->options = [0 => ''] + array_map(function($place) { return $place->name; }, Place::select());
+		$filters['place_id']->label = __("Place");
+		if (isset($_REQUEST['plant']['place_id'])) {
+			$filters['place_id']->value = $_REQUEST['plant']['place_id'];
+		}
+
+		$filters['name'] = new HTML_Input("plant-name");
+		$filters['name']->type = "text";
+		$filters['name']->name = "plant[name]";
+		$filters['name']->label = __("Name");
+		if (isset($_REQUEST['plant']['name'])) {
+			$filters['name']->value = $_REQUEST['plant']['name'];
+		}
+
+		return $filters;
+	}
+
 	static function grid_row_header_admin() {
 		return [
 			'name' => __('Name'),
@@ -87,7 +126,7 @@ HTML;
 			return [
 				'name' => "<a href='{$GLOBALS['config']['base_path']}/admin/plant/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
-				'planted' => $this->planted > 0 ? date('Y-m-d', $this->planted) : "",
+				'planted' => $this->planted > 0 ? gmdate('Y-m-d', $this->planted) : "",
 				'latin_name' => $this->latin_name,
 				'last_watered' => [
 					'value' => $last_watered_string,
@@ -149,7 +188,7 @@ HTML;
 			return [
 				'name' => "<a href='{$GLOBALS['config']['base_path']}/plant/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
-				'planted' => $this->planted > 0 ? date('Y-m-d', $this->planted) : "",
+				'planted' => $this->planted > 0 ? gmdate('Y-m-d', $this->planted) : "",
 				'latin_name' => "<a href='https://en.wikipedia.org/wiki/{$this->latin_name}'>{$this->latin_name}</a>",
 				'last_watered' => [
 					'value' => $last_watered_string,
@@ -208,7 +247,7 @@ HTML;
 		$form->fields['planted'] = new HTML_Input("plant-planted");
 		$form->fields['planted']->type = "date";
 		$form->fields['planted']->name = "plant[planted]";
-		$form->fields['planted']->value = date("Y-m-d", $this->planted);
+		$form->fields['planted']->value = gmdate("Y-m-d", $this->planted);
 		$form->fields['planted']->label = __("Planting date");
 
 		$form->fields['comment'] = new HTML_Textarea("plant-comment");
@@ -231,7 +270,36 @@ HTML;
 		$form->actions['delete']->value = "delete";
 		$form->actions['delete']->confirmation = __("Are you sure you want to delete this plant?");
 
-		return $form->html();
+		$html = $form->html();
+
+		if ($this->id) {
+			$note = new Plant_Note();
+			$note->plant_id = $this->id;
+
+			$html .= $note->form();
+
+			$notes = Plant_Note::select(['plant_id' => $this->id], 'timestamp DESC');
+
+			if (count($notes)) {
+				$dl = new Html_DL();
+				$dl->elements['title'] = array(
+					'title' => 'Notes',
+					'value' => '',
+					'attributes' => [
+						'class' => 'title',
+					],
+				);
+				$dl->elements += array_map(function($note) {
+					return [
+						'title' => gmdate('Y-m-d H:i:s', $note->timestamp),
+						'value' => $note->note,
+					];
+				}, $notes);
+				$html .= $dl->html();
+			}
+		}
+
+		return $html;
 	}
 
 	function from_form($data) {
@@ -304,6 +372,43 @@ HTML;
 
 		if ($photo = $this->place()->photo_at(time())) {
 			return true;
+		}
+	}
+
+	function make_video() {
+		$photos = array_filter(
+			array_values(Photo::select([
+				'place_id' => $this->place_id,
+				'period != "night" OR path_balanced != ""',
+				'(timestamp%86400)/3600 BETWEEN 10 AND 16',
+			], 'timestamp ASC')),
+			function($key) {
+				return $key % 10 == 0;
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		$playlist = tempnam("/tmp", "veranda");
+
+		foreach ($photos as $photo) {
+			$filename = tempnam("/tmp", "veranda_photo_".$this->id); unlink($filename); $filename .= ".jpg";
+			file_put_contents($filename, $this->box_image($photo));
+
+			$photo_files[] = $filename;
+		}
+
+		$video = new Video();
+		$video->place_id = $this->place_id;
+		$video->files = $photo_files;
+		$video->fps = 50;
+		$video->start = 0;
+		$video->stop = time();
+		$video->set_filename("video-".$this->id);
+		$video->make();
+		$video->insert();
+
+		foreach ($photo_files as $photo_file) {
+			unlink($photo_file);
 		}
 	}
 
@@ -445,5 +550,45 @@ HTML;
 		}
 
 		return 0;
+	}
+
+	function html() {
+		$html = <<<HTML
+		  <h1 class="name">{$this->name}</h1>
+		  <h2 class="latin-name">{$this->latin_name}</h2>
+		  <div class='place'>{$this->place()->name}</div>
+HTML;
+
+		if ($this->planted) {
+			$html .= "<div class='planted'>Plantée : ".gmdate("d/m/Y", $this->planted)."</div>";
+		}
+
+		if ($this->comment) {
+			$html .= "<div class='comment'>".$this->comment."</div>";
+		}
+
+		$html .= $this->photo();
+
+		$notes = Plant_Note::select(['plant_id' => $this->id], 'timestamp DESC');
+
+		if (count($notes)) {
+			$dl = new Html_DL();
+			$dl->elements['title'] = array(
+				'title' => 'Notes',
+				'value' => '',
+				'attributes' => [
+					'class' => 'title',
+				],
+			);
+			$dl->elements += array_map(function($note) {
+				return [
+					'title' => gmdate('Y-m-d H:i:s', $note->timestamp),
+					'value' => $note->note,
+				];
+			}, $notes);
+			$html .= $dl->html();
+		}
+
+		return $html;
 	}
 }

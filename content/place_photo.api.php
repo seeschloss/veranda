@@ -6,7 +6,7 @@ if (!isset($_FILES) or empty($_FILES)) {
   http_response_code(400);
 } else {
   $timestamp = isset($_REQUEST['timestamp']) ? (int)$_REQUEST['timestamp'] : time();
-  $period = isset($_REQUEST['period']) ? $_REQUEST['period'] : "";
+  $period = isset($_REQUEST['period']) ? $_REQUEST['period'] : $place->period($timestamp);
 
   foreach ($_FILES as $file) {
     $photo = new Photo();

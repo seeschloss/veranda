@@ -1,8 +1,9 @@
 <?php // vim: ft=html:et:sw=2:sts=2:ts=2
 
-$plants = Plant::select();
+$plants = (isset($_POST['action']) and $_POST['action'] == 'filter') ? Plant::filter($_POST['plant']) : Plant::select();
 
 $table = new Html_Table();
+$table->filters = Plant::filters();
 $table->header = Plant::grid_row_header_admin();
 $table->rows = array_map(function($plant) { return $plant->grid_row_admin(); }, $plants);
 

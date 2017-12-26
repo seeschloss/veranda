@@ -2,6 +2,7 @@
 
 class Dashboard_Photo extends Record {
 	public static $table = "dashboard_photos";
+	public static $relations = ['place_id' => 'Place'];
 
 	public $id = 0;
 	public $place_id = 0;
@@ -188,8 +189,7 @@ class Dashboard_Photo extends Record {
         }
 		$plants_list .= "</ul>";
 
-		$videos = Video::select(['place_id' => $this->place_id, "quality != 'hd'"], "start DESC, id DESC", 1);
-		if (count($videos)) {
+		if ($this->place->public and $videos = Video::select(['place_id' => $this->place_id, "quality != 'hd'"], "start DESC, id DESC", 1) and count($videos)) {
 			$video = array_shift($videos);
 			$link = "<a href='{$GLOBALS['config']['base_path']}/video/{$video->place_id}/{$video->id}'><img src='{$GLOBALS['config']['base_path']}/photo/{$photo->place_id}/{$photo->id}' /></a>";
 		} else {

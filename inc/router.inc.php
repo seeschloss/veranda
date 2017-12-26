@@ -25,11 +25,15 @@ class Router {
 			'/admin/plant/([0-9]+)/locate' => [$this, 'show_admin_plant_locate'],
 			'/admin/plant/([0-9]+)' => [$this, 'show_admin_plant'],
 			'/admin/plants' => [$this, 'show_admin_plants'],
+			'/admin/place/([0-9]+)/photos/[0-9]*' => [$this, 'show_admin_place_photos_day'],
 			'/admin/place/([0-9]+)/photos' => [$this, 'show_admin_place_photos'],
 			'/admin/place/([0-9]+)' => [$this, 'show_admin_place'],
 			'/admin/places' => [$this, 'show_admin_places'],
 			'/admin/photo/([0-9]+)' => [$this, 'show_admin_photo'],
 			'/admin/photos' => [$this, 'show_admin_photos'],
+			'/admin/videos' => [$this, 'show_admin_videos'],
+			'/admin/alert/([0-9]+)' => [$this, 'show_admin_alert'],
+			'/admin/alerts' => [$this, 'show_admin_alerts'],
 			'/admin/chart/([0-9]+)' => [$this, 'show_admin_chart'],
 			'/admin/dashboard-photo/([0-9]+)' => [$this, 'show_admin_dashboard_photo'],
 			'/admin/dashboard' => [$this, 'show_admin_dashboard'],
@@ -39,6 +43,7 @@ class Router {
 			'/water' => [$this, 'show_water'],
 
 			'/video/([0-9]+)/([0-9]+)' => [$this, 'show_video'],
+			'/photo/([0-9]+)/([0-9]+)/[a-z]*' => [$this, 'show_photo'],
 			'/photo/([0-9]+)/([0-9]+)' => [$this, 'show_photo'],
 			'/photos/?' => [$this, 'show_photos'],
 			'/plant/([0-9]+)' => [$this, 'show_plant'],
@@ -345,6 +350,27 @@ HTML;
 		return true;
 	}
 
+	public function show_admin_place_photos_day($parts, $get, $post) {
+		$this->theme->admin = true;
+		$this->theme->content_file = 'admin_place_photos_day.php';
+
+		$place_id = (int)$parts[3];
+
+		$place = new Place();
+		$place->load(['id' => $place_id]);
+
+		$this->theme->content_env = ['place' => $place, 'day' => (int)$parts[5]];
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
 	public function show_admin_place_photos($parts, $get, $post) {
 		$this->theme->admin = true;
 		$this->theme->content_file = 'admin_place_photos.php';
@@ -404,6 +430,55 @@ HTML;
 	public function show_admin_photos($parts, $get, $post) {
 		$this->theme->admin = true;
 		$this->theme->content_file = 'admin_photos.php';
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
+	public function show_admin_videos($parts, $get, $post) {
+		$this->theme->admin = true;
+		$this->theme->content_file = 'admin_videos.php';
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
+	public function show_admin_alert($parts, $get, $post) {
+		$this->theme->admin = true;
+		$this->theme->content_file = 'admin_alert.php';
+
+		$alert_id = (int)$parts[3];
+
+		$alert = new Alert();
+		$alert->load(['id' => $alert_id]);
+
+		$this->theme->content_env = ['alert' => $alert];
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
+	public function show_admin_alerts($parts, $get, $post) {
+		$this->theme->admin = true;
+		$this->theme->content_file = 'admin_alerts.php';
 
 		if ($this->json) {
 			header('Content-Type: application/json;charset=UTF-8');
@@ -480,8 +555,16 @@ HTML;
 
 		if ($photo->place_id == $place_id) {
 			header("Content-Type: image/jpeg");
-			header("Content-Length: ".filesize($photo->best_quality()));
-			readfile($photo->best_quality());
+			if (isset($parts[4]) and $parts[4] == "original") {
+				header("Content-Length: ".filesize($photo->path_original));
+				readfile($photo->path_original);
+			} else if (isset($parts[4])) {
+				header("Content-Length: ".filesize($photo->path($parts[4])));
+				readfile($photo->path($parts[4]));
+			} else {
+				header("Content-Length: ".filesize($photo->best_quality()));
+				readfile($photo->best_quality());
+			}
 		} else {
 			http_response_code(404);
 		}

@@ -75,7 +75,7 @@ class HTML_Input_Datetime extends HTML_Input {
 		$attributes['type'] = "date";
 
 		if ($this->value) {
-			$attributes['value'] = date("Y-m-d", $this->value);
+			$attributes['value'] = gmdate("Y-m-d", $this->value);
 		}
 
 		foreach ($attributes as $name => $value) {
@@ -93,7 +93,7 @@ class HTML_Input_Datetime extends HTML_Input {
 		$attributes['type'] = "time";
 
 		if ($this->value) {
-			$attributes['value'] = date("H:i:s", $this->value);
+			$attributes['value'] = gmdate("H:i:s", $this->value);
 		}
 
 		foreach ($attributes as $name => $value) {
@@ -244,6 +244,7 @@ class HTML_Select extends HTML_Form_Element {
 }
 
 class HTML_Table {
+	public $filters = [];
 	public $header = [];
 	public $rows = [];
 
@@ -280,10 +281,31 @@ class HTML_Table {
 			return $html.$row_html;
 		}, "");
 
+		$filters = "";
+		if (count($this->filters)) {
+			$form = new HTML_Form();
+			$form->attributes = ['class' => 'filters'];
+			$form->fields = $this->filters;
+
+			$form->actions['search'] = new HTML_Button("filter-submit");
+			$form->actions['search']->name = "action";
+			$form->actions['search']->label = __("Filter");
+			$form->actions['search']->value = "filter";
+
+			$filters .= $form->html();
+		}
+
 		$html = <<<HTML
 	<table>
-		<tr>{$header_html}</tr>
-		{$rows_html}
+		<caption>
+			{$filters}
+		</caption>
+		<thead>
+		</thead>
+		<tbody>
+			<tr>{$header_html}</tr>
+			{$rows_html}
+		</tbody>
 	</table>
 HTML;
 
@@ -380,6 +402,9 @@ class HTML_Form {
 
 			return $html.$parameter_html;
 		}, "");
+		if ($parameters_html) {
+			$parameters_html = "<dl class='form-parameters'>{$parameters_html}</dl>";
+		}
 
 		$actions_html = array_reduce($this->actions, function($html, $action) {
 			$action_html = $action->html();
@@ -394,12 +419,33 @@ class HTML_Form {
 		$html = <<<HTML
 	<form target="{$this->target}" method="{$this->method}" enctype="{$this->enctype}" {$attributes}>
 		<dl class='form-fields'>{$fields_html}</dl>
-		<dl class='form-parameters'>{$parameters_html}</dl>
+		{$parameters_html}
 		<span class="actions">{$actions_html}</span>
 	</form>
 HTML;
 
 		return $html;
+	}
+}
+
+class HTML_DL {
+	public $elements = [];
+
+	public function html() {
+		return '<dl>'.join('', array_map(function($element) {
+			$attributes = "";
+
+			if (isset($element['attributes'])) {
+				$attributes = join(" ", array_map(function($key, $value) {
+					return "{$key}='{$value}'";
+				}, array_keys($element['attributes']), $element['attributes']));
+			}
+
+			return <<<HTML
+				<dt $attributes>{$element['title']}</dt>
+				<dd>{$element['value']}</dd>
+HTML;
+		}, $this->elements)).'</dl>';
 	}
 }
 

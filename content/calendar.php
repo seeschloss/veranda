@@ -8,9 +8,24 @@
 <div id="calendar">
 <?php
 
-$floreal = new FlorealDate();
+if (isset($_REQUEST['type']) and $_REQUEST['type'] == 'republican') {
+  $calendar = new FlorealCalendar();
+} else {
+  $calendar = new GregorianCalendar();
+}
 
-$calendar = new FlorealCalendar($floreal->republican_year());
+$plant_notes = Plant_Note::select();
+foreach ($plant_notes as $plant_note) {
+  $date = strtotime("today midnight", $plant_note->timestamp);
+
+  if (!isset($calendar->events[$date])) {
+    $calendar->events[$date] = [];
+  }
+
+  $plant = new Plant();
+  $plant->load(['id' => $plant_note->plant_id]);
+  $calendar->events[$date][] = __("Note: %s « %s »", "<a href='/plant/{$plant->id}'>{$plant->name}</a>", $plant_note->note);
+}
 
 $waterings = Watering::select();
 

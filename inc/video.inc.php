@@ -16,6 +16,8 @@ class Video extends Record {
 	public $photos = [];
 	public $blur = false;
 
+	public $files = [];
+
 	private $_legend_file = "";
 
 	function set_filename($filename) {
@@ -30,7 +32,7 @@ class Video extends Record {
 
 	function path() {
 		if (empty($this->path)) {
-			$this->path = self::$directory.'/'.gmdate('Y-m-d', $this->start);
+			$this->path = self::$directory.'/'.gmdate('Y-m-d', $this->start).'-'.$this->start;
 
 			if ($this->quality) {
 				$this->path .= '-' . $this->quality;
@@ -46,8 +48,9 @@ class Video extends Record {
 		$legend_file = tempnam("/tmp", "veranda_legend"); unlink($legend_file); $legend_file .= '.webm';
 		$video_file = tempnam("/tmp", "veranda_legend"); unlink($video_file); $video_file .= '.webm';
 
-		$this->make_legend($legend_file);
 		$this->make_video($video_file);
+		$height = (int)`/usr/bin/ffprobe -v quiet -print_format flat -select_streams v:0 -show_entries stream=height '{$video_file}' | cut -d= -f2`;
+		$this->make_legend($legend_file, $height);
 
 		$this->stack_videos($legend_file, $video_file, $this->path());
 
@@ -69,7 +72,7 @@ class Video extends Record {
 		return file_exists($destination);
 	}
 
-	function make_legend($path) {
+	function make_legend($path, $height) {
 		if (empty($this->photos)) {
 			$this->photos = Photo::select(['timestamp BETWEEN '.(int)$this->start.' AND '.(int)$this->stop], 'timestamp ASC');
 		}
@@ -80,16 +83,14 @@ class Video extends Record {
 
 		$lines = [];
 		foreach ($this->photos as $photo) {
-			if ($this->quality == "hd") {
-				$legend_frame = imagecreatetruecolor(360, 1440);
-			} else {
-				$legend_frame = imagecreatetruecolor(360, 1440);
-			}
-
-			$legend_frame = imagecreatetruecolor(360, 1440);
+			$legend_frame = imagecreatetruecolor(360, 720);
 			$white = imagecolorallocate($legend_frame, 255, 255, 255);
-			//imagettftext($legend_frame, 10, 0, 0, 0, $white, "/usr/share/fonts/TTF/verdana.ttf", date("Y-m-d H:i:s", $photo->timestamp));
-			imagestring($legend_frame, 5, 0, 0, date("Y-m-d H:i:s", $photo->timestamp), $white);
+
+			$text_y = 20;
+			$bounds = imagettftext($legend_frame, 14, 0, 5, $text_y, $white, __DIR__."/../fonts/verdana.ttf", $photo->place()->name);
+
+			$text_y += ($bounds[1] - $bounds[7]) + 5;
+			imagettftext($legend_frame, 14, 0, 5, $text_y, $white, __DIR__."/../fonts/verdana.ttf", gmdate("Y-m-d H:i:s", $photo->timestamp));
 			
 			$temporary_file = tempnam("/tmp", "veranda_legend_frame"); unlink($temporary_file); $temporary_file .= '.png';
 			$temporary_files[] = $temporary_file;
@@ -98,11 +99,13 @@ class Video extends Record {
 			$lines[] = "file '{$temporary_file}'\n";
 		}
 
+		$vf = "-vf scale=-2:$height";
+
 		file_put_contents($playlist, implode("duration ".(1/$this->fps)."\n", $lines));
 
 		`/usr/bin/ffmpeg -y -safe 0 \
 			-f concat -i "{$playlist}" -vsync vfr \
-			-c:v vp9 -crf 30 -b:v 0 -threads 8 -pix_fmt yuv420p \
+			-c:v vp9 -crf 30 -b:v 0 {$vf} -threads 8 -pix_fmt yuv420p \
 			-r {$this->fps} \
 			"{$path}"`;
 
@@ -129,16 +132,24 @@ class Video extends Record {
 
 		$playlist = tempnam("/tmp", "veranda");
 
-		$lines = array_map(function($photo) {
-			return "file '{$photo->best_quality()}'\n";
-		}, $this->photos);
+		if ($this->files) {
+			$lines = array_map(function($file) {
+				return "file '{$file}'\n";
+			}, $this->files);
+		} else if ($this->photos) {
+			$lines = array_map(function($photo) {
+				return "file '{$photo->best_quality()}'\n";
+			}, $this->photos);
+		}
 
 		file_put_contents($playlist, implode("duration ".(1/$this->fps)."\n", $lines));
 
 		if ($this->quality == "hd") {
 			$vf = "";
+		} else if (!$this->quality) {
+			$vf = "-vf scale=1080:-2";
 		} else {
-			$vf = "-vf scale=1080:1440";
+			$vf = "-vf scale=".$this->quality;
 		}
 
 		if ($this->blur) {
@@ -182,6 +193,42 @@ class Video extends Record {
 		$this->id = $db->insert_id();
 
 		return $this->id;
+	}
+
+	static function grid_row_header_admin() {
+		return [
+			'place' => __('Place'),
+			'start' => __('Start'),
+			'stop' => __('Stop'),
+			'link' => __('Link'),
+		];
+	}
+
+	function grid_row_admin() {
+		return [
+			'place' => "<a href='{$GLOBALS['config']['base_path']}/admin/place/{$this->place_id}/videos'>{$this->place->name}</a>",
+			'start' => $this->start ? gmdate("r", $this->start) : "",
+			'stop' => gmdate("r", $this->stop),
+			'link' => "<a href='{$GLOBALS['config']['base_path']}/video/{$this->place_id}/{$this->id}'>/video/{$this->place_id}/{$this->id}</a>",
+		];
+	}
+
+	static function select_latest_by_place($conditions = []) {
+		$latest_videos = [];
+
+		foreach (Place::select($conditions) as $place) {
+			$videos = self::select(['place_id' => $place->id, 'start > 0'], 'stop DESC', 1);
+			if (count($videos)) {
+				$latest_videos[] = array_shift($videos);
+			}
+
+			$videos = self::select(['place_id' => $place->id, 'start' => 0], 'stop DESC', 1);
+			if (count($videos)) {
+				$latest_videos[] = array_shift($videos);
+			}
+		}
+
+		return $latest_videos;
 	}
 }
 

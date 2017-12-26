@@ -69,7 +69,9 @@ HTML;
 			<a href="{$GLOBALS['config']['base_path']}/admin/devices">{$GLOBALS['__']('Devices')}</a>
 			<input id="submenu-devices" type="checkbox" class="handle" /><label for="submenu-devices"></label><ul>{$devices_list}</ul>
 		</li>
+		<li><a href="{$GLOBALS['config']['base_path']}/admin/alerts">{$GLOBALS['__']('Alerts')}</a></li>
 		<li><a href="{$GLOBALS['config']['base_path']}/admin/photos">{$GLOBALS['__']('Photos')}</a></li>
+		<li><a href="{$GLOBALS['config']['base_path']}/admin/videos">{$GLOBALS['__']('Videos')}</a></li>
 		<li><a href="{$GLOBALS['config']['base_path']}/admin/dashboard">{$GLOBALS['__']('Dashboard')}</a></li>
 		<li class='admin-logout'><a href="https://logout@veranda.seos.fr/admin/logout">{$GLOBALS['__']('Logout')}</a></li>
 	</ul>

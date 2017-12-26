@@ -2,17 +2,164 @@
 
 require_once __DIR__.'/floreal.inc.php';
 
-class FlorealCalendar {
-	private $republican_year;
-
+class Calendar {
 	public $events = [];
 
-	function __construct($republican_year) {
-		$this->republican_year = $republican_year;
+	function html() {
+		return "";
+	}
+}
+
+class GregorianCalendar extends Calendar {
+	private $gregorian_year;
+
+	function __construct() {
+		$this->gregorian_year = gmdate('Y');
 	}
 
 	function html() {
-		$html = '<section>';
+		$html = '<section class="calendar gregorian">';
+
+		$html .= '<h1>'.$this->gregorian_year.'</h1>';
+
+		for ($month = 1; $month <= 12; $month++) {
+			$calendar_month = new GregorianCalendarMonth($this->gregorian_year, $month);
+			$calendar_month->events = $this->events;
+			$html .= $calendar_month->table();
+		}
+
+		$html .= '</section>';
+
+		return $html;
+	}
+}
+
+class GregorianCalendarMonth {
+	private $gregorian_year;
+	private $gregorian_month;
+
+	public $events = [];
+
+	function __construct($gregorian_year, $gregorian_month) {
+		$this->gregorian_year = $gregorian_year;
+		$this->gregorian_month = $gregorian_month;
+	}
+
+	function table() {
+		switch ($this->gregorian_month) {
+			case 1:
+			case 2:
+			case 3:
+				$class = 'printemps';
+				break;
+			case 4:
+			case 5:
+			case 6:
+				$class = 'ete';
+				break;
+			case 7:
+			case 8:
+			case 9:
+				$class = 'automne';
+				break;
+			case 10:
+			case 11:
+			case 12:
+				$class = 'hiver';
+				break;
+		}
+
+		$html = '<table class="month '.$class.'">';
+		$html .= $this->table_head();
+
+		$first_day = mktime(0, 0, 0, $this->gregorian_month, 1, $this->gregorian_year);
+		$day_of_week_of_first_day = gmdate('N', $first_day);
+		if ($day_of_week_of_first_day != 1) {
+			$offset = $day_of_week_of_first_day - 1;
+			$first_day = strtotime("-{$offset} days", $first_day);
+		}
+
+		$last_day = mktime(0, 0, 0, $this->gregorian_month + 1, 0, $this->gregorian_year);
+		$day_of_week_of_last_day = gmdate('N', $last_day);
+		if ($day_of_week_of_last_day != 7) {
+			$offset = $day_of_week_of_last_day - 1;
+			$last_day = strtotime("+{$offset} days", $last_day);
+		}
+
+		for ($day = $first_day; $day <= $last_day; $day = strtotime("+7 days", $day)) {
+			$html .= $this->table_row($day);
+		}
+		$html .= '</table>';
+
+		return $html;
+	}
+
+	function table_head() {
+		$html = '<thead>';
+		$html .= '<tr class="month-name">';
+		$html .= '<th colspan="7">';
+		$html .= $this->gregorian_month.'. '._a('gregorian-month-names', $this->gregorian_month);
+		$html .= '</th>';
+		$html .= '</tr>';
+
+		$html .= '<tr class="day-names">';
+
+		foreach (_a('gregorian-day-names') as $name) {
+			$html .= '<th title="'.$name.'">'.mb_strtoupper($name[0]).'</th>';
+		}
+		$html .= '</tr>';
+
+		$html .= '</thead>';
+
+		return $html;
+	}
+
+	function table_row($first_day_of_week) {
+		$html = '<tr>';
+		for ($day_of_week = 1; $day_of_week <= 7; $day_of_week++) {
+			$offset = $day_of_week - 1;
+			$day = strtotime("+{$offset} days", $first_day_of_week);
+
+			$day_events = "";
+
+			$classes = [];
+			if (gmdate('n', $day) != $this->gregorian_month) {
+				$classes[] = 'extra';
+			} else {
+				if (isset($this->events[$day])) {
+					$classes[] = "event";
+					$day_events = "<ul class='events'><li>".join("</li><li>", $this->events[$day])."</li></ul>";
+				}
+
+				if ($day == strtotime("today midnight")) {
+					$classes[] = "today";
+				}
+
+				if ($day_of_week == 6 or $day_of_week == 7) {
+					$classes[] = "weekend";
+				}
+			}
+
+			$html .= '<td class="'.join(' ', $classes).'">';
+			$html .= '<span class="day">'.gmdate("d", $day).'</span>';
+			$html .= $day_events;
+			$html .= '</td>';
+		}
+		$html .= '</tr>';
+
+		return $html;
+	}
+}
+
+class FlorealCalendar extends Calendar {
+	private $republican_year;
+
+	function __construct() {
+		$this->republican_year = (new FlorealDate())->republican_year();
+	}
+
+	function html() {
+		$html = '<section class="calendar republican">';
 
 		$html .= '<h1>An '.$this->republican_year.' &mdash; '._to_roman($this->republican_year).'</h1>';
 
@@ -143,7 +290,7 @@ class FlorealCalendarMonth {
 				$class .= " today";
 			}
 
-			$georgian_day = date('N', $timestamp);
+			$georgian_day = gmdate('N', $timestamp);
 			if ($georgian_day == 6 or $georgian_day == 7) {
 				$class .= " weekend";
 			}
@@ -156,7 +303,7 @@ class FlorealCalendarMonth {
 			}
 
 			$html .= '<td class="'.$class.'" title="'._mb_ucfirst($day_name).'">';
-			$html .= $republican_decade * 10 + $republican_decade_day;
+			$html .= '<span class="day">'.($republican_decade * 10 + $republican_decade_day).'</span>';
 			$html .= $day_events;
 			$html .= '</td>';
 		}
