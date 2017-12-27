@@ -89,6 +89,7 @@ $__['Are you sure you want to delete this place?'] = "Are you sure you want to d
 $__['Are you sure you want to delete this plant?'] = "Are you sure you want to delete this plant?";
 $__['Are you sure you want to delete this sensor?'] = "Are you sure you want to delete this sensor?";
 $__['Are you sure you want to remove this photo from the dashboard?'] = "Are you sure you want to remove this photo from the dashboard?";
+$__['Battery'] = "Battery";
 $__['Brightness'] = "Brightness";
 $__['Comment'] = "Comment";
 $__['Condition'] = "Condition";

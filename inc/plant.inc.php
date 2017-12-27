@@ -23,15 +23,15 @@ class Plant extends Record {
 	static function filter($filters) {
 		$fields = [];
 
-		if (isset($filters['place_id']) and $filters['place_id'] > 0) {
-			$fields['place_id'] = (int)$filters['place_id'];
+		if (isset($filters['place']) and $filters['place'] > 0) {
+			$fields['place_id'] = (int)$filters['place'];
 		}
 
-		if (isset($filters['name'])) {
+		if (isset($filters['plant_name'])) {
 			$db = new DB();
 
-			$fields[] = '(LOWER(name) LIKE '.$db->escape('%'.mb_strtolower($filters['name']).'%')
-			           . ' OR LOWER(latin_name) LIKE '.$db->escape('%'.mb_strtolower($filters['name']).'%').')';
+			$fields[] = '(LOWER(name) LIKE '.$db->escape('%'.mb_strtolower($filters['plant_name']).'%')
+			           . ' OR LOWER(latin_name) LIKE '.$db->escape('%'.mb_strtolower($filters['plant_name']).'%').')';
 		}
 
 		return self::select($fields);
@@ -41,19 +41,19 @@ class Plant extends Record {
 		$filters = [];
 
 		$filters['place_id'] = new HTML_Select("plant-place-id");
-		$filters['place_id']->name = "plant[place_id]";
+		$filters['place_id']->name = "place";
 		$filters['place_id']->options = [0 => ''] + array_map(function($place) { return $place->name; }, Place::select());
 		$filters['place_id']->label = __("Place");
-		if (isset($_REQUEST['plant']['place_id'])) {
-			$filters['place_id']->value = $_REQUEST['plant']['place_id'];
+		if (isset($_REQUEST['place'])) {
+			$filters['place_id']->value = $_REQUEST['place'];
 		}
 
 		$filters['name'] = new HTML_Input("plant-name");
 		$filters['name']->type = "text";
-		$filters['name']->name = "plant[name]";
+		$filters['name']->name = "plant_name";
 		$filters['name']->label = __("Name");
-		if (isset($_REQUEST['plant']['name'])) {
-			$filters['name']->value = $_REQUEST['plant']['name'];
+		if (isset($_REQUEST['plant_name'])) {
+			$filters['name']->value = $_REQUEST['plant_name'];
 		}
 
 		return $filters;

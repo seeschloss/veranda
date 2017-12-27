@@ -218,44 +218,35 @@ class Device extends Record {
 		$sensors = Sensor::select(['type' => 'temperature', 'place_id' => $this->place_id]);
 
 		$form->parameters['sensor'] = [
-			'label' => __("Sensor to use"),
+			'label' => __("Sensors"),
 			'value' => "",
 		];
 
-		$form->parameters['sensor-0'] = new HTML_Input("device-sensor-0");
-		$form->parameters['sensor-0']->type = "radio";
-		$form->parameters['sensor-0']->name = "device[sensor][id]";
-		$form->parameters['sensor-0']->value = 0;
-		$form->parameters['sensor-0']->label = __("None");
-		if (!isset($this->parameters['sensor']) or !$this->parameters['sensor']['id']) {
-			$form->parameters['sensor-0']->attributes['checked'] = "checked";
-		}
-
 		foreach ($sensors as $sensor) {
 			$form->parameters['sensor-'.$sensor->id] = new HTML_Input("device-sensor-".$sensor->id);
-			$form->parameters['sensor-'.$sensor->id]->type = "radio";
-			$form->parameters['sensor-'.$sensor->id]->name = "device[sensor][id]";
+			$form->parameters['sensor-'.$sensor->id]->type = "checkbox";
+			$form->parameters['sensor-'.$sensor->id]->name = "device[sensor][{$sensor->id}][id]";
 			$form->parameters['sensor-'.$sensor->id]->value = $sensor->id;
 			$form->parameters['sensor-'.$sensor->id]->label = "{$sensor->name} ({$sensor->value_text()})";
-			if (isset($this->parameters['sensor']) and $this->parameters['sensor']['id'] == $sensor->id) {
+			if (isset($this->parameters['sensors'][$sensor->id])) {
 				$form->parameters['sensor-'.$sensor->id]->attributes['checked'] = "checked";
 			}
 
 			$input_min = new HTML_Input("device-sensor-{$sensor->id}-min");
 			$input_min->type = "number";
 			$input_min->attributes['step'] = "0.1";
-			$input_min->name = "device[sensor][min]";
-			if (isset($this->parameters['sensor']) and $this->parameters['sensor']['id'] == $sensor->id) {
-				$input_min->value = $this->parameters['sensor']['min'];
+			$input_min->name = "device[sensor][{$sensor->id}][min]";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$input_min->value = $this->parameters['sensors'][$sensor->id]['min'];
 			}
 
 
 			$input_max = new HTML_Input("device-sensor-{$sensor->id}-min");
 			$input_max->type = "number";
 			$input_max->attributes['step'] = "0.1";
-			$input_max->name = "device[sensor][max]";
-			if (isset($this->parameters['sensor']) and $this->parameters['sensor']['id'] == $sensor->id) {
-				$input_max->value = $this->parameters['sensor']['max'];
+			$input_max->name = "device[sensor][{$sensor->id}][max]";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$input_max->value = $this->parameters['sensors'][$sensor->id]['max'];
 			}
 
 			$form->parameters['sensor-'.$sensor->id]->suffix = "min ".$input_min->element()."°C &mdash; max ".$input_max->element()."°C";
@@ -337,11 +328,17 @@ class Device extends Record {
 		$this->parameters = $this->parameters();
 
 		if (isset($data['sensor']) and is_array($data['sensor'])) {
-			$this->parameters['sensor'] = [
-				'id' => $data['sensor']['id'],
-				'min' => (float)$data['sensor']['min'],
-				'max' => (float)$data['sensor']['max'],
-			];
+			$this->parameters['sensors'] = [];
+
+			foreach ($data['sensor'] as $id => $sensor_data) {
+				if (isset($sensor_data['id']) and $sensor_data['id']) {
+					$this->parameters['sensors'][$id] = [
+						'id' => $id,
+						'min' => $sensor_data['min'] !== "" ? (float)$sensor_data['min'] : null,
+						'max' => $sensor_data['max'] !== "" ? (float)$sensor_data['max'] : null,
+					];
+				}
+			}
 		}
 	}
 
@@ -441,16 +438,18 @@ class Device extends Record {
 	function check_temperature() {
 		$this->parameters = $this->parameters();
 
-		if (isset($this->parameters['sensor']['id']) and $this->parameters['sensor']['id']) {
-			$sensor = new Sensor();
-			$sensor->load(['id' => $this->parameters['sensor']['id']]);
+		if (isset($this->parameters['sensors'])) {
+			foreach ($this->parameters['sensors'] as $id => $parameters) {
+				$sensor = new Sensor();
+				$sensor->load(['id' => $id]);
 
-			$value = $sensor->data_at(time());
+				$value = $sensor->data_at(time());
 
-			if ($value['value'] < $this->parameters['sensor']['min']) {
-				return "on";
-			} else if ($value['value'] > $this->parameters['sensor']['max']) {
-				return "off";
+				if (isset($parameters['min']) and $value['value'] < $parameters['min']) {
+					return "on";
+				} else if (isset($parameters['max']) and $value['value'] > $parameters['max']) {
+					return "off";
+				}
 			}
 		}
 
@@ -569,8 +568,12 @@ class Device extends Record {
 
 		$html = $this->chart();
 
-		if (!empty($this->parameters['sensor']['id']) and $sensor = new Sensor() and $sensor->load(['id' => $this->parameters['sensor']['id']])) {
-			$html .= $sensor->chart_line("1-day");
+		if (isset($this->parameters['sensors'])) {
+			foreach ($this->parameters['sensors'] as $sensor_id => $parameters) {
+				$sensor = new Sensor();
+				$sensor->load(['id' => $sensor_id]);
+				$html .= $sensor->chart_line("1-day");
+			}
 		}
 
 		return $html;
@@ -582,10 +585,6 @@ class Device extends Record {
 		$html = "";
 
 		$html = $this->chart();
-
-		if (!empty($this->parameters['sensor']['id']) and $sensor = new Sensor() and $sensor->load(['id' => $this->parameters['sensor']['id']])) {
-			$html .= $sensor->chart();
-		}
 
 		return $html;
 	}

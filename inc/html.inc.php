@@ -286,6 +286,7 @@ class HTML_Table {
 			$form = new HTML_Form();
 			$form->attributes = ['class' => 'filters'];
 			$form->fields = $this->filters;
+			$form->method = "GET";
 
 			$form->actions['search'] = new HTML_Button("filter-submit");
 			$form->actions['search']->name = "action";

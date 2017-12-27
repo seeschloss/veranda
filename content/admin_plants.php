@@ -1,6 +1,6 @@
 <?php // vim: ft=html:et:sw=2:sts=2:ts=2
 
-$plants = (isset($_POST['action']) and $_POST['action'] == 'filter') ? Plant::filter($_POST['plant']) : Plant::select();
+$plants = (isset($_REQUEST['action']) and $_REQUEST['action'] == 'filter') ? Plant::filter($_REQUEST) : Plant::select();
 
 $table = new Html_Table();
 $table->filters = Plant::filters();

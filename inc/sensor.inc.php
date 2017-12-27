@@ -13,12 +13,49 @@ class Sensor extends Record {
 	public $created = 0;
 	public $updated = 0;
 
+	static function filter($filters) {
+		$fields = [];
+
+		if (isset($filters['place']) and $filters['place'] > 0) {
+			$fields['place_id'] = (int)$filters['place'];
+		}
+
+		if (isset($filters['type']) and $filters['type']) {
+			$fields['type'] = $filters['type'];
+		}
+
+		return self::select($fields);
+	}
+
+	static function filters() {
+		$filters = [];
+
+		$filters['place_id'] = new HTML_Select("plant-place-id");
+		$filters['place_id']->name = "place";
+		$filters['place_id']->options = [0 => ''] + array_map(function($place) { return $place->name; }, Place::select());
+		$filters['place_id']->label = __("Place");
+		if (isset($_REQUEST['place'])) {
+			$filters['place_id']->value = $_REQUEST['place'];
+		}
+
+		$filters['type'] = new HTML_Select("sensor-type");
+		$filters['type']->name = "type";
+		$filters['type']->options = ['' => ''] + _a('sensor-types');
+		$filters['type']->label = __("Type");
+		if (isset($_REQUEST['type'])) {
+			$filters['type']->value = $_REQUEST['type'];
+		}
+
+		return $filters;
+	}
+
 	static function grid_row_header_admin() {
 		return [
 			'name' => __('Name'),
 			'place' => __('Place'),
 			'type' => __('Type'),
 			'value' => __('Value'),
+			'battery' => __('Battery'),
 			'updated' => __('Last update'),
 		];
 	}
@@ -61,6 +98,7 @@ class Sensor extends Record {
 				'place' => $this->place()->name,
 				'type' => _a('sensor-types', $this->type),
 				'value' => $this->value_text(),
+				'battery' => $this->battery_text(),
 				'updated' => [
 					'value' => $last_updated_string,
 					'attributes' => [
@@ -72,7 +110,7 @@ class Sensor extends Record {
 			return [
 				'name' => [
 					'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/sensor/{$this->id}'>".__('Add a new sensor')."</a>",
-					'attributes' => ['colspan' => 5],
+					'attributes' => ['colspan' => 6],
 				],
 			];
 		}
@@ -303,7 +341,7 @@ class Sensor extends Record {
 	function data_at($timestamp) {
 		$db = new DB();
 
-		$query = 'SELECT value, timestamp '.
+		$query = 'SELECT value, battery, timestamp '.
 		           'FROM sensors_data '.
 				  'WHERE timestamp <= '.(int)$timestamp.' '.
 				    'AND sensor_id = '.(int)$this->id.' '.
@@ -323,12 +361,23 @@ class Sensor extends Record {
 		           'FROM sensors_data '.
 				  'WHERE timestamp BETWEEN '.(int)$start.' AND '.(int)$stop.' '.
 				    'AND sensor_id = '.(int)$this->id.' '.
-				  'ORDER BY timestamp DESC';
+				  'ORDER BY timestamp ASC';
 
 		$data = [];
 		$result = $db->query($query);
+		$tare = 0;
 		while ($record = $result->fetch(PDO::FETCH_ASSOC)) {
-			$data[(int)$record['timestamp']] = (float)$record['value'];
+			$value = (float)$record['value'];
+
+			if ($this->type == "weight") {
+				if ($value < 3) {
+					$tare = $value;
+				}
+
+				$value -= $tare;
+			}
+
+			$data[(int)$record['timestamp']] = $value;
 		}
 
 		return $data;
@@ -372,6 +421,17 @@ class Sensor extends Record {
 			}
 			
 			$text .= $this->unit();
+		}
+
+		return $text;
+	}
+
+	function battery_text() {
+		$text = "";
+
+		$data = $this->data_at(time());
+		if ($data and $data['battery'] != "") {
+			$text = $data['battery']."%";
 		}
 
 		return $text;

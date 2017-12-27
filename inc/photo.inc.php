@@ -36,7 +36,7 @@ class Photo extends Record {
 			'place' => [
 				'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/photo/0'>".__('Add a new photo')."</a>",
 				'attributes' => [
-					'colspan' => 3,
+					'colspan' => 4,
 				],
 			],
 		];

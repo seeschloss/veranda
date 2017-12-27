@@ -56,7 +56,9 @@ abstract class Record {
 
 			switch ($field['native_type']) {
 				case 'integer':
-					$value = (int)$value;
+					if ($value !== null) {
+						$value = (int)$value;
+					}
 					break;
 				default:
 					break;

@@ -11,6 +11,7 @@ class Alert extends Record {
 	public $sensor_id = 0;
 	public $min = null;
 	public $max = null;
+	public $timeout = null;
 	public $created = 0;
 	public $updated = 0;
 
@@ -72,6 +73,10 @@ class Alert extends Record {
 
 			if ($this->max !== null) {
 				$conditions[] = "&gt; {$this->max}{$this->sensor->unit()}";
+			}
+
+			if ($this->timeout !== null) {
+				$conditions[] = ($this->timeout/60)." min";
 			}
 
 			return [
@@ -160,7 +165,7 @@ class Alert extends Record {
 		$form->fields['timeout'] = new HTML_Input("alert-timeout");
 		$form->fields['timeout']->name = "alert[timeout]";
 		$form->fields['timeout']->type = "number";
-		$form->fields['timeout']->value = $this->timeout;
+		$form->fields['timeout']->value = $this->timeout ? $this->timeout/60 : "";
 		$form->fields['timeout']->label = __("Timeout");
 		$form->fields['timeout']->suffix = "minutes";
 
@@ -235,6 +240,7 @@ class Alert extends Record {
 			'sensor_id' => (int)$this->sensor_id,
 			'min' => $this->min === null ? 'NULL' : (int)$this->min,
 			'max' => $this->max === null ? 'NULL' : (int)$this->max,
+			'timeout' => $this->timeout === null ? 'NULL' : (int)$this->timeout * 60,
 			'created' => time(),
 			'updated' => time(),
 		];
@@ -259,6 +265,7 @@ class Alert extends Record {
 			'sensor_id' => (int)$this->sensor_id,
 			'min' => $this->min === null ? 'NULL' : (int)$this->min,
 			'max' => $this->max === null ? 'NULL' : (int)$this->max,
+			'timeout' => $this->timeout === null ? 'NULL' : (int)$this->timeout * 60,
 			'updated' => time(),
 		];
 
@@ -289,7 +296,7 @@ class Alert extends Record {
 
 		$sensor_value = $this->sensor->value_at(time());
 
-		if ($this->timeout !== null and time() - $this->timeout < $this->sensor->last_updated()) {
+		if ($this->timeout !== null and (time() - $this->sensor->last_updated()) > $this->timeout) {
 			$status = "timeout";
 		} else if ($this->min !== null and $this->min > $sensor_value) {
 			$status = "low";
@@ -305,7 +312,13 @@ class Alert extends Record {
 			return "";
 		}
 
-		return "{$this->status()} ({$this->sensor->value_text()})";
+		$text = $this->status();
+		
+		if ($this->min !== null or $this->max !== null) {
+			$text .= " ({$this->sensor->value_text()})";
+		}
+
+		return $text;
 	}
 
 	function status_at($timestamp) {
@@ -369,11 +382,8 @@ class Alert extends Record {
 		$previous_status = $this->status_at(time());
 		$current_status = $this->status();
 
-		if ($current_status != "ok" and $current_status != $previous_status) {
-			$this->send();
-		}
-
 		if ($current_status != $previous_status) {
+			$this->send();
 			$this->update_status();
 		}
 	}
@@ -390,7 +400,6 @@ class Alert extends Record {
 	}
 
 	function send_mail() {
-		debug::dump($this->status());
 		if ($this->dest) {
 			$status = $this->status();
 			$value = $this->sensor->value_text();

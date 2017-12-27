@@ -360,7 +360,7 @@ var chart_line_display = function(id, title, raw_data) {
 			}
 
 			scale.line = d3.line()
-				.curve(d3.curveBasis)
+				.curve(d3.curveMonotoneX)
 				.x(d => x(d.date))
 				.y(d => scale.scale(d.value));
 

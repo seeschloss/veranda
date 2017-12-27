@@ -44,7 +44,8 @@ switch ($argv[1]) {
 			$video->set_filename($place->id."-total-legend-".time());
 			$video->photos = Photo::select_monotonous(1800, [
 					'place_id' => $place->id,
-					'period != "night" OR path_balanced != ""',
+					'period != "night"',
+					//'period != "night" OR path_balanced != ""',
 				], 'timestamp ASC');
 			$video->make_with_legend();
 			$video->insert();

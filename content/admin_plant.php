@@ -46,5 +46,5 @@ if (isset($_POST['action']) and $_POST['action'] == 'insert-note' and isset($_PO
 <div id="plant-photo">
   <?= $plant->photo() ?>
 </div>
-<script src="<?= $GLOBALS['config']['base_path'] ?>/admin.js"></script>
+<script src="<?= $GLOBALS['config']['base_path'] ?>/common.js"></script>
 <script src="<?= $GLOBALS['config']['base_path'] ?>/modal.js"></script>

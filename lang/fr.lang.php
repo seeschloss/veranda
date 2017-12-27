@@ -89,6 +89,7 @@ $__['Are you sure you want to delete this place?'] = "Voulez-vous vraiment suppr
 $__['Are you sure you want to delete this plant?'] = "Voulez-vous vraiment supprimer cette plante ?";
 $__['Are you sure you want to delete this sensor?'] = "Voulez-vous vraiment supprimer ce capteur ?";
 $__['Are you sure you want to remove this photo from the dashboard?'] = "Voulez-vous vraiment retirer cette photo du tableau de bord ?";
+$__['Battery'] = "Batterie";
 $__['Brightness'] = "Luminosité";
 $__['Comment'] = "Commentaire";
 $__['Condition'] = "Conditions";
