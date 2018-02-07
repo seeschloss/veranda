@@ -81,6 +81,23 @@ class Place extends Record {
 		}
 
 		$sensors = Sensor::select(['place_id' => $this->id]);
+
+		$chart = new Chart();
+		$chart->id = "place-{$this->id}-line";
+		$chart->title = $this->name;
+		$chart->size = "large";
+		$chart->period = "1-week";
+		$chart->type = "line";
+		$chart->parameters = [
+			'sensors' => array_map(function($sensor) {
+				return [
+					'id' => $sensor->id,
+					'color' => '#'.substr(md5($sensor->name), 0, 6),
+				];
+			}, array_filter($sensors, function($sensor) { return $sensor->type != 'rx-power'; })),
+		];
+		$html .= $chart->html();
+
 		foreach ($sensors as $sensor) {
 			$html .= $sensor->chart();
 		}
