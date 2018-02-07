@@ -13,7 +13,7 @@ class Sensor extends Record {
 	public $created = 0;
 	public $updated = 0;
 
-	static function filter($filters) {
+	static function filter($filters, $forced = []) {
 		$fields = [];
 
 		if (isset($filters['place']) and $filters['place'] > 0) {
@@ -23,6 +23,8 @@ class Sensor extends Record {
 		if (isset($filters['type']) and $filters['type']) {
 			$fields['type'] = $filters['type'];
 		}
+
+		$fields += $forced;
 
 		return self::select($fields);
 	}
