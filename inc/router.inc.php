@@ -707,13 +707,17 @@ HTML;
 		$sensor = new Sensor();
 		$sensor->load(['id' => $sensor_id]);
 
-		$this->theme->content_env = ['sensor' => $sensor];
-
-		if ($this->json) {
-			header('Content-Type: application/json;charset=UTF-8');
-			print $this->theme->bare();
+		if (!$sensor->place->public) {
+			http_response_code(404);
 		} else {
-			print $this->theme->html();
+			$this->theme->content_env = ['sensor' => $sensor];
+
+			if ($this->json) {
+				header('Content-Type: application/json;charset=UTF-8');
+				print $this->theme->bare();
+			} else {
+				print $this->theme->html();
+			}
 		}
 
 		return true;
@@ -727,13 +731,17 @@ HTML;
 		$device = new Device();
 		$device->load(['id' => $device_id]);
 
-		$this->theme->content_env = ['device' => $device];
-
-		if ($this->json) {
-			header('Content-Type: application/json;charset=UTF-8');
-			print $this->theme->bare();
+		if (!$device->place->public) {
+			http_response_code(404);
 		} else {
-			print $this->theme->html();
+			$this->theme->content_env = ['device' => $device];
+
+			if ($this->json) {
+				header('Content-Type: application/json;charset=UTF-8');
+				print $this->theme->bare();
+			} else {
+				print $this->theme->html();
+			}
 		}
 
 		return true;
