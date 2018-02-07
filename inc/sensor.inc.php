@@ -124,6 +124,7 @@ class Sensor extends Record {
 			'place' => __('Place'),
 			'type' => __('Type'),
 			'value' => __('Value'),
+			'battery' => __('Battery'),
 			'updated' => __('Last update'),
 		];
 	}
@@ -166,6 +167,7 @@ class Sensor extends Record {
 				'place' => $this->place()->name,
 				'type' => _a('sensor-types', $this->type),
 				'value' => $this->value_text(),
+				'battery' => $this->battery_text(),
 				'updated' => [
 					'value' => $last_updated_string,
 					'attributes' => [
@@ -177,7 +179,7 @@ class Sensor extends Record {
 			return [
 				'name' => [
 					'value' => "<a href='{$GLOBALS['config']['base_path']}/sensor/{$this->id}'>{$this->name}</a>",
-					'attributes' => ['colspan' => 5],
+					'attributes' => ['colspan' => 6],
 				],
 			];
 		}
