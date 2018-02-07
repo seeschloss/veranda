@@ -14,6 +14,7 @@ if (!isset($_FILES) or empty($_FILES)) {
     $photo->timestamp = $timestamp;
     $photo->period = $period;
     $photo->save(file_get_contents($file['tmp_name']));
+    unlink($file['tmp_name']);
 
     $response[] = [
       'photo_id' => $photo->id,
