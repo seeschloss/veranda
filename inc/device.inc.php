@@ -465,10 +465,10 @@ class Device extends Record {
 				$min = isset($parameters['min']) ? $parameters['min'] : null;
 				$max = isset($parameters['max']) ? $parameters['min'] : null;
 
-				if (isset($parameters['night-drop']) and $parameters['night-drop'] != 0) {
+				if (isset($this->parameters['night-drop']) and $this->parameters['night-drop'] != 0) {
 					if (Time::period(time()) == "night") {
-						$min -= $parameters['night-drop'];
-						$max -= $parameters['night-drop'];
+						$min -= $this->parameters['night-drop'];
+						$max -= $this->parameters['night-drop'];
 					}
 				}
 
