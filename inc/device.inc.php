@@ -215,6 +215,14 @@ class Device extends Record {
 		$form->parameters['power']->label = __("Power");
 		$form->parameters['power']->suffix = "W";
 
+		$form->parameters['night'] = new HTML_Input("device-night-drop");
+		$form->parameters['night']->type = "number";
+		$form->parameters['night']->attributes['step'] = "0.1";
+		$form->parameters['night']->name = "device[night-drop]";
+		$form->parameters['night']->value = $this->parameters['night-drop'];
+		$form->parameters['night']->label = __("Night temperature drop");
+		$form->parameters['night']->suffix = "°C";
+
 		$sensors = Sensor::select(['type' => 'temperature', 'place_id' => $this->place_id]);
 
 		$form->parameters['sensor'] = [
@@ -306,6 +314,7 @@ class Device extends Record {
 		switch ($this->type) {
 			case "heating":
 				$this->from_form_parameters_power($data);
+				$this->from_form_parameters_night($data);
 				$this->from_form_parameters_sensor($data);
 				break;
 			case "lighting":
@@ -321,6 +330,14 @@ class Device extends Record {
 
 		if (isset($data['power'])) {
 			$this->parameters['power'] = (float)$data['power'];
+		}
+	}
+
+	function from_form_parameters_night($data) {
+		$this->parameters = $this->parameters();
+
+		if (isset($data['night-drop'])) {
+			$this->parameters['night-drop'] = (float)$data['night-drop'];
 		}
 	}
 
@@ -445,9 +462,19 @@ class Device extends Record {
 
 				$value = $sensor->data_at(time());
 
-				if (isset($parameters['min']) and $value['value'] < $parameters['min']) {
+				$min = isset($parameters['min']) ? $parameters['min'] : null;
+				$max = isset($parameters['max']) ? $parameters['min'] : null;
+
+				if (isset($parameters['night-drop']) and $parameters['night-drop'] != 0) {
+					if (Time::period(time()) == "night") {
+						$min -= $parameters['night-drop'];
+						$max -= $parameters['night-drop'];
+					}
+				}
+
+				if (isset($min) and $value['value'] < $min) {
 					return "on";
-				} else if (isset($parameters['max']) and $value['value'] > $parameters['max']) {
+				} else if (isset($max) and $value['value'] > $max) {
 					return "off";
 				}
 			}
