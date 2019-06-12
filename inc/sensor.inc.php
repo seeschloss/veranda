@@ -445,7 +445,7 @@ class Sensor extends Record {
 		}
 
 		foreach ($grouped_data as $timestamp => $values) {
-			$grouped_data[$timestamp] = array_sum($values) / count($values);
+			$grouped_data[$timestamp] = Math::mean($values, 15);
 		}
 
 		return $grouped_data;
