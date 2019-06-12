@@ -174,7 +174,7 @@ HTML;
 		$footer = <<<HTML
 			<a href="mailto:see@seos.fr">see@seos.fr</a> &mdash;
 			<a href="https://ssz.fr">ssz.fr</a> &mdash;
-			<span class="location">Lille / 50.585, 3.4525</span>
+			<span class="location">{$GLOBALS['config']['location']['name']} / {$GLOBALS['config']['location']['latitude']}, {$GLOBALS['config']['location']['longitude']}</span>
 HTML;
 
 		return $footer;

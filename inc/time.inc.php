@@ -16,7 +16,7 @@ class Time {
 				SUNFUNCS_RET_TIMESTAMP,
 				$GLOBALS['config']['location']['latitude'],
 				$GLOBALS['config']['location']['longitude'],
-				85);
+				80);
 
 		if ($timestamp < $twilight_stop) {
 			return 'twilight';
@@ -26,7 +26,7 @@ class Time {
 				SUNFUNCS_RET_TIMESTAMP,
 				$GLOBALS['config']['location']['latitude'],
 				$GLOBALS['config']['location']['longitude'],
-				85);
+				80);
 
 		if ($timestamp < $twilight_start) {
 			return 'day';

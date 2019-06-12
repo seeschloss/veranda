@@ -2,7 +2,7 @@ var chart_min_max_display = function(id, title, raw_data) {
 	let svg = d3.select('#' + id);
 
 	var create_chart = function() {
-		let margin = {top: 20, right: 40, bottom: 50, left: 20},
+		let margin = {top: 20, right: 60, bottom: 50, left: 20},
 			width = +svg.node().getBoundingClientRect().width - margin.left - margin.right,
 			height = +svg.node().getBoundingClientRect().height - margin.top - margin.bottom,
 			g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -207,11 +207,15 @@ var chart_min_max_display = function(id, title, raw_data) {
 	})
 };
 
-var chart_line_display = function(id, title, raw_data) {
+var chart_line_display = function(id, title, raw_data, daylight) {
+	if (daylight === undefined) {
+		daylight = true;
+	}
+
 	let svg = d3.select('#' + id);
 
 	var create_chart = function() {
-		let margin = {top: 20, right: 40, bottom: 50, left: 30},
+		let margin = {top: 20, right: 60, bottom: 50, left: 30},
 			width = +svg.node().getBoundingClientRect().width - margin.left - margin.right,
 			height = +svg.node().getBoundingClientRect().height - margin.top - margin.bottom,
 			g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -257,6 +261,11 @@ var chart_line_display = function(id, title, raw_data) {
 			d3.min(data, sensor => d3.min(sensor.values, point => point.date)),
 			new Date()
 		]);
+		var bands = d3.timeDay.every(1).range(
+			d3.min(data, sensor => d3.min(sensor.values, point => point.date)) - 12*3600*1000,
+			+new Date() + 24*3600*1000
+		);
+		var bandWidth = width/bands.length;
 
 		let legend_offset_x = 0;
 		let legend_offset_y = 0;
@@ -314,7 +323,7 @@ var chart_line_display = function(id, title, raw_data) {
 					.ticks(d3.timeMinute.every(5))
 					.tickFormat("")
 				 );
-		} else {
+		} else if (bandWidth > 20) {
 			g.append("g")
 				.attr("class", "axis axis--x labels hours")
 				.attr("transform", "translate(0," + height + ")")
@@ -338,6 +347,16 @@ var chart_line_display = function(id, title, raw_data) {
 					.ticks(d3.timeHour.every(4))
 					.tickFormat("")
 				 );
+		} else {
+			g.append("g")
+				.attr("class", "axis axis--x labels hours")
+				.attr("transform", "translate(0," + height + ")")
+				.call(d3.axisBottom(x)
+					.tickFormat(d => locale.format("%d %b")(d))
+				)
+				.selectAll("text")
+				.attr("transform", "translate(-6, 0) rotate(-45)")
+				.style("text-anchor", "end");
 		}
 
 
@@ -394,24 +413,26 @@ var chart_line_display = function(id, title, raw_data) {
 			}
 		})
 
-		// interval.range() is [start; stop[ so we have to add an extra day at the end
-		var days = d3.timeDay.every(1).range(x.domain()[0], d3.timeDay.offset(x.domain()[1], 1));
-		let rect_daylight = g.selectAll("rect.daylight")
-			.data(days)
-			.enter().append("rect")
-				.attr("class", "daylight")
-				.attr("fill", "yellow")
-				.attr("opacity", "0.3")
-				.attr("x", d => {
-					let sun = SunCalc.getTimes(d, 50.6278, 3.0583);
+		if (daylight) {
+			// interval.range() is [start; stop[ so we have to add an extra day at the end
+			var days = d3.timeDay.every(1).range(x.domain()[0], d3.timeDay.offset(x.domain()[1], 1));
+			let rect_daylight = g.selectAll("rect.daylight")
+				.data(days)
+				.enter().append("rect")
+					.attr("class", "daylight")
+					.attr("fill", "yellow")
+					.attr("opacity", "0.3")
+					.attr("x", d => {
+						let sun = SunCalc.getTimes(d, 50.6278, 3.0583);
 
-					d.x = Math.min(Math.max(0, x(sun.sunrise)), width);
-					d.width = Math.min(Math.max(0, x(sun.sunset) - d.x), width - d.x);
-					return d.x;
-					})
-				.attr("y", margin.top)
-				.attr("width", d => d.width)
-				.attr("height", height - margin.top - 1)
+						d.x = Math.min(Math.max(0, x(sun.sunrise)), width);
+						d.width = Math.min(Math.max(0, x(sun.sunset) - d.x), width - d.x);
+						return d.x;
+						})
+					.attr("y", margin.top)
+					.attr("width", d => d.width)
+					.attr("height", height - margin.top - 1)
+		}
 
 		data.forEach((sensor, i) => {
 			let path = g.selectAll("line.sensor-" + sensor.id)

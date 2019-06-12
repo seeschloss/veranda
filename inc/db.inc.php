@@ -70,6 +70,7 @@ class DB {
 				place_id INTEGER,
 				value REAL,
 				battery REAL,
+				raw REAL,
 				timestamp INTEGER
 			);',
 			'CREATE TABLE charts (

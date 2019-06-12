@@ -182,6 +182,9 @@ class Device extends Record {
 			case "lighting":
 				$form = $this->form_lighting($form);
 				break;
+			case "ventilation":
+				$form = $this->form_ventilation($form);
+				break;
 			default:
 				break;
 		}
@@ -286,6 +289,49 @@ class Device extends Record {
 		return $form;
 	}
 
+	function form_ventilation($form) {
+		$this->parameters = $this->parameters();
+
+		$sensors = Sensor::select(['type' => 'humidity', 'place_id' => $this->place_id]);
+
+		$form->parameters['sensor'] = [
+			'label' => __("Sensors"),
+			'value' => "",
+		];
+
+		foreach ($sensors as $sensor) {
+			$form->parameters['sensor-'.$sensor->id] = new HTML_Input("device-sensor-".$sensor->id);
+			$form->parameters['sensor-'.$sensor->id]->type = "checkbox";
+			$form->parameters['sensor-'.$sensor->id]->name = "device[sensor][{$sensor->id}][id]";
+			$form->parameters['sensor-'.$sensor->id]->value = $sensor->id;
+			$form->parameters['sensor-'.$sensor->id]->label = "{$sensor->name} ({$sensor->value_text()})";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$form->parameters['sensor-'.$sensor->id]->attributes['checked'] = "checked";
+			}
+
+			$input_min = new HTML_Input("device-sensor-{$sensor->id}-min");
+			$input_min->type = "number";
+			$input_min->attributes['step'] = "0.1";
+			$input_min->name = "device[sensor][{$sensor->id}][min]";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$input_min->value = $this->parameters['sensors'][$sensor->id]['min'];
+			}
+
+
+			$input_max = new HTML_Input("device-sensor-{$sensor->id}-min");
+			$input_max->type = "number";
+			$input_max->attributes['step'] = "0.1";
+			$input_max->name = "device[sensor][{$sensor->id}][max]";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$input_max->value = $this->parameters['sensors'][$sensor->id]['max'];
+			}
+
+			$form->parameters['sensor-'.$sensor->id]->suffix = "min ".$input_min->element()."% &mdash; max ".$input_max->element()."%";
+		}
+
+		return $form;
+	}
+
 	function from_form($data) {
 		if (isset($data['id'])) {
 			$this->id = (int)$data['id'];
@@ -319,6 +365,9 @@ class Device extends Record {
 				break;
 			case "lighting":
 				$this->from_form_parameters_lighting($data);
+				break;
+			case "ventilation":
+				$this->from_form_parameters_sensor($data);
 				break;
 			default:
 				break;
@@ -447,6 +496,8 @@ class Device extends Record {
 				return $this->check_temperature();
 			case "lighting":
 				return $this->check_period();
+			case "ventilation":
+				return $this->check_humidity();
 			default:
 				return "nop";
 		}
@@ -499,6 +550,30 @@ class Device extends Record {
 			} else {
 				if ($state_now != 'off') {
 					return 'off';
+				}
+			}
+		}
+
+		return "nop";
+	}
+
+	function check_humidity() {
+		$this->parameters = $this->parameters();
+
+		if (isset($this->parameters['sensors'])) {
+			foreach ($this->parameters['sensors'] as $id => $parameters) {
+				$sensor = new Sensor();
+				$sensor->load(['id' => $id]);
+
+				$value = $sensor->data_at(time());
+
+				$min = isset($parameters['min']) ? $parameters['min'] : null;
+				$max = isset($parameters['max']) ? $parameters['min'] : null;
+
+				if (isset($min) and $value['value'] < $min) {
+					return "off";
+				} else if (isset($max) and $value['value'] > $max) {
+					return "on";
 				}
 			}
 		}
@@ -616,6 +691,24 @@ class Device extends Record {
 		return $html;
 	}
 
+	function details_ventilation() {
+		$this->parameters = $this->parameters();
+
+		$html = "";
+
+		$html = $this->chart();
+
+		if (isset($this->parameters['sensors'])) {
+			foreach ($this->parameters['sensors'] as $sensor_id => $parameters) {
+				$sensor = new Sensor();
+				$sensor->load(['id' => $sensor_id]);
+				$html .= $sensor->chart_line("1-day");
+			}
+		}
+
+		return $html;
+	}
+
 	function details() {
 		$html = "";
 
@@ -625,6 +718,9 @@ class Device extends Record {
 				break;
 			case "lighting":
 				$html .= $this->details_lighting();
+				break;
+			case "ventilation":
+				$html .= $this->details_ventilation();
 				break;
 		}
 

@@ -93,6 +93,10 @@ class Chart extends Record {
 		return $this->form_add_parameters_sensors($form);
 	}
 
+	function form_daily($form) {
+		return $this->form_add_parameters_sensors($form);
+	}
+
 	function form_line($form) {
 		return $this->form_add_parameters_sensors($form);
 	}
@@ -134,6 +138,9 @@ class Chart extends Record {
 			case "min-max":
 				$form = $this->form_min_max($form);
 				break;
+			case "daily":
+				$form = $this->form_daily($form);
+				break;
 			case "line":
 				$form = $this->form_line($form);
 				break;
@@ -173,6 +180,9 @@ class Chart extends Record {
 			case "min-max":
 				$this->from_form_min_max($data);
 				break;
+			case "daily":
+				$this->from_form_daily($data);
+				break;
 			case "line":
 				$this->from_form_line($data);
 				break;
@@ -182,6 +192,10 @@ class Chart extends Record {
 	}
 
 	function from_form_min_max($data) {
+		$this->from_form_parameters_sensors($data);
+	}
+
+	function from_form_daily($data) {
 		$this->from_form_parameters_sensors($data);
 	}
 
@@ -296,12 +310,15 @@ class Chart extends Record {
 			case '1-month':
 			case '1 month':
 				return strtotime('-31 days midnight');
+			case '2-months':
+			case '2 months':
+				return strtotime('-60 days midnight');
 			case 'all':
 				return 0;
 		}
 	}
 
-	function sensors_data() {
+	function sensors_data($interval = 0) {
 		$data = [];
 
 		$sensors = Sensor::select(['id' => array_map(function($sensor) { return $sensor['id']; }, $this->parameters['sensors'])]);
@@ -317,7 +334,7 @@ class Chart extends Record {
 				'unit' => $sensor->unit(),
 				'place' => $sensor->place()->name,
 				'color' => $this->parameters['sensors'][$sensor->id]['color'],
-				'values' => $sensor->data_between($start, $stop),
+				'values' => $sensor->data_between($start, $stop, $interval),
 			];
 		}
 
@@ -347,20 +364,32 @@ class Chart extends Record {
 	}
 
 	function html() {
+		$interval = 0;
+
+		switch ($this->type) {
+			case "daily":
+				$interval = 3600 * 24;
+				break;
+			default:
+				break;
+		}
+
 		$old_serialize_precision = ini_get('serialize_precision');
 		ini_set('serialize_precision', 8);
 		if (isset($this->parameters['sensors'])) {
-			$data_json = json_encode($this->sensors_data());
+			$data_json = json_encode($this->sensors_data($interval));
 		} else {
 			$data_json = json_encode($this->devices_data());
 		}
 		ini_set('serialize_precision', $old_serialize_precision);
-
 		$html = "";
 
 		switch ($this->type) {
 			case "min-max":
 				$html .= $this->html_min_max($data_json);
+				break;
+			case "daily":
+				$html .= $this->html_daily($data_json);
 				break;
 			case "line":
 				$html .= $this->html_line($data_json);
@@ -389,6 +418,29 @@ class Chart extends Record {
     <svg id='chart-{$this->id}' class="dashboard-element chart size-{$this->size}"></svg>
 	<script>
 		chart_min_max_display('chart-{$this->id}', '{$this->title}', {$data_json});
+	</script>
+HTML;
+
+		return $html;
+	}
+
+	function html_daily($data_json) {
+		switch($this->size) {
+			case 'small':
+				$height = 350;
+				break;
+			case 'medium':
+				$height = 450;
+				break;
+			case 'large':
+				$height = 600;
+				break;
+		}
+
+		$html = <<<HTML
+    <svg id='chart-{$this->id}' class="dashboard-element chart size-{$this->size}"></svg>
+	<script>
+		chart_line_display('chart-{$this->id}', '{$this->title}', {$data_json}, false);
 	</script>
 HTML;
 

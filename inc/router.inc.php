@@ -580,9 +580,52 @@ HTML;
 		$video->load(['id' => $video_id]);
 
 		if ($video->place_id == $place_id) {
-			header("Content-Type: video/webm");
-			header("Content-Length: ".filesize($video->path));
-			readfile($video->path);
+			if (isset($_SERVER['HTTP_RANGE'])) {
+				if (!preg_match('/bytes=(\d+)-(\d+)?/', $_SERVER['HTTP_RANGE'], $matches)) {
+					header('HTTP/1.1 416 Requested Range Not Satisfiable');
+					header('Content-Range: bytes */'.filesize($video->path));
+					return true;
+				}
+
+				$offset = intval($matches[1]);
+
+				if (isset($matches[2])) {
+					$end = $intval($matches[2]);
+
+					if ($offset > $end) {
+						header('HTTP/1.1 416 Requested Range Not Satisfiable');
+						header('Content-Range: bytes */' . filesize($video->path));
+						return true;
+					}
+
+					$length = $end - $offset;
+				}
+				else {
+					$length = filesize($video->path) - $offset;
+				}
+
+				header('HTTP/1.1 206 Partial Content');
+				header("Content-Type: video/webm");
+				header("Content-Length: ".$length);
+				header('Content-Range: bytes ' . $offset . '-' . ($offset + $length - 1) . '/' . filesize($video->path));
+
+				$f = fopen($video->path, 'r');
+				fseek($f, $offset);
+				
+				$pos = 0;
+				while ($pos < $length) {
+					$chunk = min($length - $pos, 1024*8);
+
+					echo fread($f, $chunk);
+					flush();
+					ob_flush();
+					$pos += $chunk;
+				}
+			} else {
+				header("Content-Type: video/webm");
+				header("Content-Length: ".filesize($video->path));
+				readfile($video->path);
+			}
 		} else {
 			http_response_code(404);
 		}

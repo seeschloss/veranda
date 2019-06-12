@@ -97,7 +97,26 @@ class Update {
 			self::to_24();
 		}
 
+		if (!$db->query('SELECT raw FROM sensors_data')) {
+			self::to_25();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_25() {
+		echo "25. Add raw to table `sensors_data`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE sensors_data ADD raw REAL');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+
+		$db->query('UPDATE sensors_data SET raw=value');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_24() {

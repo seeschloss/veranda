@@ -323,13 +323,53 @@ class Sensor extends Record {
 		return true;
 	}
 
+	function check_electricity_data($value, $timestamp) {
+		// value is in kWh
+
+		$new_data = (float)$value;
+		$previous_data = $this->data_at($timestamp - 1);
+
+		if ($previous_data == $new_data) {
+			return true;
+		} else if (!$previous_data) {
+			return true;
+		} else if (!empty($previous_data['value'])) {
+			$difference = $new_data - $previous_data['value'];
+			$span_h = ($timestamp - $previous_data['timestamp']) / 3600;
+
+			if ($difference < 0) {
+				// let's keep negative moves for now since anomalously high
+				// wrong values have to get corrected at one point
+
+				// no, let's not keep them after all
+				return false;
+			}
+
+			$kw = $difference/$span_h;
+
+			if ($kw > 9) {
+				// more than 9 kW over any period is probably wrong
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
 	function record_data($value, $timestamp, $battery = null) {
 		$db = new DB();
+
+		$raw = $value;
+
+		if ($this->type == "electricity" and !$this->check_electricity_data($value, $timestamp)) {
+			return 0;
+		}
 
 		$fields = [
 			'sensor_id' => (int)$this->id,
 			'place_id' => (int)$this->place_id,
 			'value' => (float)$value,
+			'raw' => (float)$raw,
 			'timestamp' => $timestamp,
 			'battery' => $battery === null ? 'NULL' : (float)$battery,
 		];
@@ -345,7 +385,7 @@ class Sensor extends Record {
 	function data_at($timestamp) {
 		$db = new DB();
 
-		$query = 'SELECT value, battery, timestamp '.
+		$query = 'SELECT value, raw, battery, timestamp '.
 		           'FROM sensors_data '.
 				  'WHERE timestamp <= '.(int)$timestamp.' '.
 				    'AND sensor_id = '.(int)$this->id.' '.
@@ -358,7 +398,7 @@ class Sensor extends Record {
 		}
 	}
 
-	function data_between($start, $stop) {
+	function data_between($start, $stop, $interval = 0) {
 		$db = new DB();
 
 		$query = 'SELECT value, timestamp '.
@@ -384,7 +424,31 @@ class Sensor extends Record {
 			$data[(int)$record['timestamp']] = $value;
 		}
 
+		if ($interval) {
+			$data = $this->group_data($data, $interval);
+		}
+
 		return $data;
+	}
+
+	function group_data($data, $interval) {
+		$grouped_data = [];
+
+		foreach ($data as $timestamp => $value) {
+			$grouped_timestamp = floor($timestamp/$interval) * $interval;
+
+			if (!isset($grouped_data[$grouped_timestamp])) {
+				$grouped_data[$grouped_timestamp] = [];
+			}
+
+			$grouped_data[$grouped_timestamp][] = $value;
+		}
+
+		foreach ($grouped_data as $timestamp => $values) {
+			$grouped_data[$timestamp] = array_sum($values) / count($values);
+		}
+
+		return $grouped_data;
 	}
 
 	function unit() {
@@ -399,6 +463,10 @@ class Sensor extends Record {
 				return 'dBm';
 			case 'weight':
 				return 'Kg';
+			case 'electricity':
+				return 'kWh';
+			case 'gas':
+				return 'ppm';
 			default:
 				return '';
 		}

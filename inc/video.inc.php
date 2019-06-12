@@ -144,12 +144,21 @@ class Video extends Record {
 
 		file_put_contents($playlist, implode("duration ".(1/$this->fps)."\n", $lines));
 
+		$vf = [
+			"deflicker=size=7:mode=median",
+		];
+
 		if ($this->quality == "hd") {
-			$vf = "";
 		} else if (!$this->quality) {
-			$vf = "-vf scale=1080:-2";
+			$vf[] = "scale=1080:-2";
 		} else {
-			$vf = "-vf scale=".$this->quality;
+			$vf[] = "scale=".$this->quality;
+		}
+
+		if (count($vf)) {
+			$vf = " -vf ".join(",", $vf);
+		} else {
+			$vf = "";
 		}
 
 		if ($this->blur) {
@@ -157,10 +166,12 @@ class Video extends Record {
 		} else {
 			$filter = "";
 		}
+		
+		$keyrate = $this->fps/2; // one keyframe every 0,5 second
 
 		`/usr/bin/ffmpeg -y -safe 0 \
 			-f concat -i "{$playlist}" -vsync vfr \
-			-c:v vp8 -crf 30 -b:v 0 {$vf} {$filter} -threads 8 -pix_fmt yuv420p \
+			-c:v vp8 -crf 30 -b:v 0 {$vf} {$filter} -threads 8 -pix_fmt yuv420p -g {$keyrate} \
 			-r {$this->fps} \
 			"{$path}"`;
 

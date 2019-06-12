@@ -39,12 +39,14 @@ $___['alert-types'] = [
 
 $___['chart-types'] = [
 	'min-max' => "Histogramme minimum-maximum",
+	'daily' => "Valeur quotidienne",
 	'line' => "Courbe",
 ];
 
 $___['chart-periods'] = [
 	'1 day' => "1 jour",
 	'1 month' => "1 mois",
+	'2 months' => "2 mois",
 	'1 week' => "1 semaine",
 	'2 weeks' => "2 semaines",
 	'all' => 'Toutes les données',
@@ -53,6 +55,7 @@ $___['chart-periods'] = [
 $___['device-types'] = [
 	'heating' => "Chauffage",
 	'lighting' => "Éclairage",
+	'ventilation' => "Ventilation",
 ];
 
 $___['sensor-types'] = [
@@ -61,6 +64,8 @@ $___['sensor-types'] = [
 	'brightness' => "Luminosité",
 	'rx-power' => "Signal",
 	'weight' => "Poids",
+	'electricity' => "Électricité",
+	'gas' => "Gaz",
 	'generic' => "Générique",
 ];
 
