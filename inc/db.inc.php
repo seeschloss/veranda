@@ -62,7 +62,8 @@ class DB {
 				comment TEXT,
 				parameters TEXT,
 				updated INTEGER,
-				created INTEGER
+				created INTEGER,
+				archived INTEGER
 			);',
 			'CREATE TABLE sensors_data (
 				id INTEGER PRIMARY KEY,

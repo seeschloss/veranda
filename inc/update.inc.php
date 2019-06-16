@@ -101,7 +101,26 @@ class Update {
 			self::to_25();
 		}
 
+		if (!$db->query('SELECT archived FROM sensors')) {
+			self::to_26();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_26() {
+		echo "26. Add archived to table `sensors`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE sensors ADD archived INTEGER');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+
+		$db->query('UPDATE sensors SET archived=0');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_25() {

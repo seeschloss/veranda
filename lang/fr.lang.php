@@ -87,6 +87,7 @@ $__['Add a new plant'] = "Ajouter une nouvelle plante";
 $__['Add a new sensor'] = "Ajouter un nouveau capteur";
 $__['Alert on sensor "%s": %s'] = "Alerte sur le capteur \"%s\" : %s";
 $__['Alerts'] = "Alertes";
+$__['Archived'] = "Archivé";
 $__['Are you sure you want to delete this alert?'] = "Voulez-vous vraiment supprimer cette alerte ?";
 $__['Are you sure you want to delete this chart?'] = "Voulez-vous vraiment supprimer ce graphique ?";
 $__['Are you sure you want to delete this device?'] = "Voulez-vous vraiment supprimer cet appareil ?";

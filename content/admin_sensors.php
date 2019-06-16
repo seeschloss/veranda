@@ -1,6 +1,6 @@
 <?php // vim: ft=html:et:sw=2:sts=2:ts=2
 
-$sensors = (isset($_REQUEST['action']) and $_REQUEST['action'] == 'filter') ? Sensor::filter($_REQUEST) : Sensor::select();
+$sensors = (isset($_REQUEST['action']) and $_REQUEST['action'] == 'filter') ? Sensor::filter($_REQUEST) : Sensor::select(['sensors.archived' => 0]);
 
 $table = new Html_Table();
 $table->filters = Sensor::filters();

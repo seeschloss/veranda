@@ -43,7 +43,7 @@ HTML;
 			return <<<HTML
 				<li><a href="{$GLOBALS['config']['base_path']}/admin/sensor/{$sensor->id}">{$sensor->name}</a></li>
 HTML;
-		}, Sensor::select([], 'name')));
+		}, Sensor::select(['sensors.archived' => 0], 'name')));
 
 		$devices_list = implode("", array_map(function($device) {
 			return <<<HTML
@@ -114,7 +114,7 @@ HTML;
 HTML;
 		}
 
-		if ($sensors = Sensor::select(['places.public' => 1], 'name')) {
+		if ($sensors = Sensor::select(['places.public' => 1, 'sensors.archived' => 0], 'name')) {
 			$sensors_list = implode("", array_map(function($sensor) {
 				return <<<HTML
 					<li><a href="{$GLOBALS['config']['base_path']}/sensor/{$sensor->id}">{$sensor->name}</a></li>

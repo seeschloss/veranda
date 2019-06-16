@@ -12,6 +12,7 @@ class Sensor extends Record {
 	public $parameters = "";
 	public $created = 0;
 	public $updated = 0;
+	public $archived = 0;
 
 	static function filter($filters, $forced = []) {
 		$fields = [];
@@ -22,6 +23,12 @@ class Sensor extends Record {
 
 		if (isset($filters['type']) and $filters['type']) {
 			$fields['type'] = $filters['type'];
+		}
+
+		if (isset($filters['archived']) and $filters['archived']) {
+			$fields['archived'] = 1;
+		} else {
+			$fields['archived'] = 0;
 		}
 
 		$fields += $forced;
@@ -46,6 +53,13 @@ class Sensor extends Record {
 		$filters['type']->label = __("Type");
 		if (isset($_REQUEST['type'])) {
 			$filters['type']->value = $_REQUEST['type'];
+		}
+
+		$filters['archived'] = new HTML_Input_Checkbox("sensor-archived");
+		$filters['archived']->name = "archived";
+		$filters['archived']->label = __("Archived");
+		if (isset($_REQUEST['archived'])) {
+			$filters['archived']->value = $_REQUEST['archived'];
 		}
 
 		return $filters;
@@ -74,7 +88,7 @@ class Sensor extends Record {
 				$lag = $last_update->diff(new DateTime());
 
 				$last_updated_string = "";
-				if ($lag->m > 0) {
+				if ($lag->y > 0 or $lag->m > 0) {
 					$last_updated_string = $last_update->format("Y-m-d");
 					$last_updated_class = "inactive";
 				} else if ($lag->d > 0) {
@@ -223,6 +237,11 @@ class Sensor extends Record {
 		$form->fields['comment']->value = $this->comment;
 		$form->fields['comment']->label = __("Comment");
 
+		$form->fields['archived'] = new HTML_Input_Checkbox("sensor-archived");
+		$form->fields['archived']->name = "sensor[archived]";
+		$form->fields['archived']->value = $this->archived;
+		$form->fields['archived']->label = __("Archived");
+
 		$form->actions['save'] = new HTML_Button("sensor-save");
 		$form->actions['save']->name = "action";
 		$form->actions['save']->label = __("Save");
@@ -266,6 +285,12 @@ class Sensor extends Record {
 		if (isset($data['comment'])) {
 			$this->comment = $data['comment'];
 		}
+
+		if (isset($data['archived'])) {
+			$this->archived = $data['archived'];
+		} else {
+			$this->archived = 0;
+		}
 	}
 
 	function save() {
@@ -280,6 +305,7 @@ class Sensor extends Record {
 			'name' => $db->escape($this->name),
 			'type' => $db->escape($this->type),
 			'comment' => $db->escape($this->comment),
+			'archived' => (int)$this->archived,
 			'created' => time(),
 			'updated' => time(),
 		];
@@ -302,6 +328,7 @@ class Sensor extends Record {
 			'name' => $db->escape($this->name),
 			'type' => $db->escape($this->type),
 			'comment' => $db->escape($this->comment),
+			'archived' => (int)$this->archived,
 			'updated' => time(),
 		];
 
