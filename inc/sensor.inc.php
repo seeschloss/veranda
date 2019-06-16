@@ -323,7 +323,7 @@ class Sensor extends Record {
 		return true;
 	}
 
-	function check_electricity_data($value, $timestamp) {
+	function check_electricity_data_consistency($value, $timestamp) {
 		// value is in kWh
 
 		$new_data = (float)$value;
@@ -356,12 +356,54 @@ class Sensor extends Record {
 		return true;
 	}
 
+	function check_temperature_data_consistency($value, $timestamp) {
+		// the most frequent problem is getting a 0 when temperature is
+		// actually not exactly 0°C
+
+		if ($this->value != 0) {
+			return true;
+		}
+
+		$new_data = (float)$value;
+		$previous_data = $this->data_at($timestamp - 1);
+
+		if (!$previous_data) {
+			return true;
+		}
+
+		// if there have been more than 12 hours since the last value,
+		// we can't assume much
+		if ($timestamp - $previous_data['timestamp'] > 3600 * 12) {
+			return true;
+		}
+
+		// we will allow 0°C values only when the previous recorded
+		// values were between -4°C and +4°C, a range within which
+		// a spurious 0°C value doesn't matter that much anyway.
+		if ($previous_data['value'] < 4 or $previous_data['value'] > -4) {
+			return true;
+		}
+
+		return false;
+	}
+
+	function check_data_consistency($value, $timestamp) {
+		switch ($this->type) {
+			case 'electricy':
+				return $this->check_electricity_data_consistency($value, $timestamp);
+			case 'temperature':
+				return $this->check_temperature_data_consistency($value, $timestamp);
+			default:
+				return true;
+		}
+	}
+
 	function record_data($value, $timestamp, $battery = null) {
 		$db = new DB();
 
 		$raw = $value;
 
-		if ($this->type == "electricity" and !$this->check_electricity_data($value, $timestamp)) {
+		if (!$this->check_data_consistency($value, $timestamp)) {
 			return 0;
 		}
 
