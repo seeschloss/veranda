@@ -11,6 +11,7 @@ require_once dirname(__FILE__).'/lang.inc.php';
 require_once dirname(__FILE__).'/time.inc.php';
 require_once dirname(__FILE__).'/calendar.inc.php';
 require_once dirname(__FILE__).'/math.inc.php';
+require_once dirname(__FILE__).'/json.inc.php';
 
 require_once dirname(__FILE__).'/cron.inc.php';
 
