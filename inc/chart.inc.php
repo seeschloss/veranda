@@ -97,17 +97,27 @@ class Chart extends Record {
 		return $this->form_add_parameters_sensors($form);
 	}
 
+	function form_monthly($form) {
+		return $this->form_add_parameters_sensors($form);
+	}
+
 	function form_line($form) {
 		return $this->form_add_parameters_sensors($form);
 	}
 
 	function form_add_parameters_sensors($form) {
-		$sensors = Sensor::select();
+		$sensors = Sensor::select(['sensors.archived' => 0]);
 
 		$form->parameters['sensors'] = [
 			'label' => __("Sensors to display"),
 			'value' => "",
 		];
+
+		foreach ($this->parameters['sensors'] as $sensor_id => $sensor_params) {
+			if (!isset($sensors[$sensor_id])) {
+				$sensors[$sensor_id] = Sensor::load(['id' => $sensor_id]);
+			}
+		}
 
 		foreach ($sensors as $sensor) {
 			$form->parameters['sensor-'.$sensor->id] = new HTML_Input("chart-sensor-".$sensor->id);
@@ -140,6 +150,9 @@ class Chart extends Record {
 				break;
 			case "daily":
 				$form = $this->form_daily($form);
+				break;
+			case "monthly":
+				$form = $this->form_monthly($form);
 				break;
 			case "line":
 				$form = $this->form_line($form);
@@ -183,6 +196,9 @@ class Chart extends Record {
 			case "daily":
 				$this->from_form_daily($data);
 				break;
+			case "monthly":
+				$this->from_form_monthly($data);
+				break;
 			case "line":
 				$this->from_form_line($data);
 				break;
@@ -196,6 +212,10 @@ class Chart extends Record {
 	}
 
 	function from_form_daily($data) {
+		$this->from_form_parameters_sensors($data);
+	}
+
+	function from_form_monthly($data) {
 		$this->from_form_parameters_sensors($data);
 	}
 
@@ -341,6 +361,29 @@ class Chart extends Record {
 		return $data;
 	}
 
+	function sensors_data_monthly() {
+		$data = [];
+
+		$sensors = Sensor::select(['id' => array_map(function($sensor) { return $sensor['id']; }, $this->parameters['sensors'])]);
+
+		$start = $this->data_start();
+		$stop = time();
+
+		foreach ($sensors as $sensor) {
+			$data[$sensor->id] = [
+				'label' => $sensor->name,
+				'axis-label' => _a('sensor-types', $sensor->type),
+				'type' => $sensor->type,
+				'unit' => $sensor->unit(),
+				'place' => $sensor->place()->name,
+				'color' => $this->parameters['sensors'][$sensor->id]['color'],
+				'values' => $sensor->data_monthly_between($start, $stop),
+			];
+		}
+
+		return $data;
+	}
+
 	function devices_data() {
 		$data = [];
 
@@ -363,36 +406,41 @@ class Chart extends Record {
 		return $data;
 	}
 
-	function html() {
-		$interval = 0;
-
-		switch ($this->type) {
-			case "daily":
-				$interval = 3600 * 24;
-				break;
-			default:
-				break;
-		}
-
-		$old_serialize_precision = ini_get('serialize_precision');
-		ini_set('serialize_precision', 8);
+	function data($interval = 0) {
 		if (isset($this->parameters['sensors'])) {
-			$data_json = json_encode($this->sensors_data($interval));
+			return $this->sensors_data($interval);
 		} else {
-			$data_json = json_encode($this->devices_data());
+			return $this->devices_data();
 		}
-		ini_set('serialize_precision', $old_serialize_precision);
+	}
+
+	function data_monthly() {
+		if (isset($this->parameters['sensors'])) {
+			return $this->sensors_data_monthly();
+		} else {
+			return [];
+		}
+	}
+
+	function html() {
 		$html = "";
 
 		switch ($this->type) {
 			case "min-max":
-				$html .= $this->html_min_max($data_json);
+				$data = $this->data();
+				$html .= $this->html_min_max($data);
 				break;
 			case "daily":
-				$html .= $this->html_daily($data_json);
+				$data = $this->data(3600 * 24);
+				$html .= $this->html_daily($data);
+				break;
+			case "monthly":
+				$data = $this->data_monthly();
+				$html .= $this->html_monthly($data);
 				break;
 			case "line":
-				$html .= $this->html_line($data_json);
+				$data = $this->data();
+				$html .= $this->html_line($data);
 				break;
 			default:
 				break;
@@ -401,7 +449,9 @@ class Chart extends Record {
 		return $html;
 	}
 
-	function html_min_max($data_json) {
+	function html_min_max($data) {
+		$data_json = JSON::encode($data);
+
 		switch($this->size) {
 			case 'small':
 				$height = 350;
@@ -424,7 +474,9 @@ HTML;
 		return $html;
 	}
 
-	function html_daily($data_json) {
+	function html_daily($data) {
+		$data_json = JSON::encode($data);
+
 		switch($this->size) {
 			case 'small':
 				$height = 350;
@@ -447,7 +499,34 @@ HTML;
 		return $html;
 	}
 
-	function html_line($data_json) {
+	function html_monthly($data) {
+		$data_json = JSON::encode($data);
+
+		switch($this->size) {
+			case 'small':
+				$height = 350;
+				break;
+			case 'medium':
+				$height = 450;
+				break;
+			case 'large':
+				$height = 600;
+				break;
+		}
+
+		$html = <<<HTML
+    <svg id='chart-{$this->id}' class="dashboard-element chart size-{$this->size}"></svg>
+	<script>
+		chart_histogram_display('chart-{$this->id}', '{$this->title}', {$data_json}, false);
+	</script>
+HTML;
+
+		return $html;
+	}
+
+	function html_line($data) {
+		$data_json = JSON::encode($data);
+
 		switch($this->size) {
 			case 'small':
 				$height = 350;

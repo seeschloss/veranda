@@ -40,6 +40,7 @@ $___['alert-types'] = [
 $___['chart-types'] = [
 	'min-max' => "Minimum-maximum bar chart",
 	'daily' => "Daily value",
+	'monthly' => "Monthly total",
 	'line' => "Line chart",
 ];
 

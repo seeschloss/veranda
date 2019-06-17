@@ -242,6 +242,14 @@ class Sensor extends Record {
 		$form->fields['archived']->value = $this->archived;
 		$form->fields['archived']->label = __("Archived");
 
+		switch ($this->type) {
+			case "electricity":
+				$form = $this->form_electricity($form);
+				break;
+			default:
+				break;
+		}
+
 		$form->actions['save'] = new HTML_Button("sensor-save");
 		$form->actions['save']->name = "action";
 		$form->actions['save']->label = __("Save");
@@ -259,6 +267,24 @@ class Sensor extends Record {
 		$form->actions['delete']->confirmation = __("Are you sure you want to delete this sensor?");
 
 		return $form->html();
+	}
+
+	function form_electricity($form) {
+		$this->parameters = $this->parameters();
+
+		$form->parameters['price'] = [
+			'label' => __("Price"),
+			'value' => "",
+		];
+
+		$form->parameters['price-value'] = new HTML_Input("sensor-price");
+		$form->parameters['price-value']->type = "number";
+		$form->parameters['price-value']->attributes['step'] = "0.00001";
+		$form->parameters['price-value']->name = "sensor[price]";
+		$form->parameters['price-value']->value = $this->parameters['price'];
+		$form->parameters['price-value']->label = "€/kwH";
+
+		return $form;
 	}
 
 	function from_form($data) {
@@ -291,6 +317,21 @@ class Sensor extends Record {
 		} else {
 			$this->archived = 0;
 		}
+
+		switch ($this->type) {
+			case "electricity":
+				$this->from_form_parameters_electricity($data);
+			default:
+				break;
+		}
+	}
+
+	function from_form_parameters_electricity($data) {
+		$this->parameters = $this->parameters();
+
+		if (isset($data['price'])) {
+			$this->parameters['price'] = $data['price'];
+		}
 	}
 
 	function save() {
@@ -305,6 +346,7 @@ class Sensor extends Record {
 			'name' => $db->escape($this->name),
 			'type' => $db->escape($this->type),
 			'comment' => $db->escape($this->comment),
+			'parameters' => $db->escape(json_encode($this->parameters())),
 			'archived' => (int)$this->archived,
 			'created' => time(),
 			'updated' => time(),
@@ -328,6 +370,7 @@ class Sensor extends Record {
 			'name' => $db->escape($this->name),
 			'type' => $db->escape($this->type),
 			'comment' => $db->escape($this->comment),
+			'parameters' => $db->escape(json_encode($this->parameters())),
 			'archived' => (int)$this->archived,
 			'updated' => time(),
 		];
@@ -467,6 +510,22 @@ class Sensor extends Record {
 		}
 	}
 
+	function data_after($timestamp) {
+		$db = new DB();
+
+		$query = 'SELECT value, raw, battery, timestamp '.
+				   'FROM sensors_data '.
+				  'WHERE timestamp > '.(int)$timestamp.' '.
+					'AND sensor_id = '.(int)$this->id.' '.
+				  'ORDER BY timestamp ASC '.
+				  'LIMIT 1';
+
+		$result = $db->query($query);
+		while ($record = $result->fetch(PDO::FETCH_ASSOC)) {
+			return $record;
+		}
+	}
+
 	function data_between($start, $stop, $interval = 0) {
 		$db = new DB();
 
@@ -495,6 +554,37 @@ class Sensor extends Record {
 
 		if ($interval) {
 			$data = $this->group_data($data, $interval);
+		}
+
+		return $data;
+	}
+
+	function data_monthly_between($start, $stop) {
+		$data = [];
+
+		if ($start === 0) {
+			$first_data = $this->data_after(0);
+
+			if (!$first_data) {
+				return [];
+			}
+
+			$start = max($first_data['timestamp'], $start);
+		}
+
+		$start = strtotime("first day of this month", $start);
+		$stop = strtotime("last day of this month", $stop);
+
+		for ($day = $start; $day < $stop; $day = strtotime("first day of next month", $day)) {
+			$period_start = $day;
+			$period_stop = strtotime("first day of next month", $day);
+
+			$value_start = $this->interpolated_value_at($period_start);
+			$value_stop = $this->interpolated_value_at($period_stop);
+
+			$value = $value_stop - $value_start;
+
+			$data[$day] = $value;
 		}
 
 		return $data;
@@ -545,6 +635,21 @@ class Sensor extends Record {
 		$data = $this->data_at($timestamp);
 		if ($data) {
 			return $data['value'];
+		}
+
+		return null;
+	}
+
+	function interpolated_value_at($timestamp) {
+		$data_before = $this->data_at($timestamp - 1);
+		$data_after = $this->data_after($timestamp + 1);
+		if ($data_before and $data_after) {
+			$value = $data_before['value'] + ($timestamp - $data_before['timestamp']) * ($data_after['value'] - $data_before['value']) / ($data_after['timestamp'] - $data_before['timestamp']);
+			return $value;
+		} else if ($data_before) {
+			return $data_before['value'];
+		} else if ($data_after) {
+			return $data_after['value'];
 		}
 
 		return null;
@@ -627,5 +732,17 @@ class Sensor extends Record {
 		];
 
 		return $chart->html();
+	}
+
+	function parameters() {
+		if (is_array($this->parameters)) {
+			return $this->parameters;
+		} else if ($this->parameters and $parameters = json_decode($this->parameters, true) and is_array($parameters)) {
+			$this->parameters = $parameters;
+			return $this->parameters;
+		} else {
+			$this->parameters = [];
+			return $this->parameters;
+		}
 	}
 }
