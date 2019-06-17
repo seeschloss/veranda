@@ -47,6 +47,7 @@ var chart_min_max_display = function(id, title, raw_data) {
 
 				y_scales.set(sensor_data.type, {
 					type: sensor_data.type,
+					axislabel: sensor_data['axis-label'],
 					unit: sensor_data.unit
 				});
 
@@ -148,7 +149,7 @@ var chart_min_max_display = function(id, title, raw_data) {
 						.attr("y", 6)
 						.attr("dy", "0.71em")
 						.attr("fill", "#000")
-						.text(scale.type + " (" + scale.unit + ")");
+						.text(scale.axislabel + (scale.unit ? " (" + scale.unit + ")" : ""));
 
 				g.append("g")
 					.attr("class", "axis axis--y lines axis-" + scale.type)
@@ -164,7 +165,7 @@ var chart_min_max_display = function(id, title, raw_data) {
 						.attr("y", 6)
 						.attr("dy", "0.71em")
 						.attr("fill", "#000")
-						.text(scale.type + " (" + scale.unit + ")");
+						.text(scale.axislabel + (scale.unit ? " (" + scale.unit + ")" : ""));
 			}
 		})
 
