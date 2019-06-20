@@ -459,7 +459,7 @@ class Sensor extends Record {
 
 	function check_data_consistency($value, $timestamp) {
 		switch ($this->type) {
-			case 'electricy':
+			case 'electricity':
 				return $this->check_electricity_data_consistency($value, $timestamp);
 			case 'temperature':
 				return $this->check_temperature_data_consistency($value, $timestamp);
