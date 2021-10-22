@@ -189,7 +189,7 @@ class Dashboard_Photo extends Record {
         }
 		$plants_list .= "</ul>";
 
-		if ($this->place->public and $videos = Video::select(['place_id' => $this->place_id, "quality != 'hd'"], "start DESC, id DESC", 1) and count($videos)) {
+		if ($this->place()->public and $videos = Video::select(['place_id' => $this->place_id, "quality != 'hd'"], "start DESC, id DESC", 1) and count($videos)) {
 			$video = array_shift($videos);
 			$link = "<a href='{$GLOBALS['config']['base_path']}/video/{$video->place_id}/{$video->id}'><img src='{$GLOBALS['config']['base_path']}/photo/{$photo->place_id}/{$photo->id}' /></a>";
 		} else {

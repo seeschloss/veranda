@@ -120,22 +120,35 @@ class Chart extends Record {
 		}
 
 		foreach ($sensors as $sensor) {
-			$form->parameters['sensor-'.$sensor->id] = new HTML_Input("chart-sensor-".$sensor->id);
-			$form->parameters['sensor-'.$sensor->id]->type = "checkbox";
-			$form->parameters['sensor-'.$sensor->id]->name = "chart[sensors][{$sensor->id}][enabled]";
-			$form->parameters['sensor-'.$sensor->id]->value = 1;
-			$form->parameters['sensor-'.$sensor->id]->label = $sensor->name;
-			if (isset($this->parameters['sensors'][$sensor->id])) {
-				$form->parameters['sensor-'.$sensor->id]->attributes['checked'] = "checked";
+			foreach ($sensor->dimensions() as $dimension => $label) {
+				$sensor_dimension = new Sensor_Dimension();
+				$sensor_dimension->dimension = $dimension;
+				$sensor_dimension->load(['id' => $sensor->id]);
+
+				$form->parameters['sensor-'.$sensor->id.'-'.$dimension] = new HTML_Input("chart-sensor-{$sensor->id}-{$dimension}");
+				$form->parameters['sensor-'.$sensor->id.'-'.$dimension]->type = "checkbox";
+				$form->parameters['sensor-'.$sensor->id.'-'.$dimension]->name = "chart[sensors][{$sensor->id}][{$dimension}][enabled]";
+				$form->parameters['sensor-'.$sensor->id.'-'.$dimension]->value = 1;
+				$form->parameters['sensor-'.$sensor->id.'-'.$dimension]->label = $sensor_dimension->label();
+
+				$input_color = new HTML_Input_Color("chart-sensor-{$sensor->id}-{$dimension}-color");
+				$input_color->name = "chart[sensors][{$sensor->id}][$dimension][color]";
+				$input_color->value = $this->parameters['sensors'][$sensor->id][$dimension]['color'];
+
+				if (isset($this->parameters['sensors'][$sensor->id][$dimension])) {
+					$form->parameters['sensor-'.$sensor->id.'-'.$dimension]->attributes['checked'] = "checked";
+				} else if ($dimension == 'value' and isset($this->parameters['sensors'][$sensor->id])) {
+					$form->parameters['sensor-'.$sensor->id.'-'.$dimension]->attributes['checked'] = "checked";
+
+					$input_color = new HTML_Input_Color("chart-sensor-{$sensor->id}-{$dimension}-color");
+					$input_color->name = "chart[sensors][{$sensor->id}][$dimension][color]";
+					$input_color->value = $this->parameters['sensors'][$sensor->id]['color'];
+				}
+
+				$form->parameters['sensor-'.$sensor->id.'-'.$dimension]->suffix = $input_color->element();
+
+				$form->parameters['sensor-'.$sensor->id.'-'.$dimension]->suffix .= " ({$sensor->place()->name} · {$sensor->value_text()})";
 			}
-
-			$input_color = new HTML_Input_Color("chart-sensor-{$sensor->id}-color");
-			$input_color->name = "chart[sensors][{$sensor->id}][color]";
-			$input_color->value = $this->parameters['sensors'][$sensor->id]['color'];
-
-			$form->parameters['sensor-'.$sensor->id]->suffix = $input_color->element();
-
-			$form->parameters['sensor-'.$sensor->id]->suffix .= " ({$sensor->place()->name} · {$sensor->value_text()})";
 		}
 
 		return $form;
@@ -230,12 +243,14 @@ class Chart extends Record {
 			$this->parameters['sensors'] = [];
 
 			foreach ($data['sensors'] as $id => $sensor) {
-				if (isset($sensor['enabled']) and $sensor['enabled']) {
+				foreach ($sensor as $dimension => $parameters) {
+					if (isset($parameters['enabled']) and $parameters['enabled']) {
 
-					$this->parameters['sensors'][$id] = [
-						'id' => $id,
-						'color' => $sensor['color'],
-					];
+						$this->parameters['sensors'][$id][$dimension] = [
+							'id' => $id,
+							'color' => $parameters['color'],
+						];
+					}
 				}
 			}
 		}
@@ -318,6 +333,9 @@ class Chart extends Record {
 
 	function data_start() {
 		switch ($this->period) {
+			case '1-hour':
+			case '1 hour':
+				return strtotime('-1 hour');
 			case '1-day':
 			case '1 day':
 				return strtotime('today midnight');
@@ -346,16 +364,21 @@ class Chart extends Record {
 		$start = $this->data_start();
 		$stop = time();
 
-		foreach ($sensors as $sensor) {
-			$data[$sensor->id] = [
-				'label' => $sensor->name,
-				'axis-label' => _a('sensor-types', $sensor->type),
-				'type' => $sensor->type,
-				'unit' => $sensor->unit(),
-				'place' => $sensor->place()->name,
-				'color' => $this->parameters['sensors'][$sensor->id]['color'],
-				'values' => $sensor->data_between($start, $stop, $interval),
-			];
+		foreach ($this->parameters['sensors'] as $sensor_id => $dimensions) {
+			$sensor = new Sensor();
+			$sensor->load(['id' => $sensor_id]);
+
+			foreach ($dimensions as $dimension => $parameters) {
+				$data[$sensor->id.'-'.$dimension] = [
+					'label' => $sensor->name,
+					'axis-label' => _a('sensor-types', $sensor->type),
+					'type' => $sensor->type,
+					'unit' => $sensor->unit(),
+					'place' => $sensor->place()->name,
+					'color' => $parameters['color'],
+					'values' => $sensor->data_between($start, $stop, $interval),
+				];
+			}
 		}
 
 		return $data;
@@ -369,16 +392,22 @@ class Chart extends Record {
 		$start = $this->data_start();
 		$stop = time();
 
-		foreach ($sensors as $sensor) {
-			$data[$sensor->id] = [
-				'label' => $sensor->name,
-				'axis-label' => _a('sensor-types', $sensor->type),
-				'type' => $sensor->type,
-				'unit' => $sensor->unit(),
-				'place' => $sensor->place()->name,
-				'color' => $this->parameters['sensors'][$sensor->id]['color'],
-				'values' => $sensor->data_monthly_between($start, $stop),
-			];
+		foreach ($this->parameters['sensors'] as $sensor_id => $dimensions) {
+			foreach ($dimensions as $dimension => $parameters) {
+				$sensor = new Sensor_Dimension();
+				$sensor->dimension = $dimension;
+				$sensor->load(['id' => $sensor_id]);
+
+				$data[$sensor->id.'-'.$dimension] = [
+					'label' => $sensor->label(),
+					'axis-label' => $sensor->axis_label(),
+					'type' => $sensor->type.'-'.$dimension,
+					'unit' => $sensor->unit(),
+					'place' => $sensor->place()->name,
+					'color' => $parameters['color'],
+					'values' => $sensor->data_monthly_between($start, $stop),
+				];
+			}
 		}
 
 		return $data;
@@ -452,18 +481,6 @@ class Chart extends Record {
 	function html_min_max($data) {
 		$data_json = JSON::encode($data);
 
-		switch($this->size) {
-			case 'small':
-				$height = 350;
-				break;
-			case 'medium':
-				$height = 450;
-				break;
-			case 'large':
-				$height = 600;
-				break;
-		}
-
 		$html = <<<HTML
     <svg id='chart-{$this->id}' class="dashboard-element chart size-{$this->size}"></svg>
 	<script>
@@ -476,18 +493,6 @@ HTML;
 
 	function html_daily($data) {
 		$data_json = JSON::encode($data);
-
-		switch($this->size) {
-			case 'small':
-				$height = 350;
-				break;
-			case 'medium':
-				$height = 450;
-				break;
-			case 'large':
-				$height = 600;
-				break;
-		}
 
 		$html = <<<HTML
     <svg id='chart-{$this->id}' class="dashboard-element chart size-{$this->size}"></svg>
@@ -502,18 +507,6 @@ HTML;
 	function html_monthly($data) {
 		$data_json = JSON::encode($data);
 
-		switch($this->size) {
-			case 'small':
-				$height = 350;
-				break;
-			case 'medium':
-				$height = 450;
-				break;
-			case 'large':
-				$height = 600;
-				break;
-		}
-
 		$html = <<<HTML
     <svg id='chart-{$this->id}' class="dashboard-element chart size-{$this->size}"></svg>
 	<script>
@@ -526,18 +519,6 @@ HTML;
 
 	function html_line($data) {
 		$data_json = JSON::encode($data);
-
-		switch($this->size) {
-			case 'small':
-				$height = 350;
-				break;
-			case 'medium':
-				$height = 450;
-				break;
-			case 'large':
-				$height = 600;
-				break;
-		}
 
 		$html = <<<HTML
     <svg id='chart-{$this->id}' class="dashboard-element chart size-{$this->size}"></svg>

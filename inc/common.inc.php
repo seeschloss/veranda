@@ -24,6 +24,7 @@ require_once dirname(__FILE__).'/photo.inc.php';
 require_once dirname(__FILE__).'/video.inc.php';
 require_once dirname(__FILE__).'/place.inc.php';
 require_once dirname(__FILE__).'/sensor.inc.php';
+require_once dirname(__FILE__).'/sensor_dimension.inc.php';
 require_once dirname(__FILE__).'/device.inc.php';
 require_once dirname(__FILE__).'/plant_note.inc.php';
 require_once dirname(__FILE__).'/plant.inc.php';

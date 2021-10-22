@@ -91,8 +91,10 @@ class Place extends Record {
 		$chart->parameters = [
 			'sensors' => array_map(function($sensor) {
 				return [
-					'id' => $sensor->id,
-					'color' => '#'.substr(md5($sensor->name), 0, 6),
+					'value' => [
+						'id' => $sensor->id,
+						'color' => '#'.substr(md5($sensor->name), 0, 6),
+					],
 				];
 			}, array_filter($sensors, function($sensor) { return $sensor->type != 'rx-power'; })),
 		];

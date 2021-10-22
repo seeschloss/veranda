@@ -212,7 +212,7 @@ var chart_histogram_display = function(id, title, raw_data) {
 	let svg = d3.select('#' + id);
 
 	var create_chart = function() {
-		let margin = {top: 20, right: 60, bottom: 50, left: 20},
+		let margin = {top: 20, right: 60, bottom: 50, left: 40},
 			width = +svg.node().getBoundingClientRect().width - margin.left - margin.right,
 			height = +svg.node().getBoundingClientRect().height - margin.top - margin.bottom,
 			g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");

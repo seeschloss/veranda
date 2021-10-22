@@ -87,33 +87,8 @@ class Device extends Record {
 
 	function grid_row() {
 		if ($this->id) {
-			$last_updated_class = "";
-
-			if ($last_updated = $this->last_updated()) {
-				$seconds = time() - $last_updated;
-				$last_update = new DateTime();
-				$last_update->setTimestamp($last_updated);
-
-				$lag = $last_update->diff(new DateTime());
-
-				$last_updated_string = "";
-				if ($lag->d > 0) {
-					$last_updated_string = $lag->format("%dd, %hh, %im, %ss");
-					$last_updated_class = "alert";
-				} else if ($lag->h > 0) {
-					$last_updated_string = $lag->format("%hh, %im, %ss");
-					$last_updated_class = "alert";
-				} else if ($lag->i > 0) {
-					if ($lag->i > 20) {
-						$last_updated_class = "alert";
-					}
-					$last_updated_string = $lag->format("%im, %ss");
-				} else if ($lag->s > 0) {
-					$last_updated_string = $lag->format("%ss");
-				}
-			} else {
-				$last_updated_string = __("never");
-			}
+			$last_updated_string = Time::format_last_updated($this->last_updated());
+			$last_updated_class = (time() - $this->last_updated()) > 1200 ? "alert" : "";
 
 			return [
 				'name' => "<a href='{$GLOBALS['config']['base_path']}/device/{$this->id}'>{$this->name}</a>",
@@ -176,6 +151,9 @@ class Device extends Record {
 		$form->fields['comment']->label = __("Comment");
 
 		switch ($this->type) {
+			case "humidifier":
+				$form = $this->form_humidifier($form);
+				break;
 			case "heating":
 				$form = $this->form_heating($form);
 				break;
@@ -206,6 +184,49 @@ class Device extends Record {
 		$form->actions['delete']->confirmation = __("Are you sure you want to delete this device?");
 
 		return $form->html();
+	}
+
+	function form_humidifier($form) {
+		$this->parameters = $this->parameters();
+
+		$sensors = Sensor::select(['type' => 'humidity', 'place_id' => $this->place_id]);
+
+		$form->parameters['sensor'] = [
+			'label' => __("Sensors"),
+			'value' => "",
+		];
+
+		foreach ($sensors as $sensor) {
+			$form->parameters['sensor-'.$sensor->id] = new HTML_Input("device-sensor-".$sensor->id);
+			$form->parameters['sensor-'.$sensor->id]->type = "checkbox";
+			$form->parameters['sensor-'.$sensor->id]->name = "device[sensor][{$sensor->id}][id]";
+			$form->parameters['sensor-'.$sensor->id]->value = $sensor->id;
+			$form->parameters['sensor-'.$sensor->id]->label = "{$sensor->name} ({$sensor->value_text()})";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$form->parameters['sensor-'.$sensor->id]->attributes['checked'] = "checked";
+			}
+
+			$input_min = new HTML_Input("device-sensor-{$sensor->id}-min");
+			$input_min->type = "number";
+			$input_min->attributes['step'] = "1";
+			$input_min->name = "device[sensor][{$sensor->id}][min]";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$input_min->value = $this->parameters['sensors'][$sensor->id]['min'];
+			}
+
+
+			$input_max = new HTML_Input("device-sensor-{$sensor->id}-min");
+			$input_max->type = "number";
+			$input_max->attributes['step'] = "1";
+			$input_max->name = "device[sensor][{$sensor->id}][max]";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$input_max->value = $this->parameters['sensors'][$sensor->id]['max'];
+			}
+
+			$form->parameters['sensor-'.$sensor->id]->suffix = "min ".$input_min->element()."% &mdash; max ".$input_max->element()."%";
+		}
+
+		return $form;
 	}
 
 	function form_heating($form) {
@@ -358,6 +379,9 @@ class Device extends Record {
 		}
 
 		switch ($this->type) {
+			case "humidifier":
+				$this->from_form_parameters_sensor($data);
+				break;
 			case "heating":
 				$this->from_form_parameters_power($data);
 				$this->from_form_parameters_night($data);
@@ -492,12 +516,14 @@ class Device extends Record {
 
 	function action() {
 		switch ($this->type) {
+			case "humidifier":
+				return $this->check_humidity_inside_range();
 			case "heating":
 				return $this->check_temperature();
 			case "lighting":
 				return $this->check_period();
 			case "ventilation":
-				return $this->check_humidity();
+				return $this->check_humidity_outside_range();
 			default:
 				return "nop";
 		}
@@ -557,7 +583,7 @@ class Device extends Record {
 		return "nop";
 	}
 
-	function check_humidity() {
+	function check_humidity_outside_range() {
 		$this->parameters = $this->parameters();
 
 		if (isset($this->parameters['sensors'])) {
@@ -574,6 +600,30 @@ class Device extends Record {
 					return "off";
 				} else if (isset($max) and $value['value'] > $max) {
 					return "on";
+				}
+			}
+		}
+
+		return "nop";
+	}
+
+	function check_humidity_inside_range() {
+		$this->parameters = $this->parameters();
+
+		if (isset($this->parameters['sensors'])) {
+			foreach ($this->parameters['sensors'] as $id => $parameters) {
+				$sensor = new Sensor();
+				$sensor->load(['id' => $id]);
+
+				$value = $sensor->data_at(time());
+
+				$min = isset($parameters['min']) ? $parameters['min'] : null;
+				$max = isset($parameters['max']) ? $parameters['min'] : null;
+
+				if (isset($min) and $value['value'] < $min) {
+					return "on";
+				} else if (isset($max) and $value['value'] > $max) {
+					return "off";
 				}
 			}
 		}
@@ -663,6 +713,24 @@ class Device extends Record {
 		return $html;
 	}
 
+	function details_humidity() {
+		$this->parameters = $this->parameters();
+
+		$html = "";
+
+		$html = $this->chart();
+
+		if (isset($this->parameters['sensors'])) {
+			foreach ($this->parameters['sensors'] as $sensor_id => $parameters) {
+				$sensor = new Sensor();
+				$sensor->load(['id' => $sensor_id]);
+				$html .= $sensor->chart_line("1-day");
+			}
+		}
+
+		return $html;
+	}
+
 	function details_heating() {
 		$this->parameters = $this->parameters();
 
@@ -713,6 +781,9 @@ class Device extends Record {
 		$html = "";
 
 		switch ($this->type) {
+			case "humidifier":
+				$html .= $this->details_humidity();
+				break;
 			case "heating":
 				$html .= $this->details_heating();
 				break;

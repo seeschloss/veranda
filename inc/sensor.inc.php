@@ -393,6 +393,11 @@ class Sensor extends Record {
 		return true;
 	}
 
+	protected function load_from_result($main_table, $aliases, $db_record, $db_fields) {
+		parent::load_from_result($main_table, $aliases, $db_record, $db_fields);
+		$this->parameters = $this->parameters();
+	}
+
 	function check_electricity_data_consistency($value, $timestamp) {
 		// value is in kWh
 
@@ -427,12 +432,19 @@ class Sensor extends Record {
 	}
 
 	function check_temperature_data_consistency($value, $timestamp) {
+		// this is intended for monitoring the outside or indoor
+		// temperature, not an oven or a freezer
+		if ($value > 50 or $value < -50) {
+			return false;
+		}
+
 		// the most frequent problem is getting a 0 when temperature is
 		// actually not exactly 0°C
-
-		if ($this->value != 0) {
+		if ($value != 0) {
 			return true;
 		}
+
+		return true;
 
 		$new_data = (float)$value;
 		$previous_data = $this->data_at($timestamp - 1);
@@ -441,16 +453,16 @@ class Sensor extends Record {
 			return true;
 		}
 
-		// if there have been more than 12 hours since the last value,
+		// if there have been more than 3 hours since the last value,
 		// we can't assume much
-		if ($timestamp - $previous_data['timestamp'] > 3600 * 12) {
+		if ($timestamp - $previous_data['timestamp'] > 3600 * 3) {
 			return true;
 		}
 
 		// we will allow 0°C values only when the previous recorded
 		// values were between -4°C and +4°C, a range within which
 		// a spurious 0°C value doesn't matter that much anyway.
-		if ($previous_data['value'] < 4 or $previous_data['value'] > -4) {
+		if ($previous_data['value'] < 7 or $previous_data['value'] > -4) {
 			return true;
 		}
 
@@ -631,6 +643,14 @@ class Sensor extends Record {
 		}
 	}
 
+	function label() {
+		return $this->name;
+	}
+
+	function axis_label() {
+		return  _a('sensor-types', $sensor->type);
+	}
+
 	function value_at($timestamp) {
 		$data = $this->data_at($timestamp);
 		if ($data) {
@@ -706,8 +726,10 @@ class Sensor extends Record {
 		$chart->parameters = [
 			'sensors' => [
 				$this->id => [
-					'id' => $this->id,
-					'color' => '#2F2F2F',
+					'value' => [
+						'id' => $this->id,
+						'color' => '#2F2F2F',
+					],
 				],
 			]
 		];
@@ -725,8 +747,10 @@ class Sensor extends Record {
 		$chart->parameters = [
 			'sensors' => [
 				$this->id => [
-					'id' => $this->id,
-					'color' => '#2F2F2F',
+					'value' => [
+						'id' => $this->id,
+						'color' => '#2F2F2F',
+					],
 				],
 			]
 		];
@@ -743,6 +767,20 @@ class Sensor extends Record {
 		} else {
 			$this->parameters = [];
 			return $this->parameters;
+		}
+	}
+
+	function dimensions() {
+		switch ($this->type) {
+			case 'electricity':
+				return [
+					'value' => __("value"),
+					'cost' => ("cost"),
+				];
+			default:
+				return [
+					'value' => __("value"),
+				];
 		}
 	}
 }

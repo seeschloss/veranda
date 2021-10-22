@@ -45,6 +45,7 @@ $___['chart-types'] = [
 ];
 
 $___['chart-periods'] = [
+	'1 hour' => "1 heure",
 	'1 day' => "1 jour",
 	'1 month' => "1 mois",
 	'2 months' => "2 mois",
@@ -57,6 +58,7 @@ $___['device-types'] = [
 	'heating' => "Chauffage",
 	'lighting' => "Éclairage",
 	'ventilation' => "Ventilation",
+	'humidifier' => "Humidificateur",
 ];
 
 $___['sensor-types'] = [
@@ -68,6 +70,10 @@ $___['sensor-types'] = [
 	'electricity' => "Électricité",
 	'gas' => "Gaz",
 	'generic' => "Générique",
+];
+
+$___['sensor-dimensions'] = [
+	'cost' => "coût",
 ];
 
 $___['place-types'] = [
@@ -124,6 +130,8 @@ $__['Logout'] = "Déconnexion";
 $__['Maximum'] = "Maximum";
 $__['Medium'] = "Moyen";
 $__['Minimum'] = "Minimum";
+$__['month'] = "mois";
+$__['months'] = "mois";
 $__['Name'] = "Nom";
 $__['never'] = "jamais";
 $__['None'] = "Aucun";
@@ -162,3 +170,5 @@ $__['Veranda alert: %s - %s - %s'] = "Alerte véranda : %s - %s - %s";
 $__['Watered'] = "Arrosée";
 $__['Watered: %s'] = "Arrosage : %s";
 $__['Place'] = "Lieu";
+$__['year'] = "an";
+$__['years'] = "ans";
