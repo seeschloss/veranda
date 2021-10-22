@@ -73,35 +73,17 @@ class Plant extends Record {
 		if ($this->id) {
 			$could_be_watered = true;
 
+			$last_watered_string = Time::format_last_updated($this->last_watered());
 			$last_watered_class = "";
-			if ($last_watered = $this->last_watered()) {
-				$seconds = time() - $last_watered;
-				$last_update = new DateTime();
-				$last_update->setTimestamp($last_watered);
-
-				$lag = $last_update->diff(new DateTime());
-
-				$last_watered_string = "";
-				if ($lag->d > 0) {
-					$last_watered_string = __('%s ago', $lag->format("%dd, %hh"));
-
-					if ($lag->d >= 10) {
-						$last_watered_class = "alert";
-					}
-				} else if ($lag->h > 0) {
-					$last_watered_string = __('%s ago', $lag->format("%hh"));
-
-					if ($lag->h < 12) {
-						$could_be_watered = false;
-					}
-				} else {
-					$last_watered_string .= "now";
-					$could_be_watered = false;
-				}
-			} else {
-				$last_watered_string = __("never");
+			if (time() - $this->last_watered() > 3600 * 24 * 10) {
+				$last_watered_class = "alert";
 			}
-
+			if (time() - $this->last_watered() > 3600 * 24 * 60) {
+				$last_watered_class = "inactive";
+			}
+			if (time() - $this->last_watered() < 3600 * 24) {
+				$could_be_watered = false;
+			}
 
 			$checkbox_extra = "";
 			if (!$could_be_watered) {
@@ -159,30 +141,16 @@ HTML;
 		if ($this->id) {
 			$could_be_watered = true;
 
+			$last_watered_string = Time::format_last_updated($this->last_watered());
 			$last_watered_class = "";
-			if ($last_watered = $this->last_watered()) {
-				$seconds = time() - $last_watered;
-				$last_update = new DateTime();
-				$last_update->setTimestamp($last_watered);
-
-				$lag = $last_update->diff(new DateTime());
-
-				$last_watered_string = "";
-				if ($lag->d > 0) {
-					$last_watered_string = __('%s ago', $lag->format("%dd, %hh"));
-
-					if ($lag->d >= 10) {
-						$last_watered_class = "alert";
-					}
-				} else if ($lag->h > 0) {
-					$last_watered_string = __('%s ago', $lag->format("%hh"));
-					$could_be_watered = false;
-				} else {
-					$last_watered_string .= "now";
-					$could_be_watered = false;
-				}
-			} else {
-				$last_watered_string = __("never");
+			if (time() - $this->last_watered() > 3600 * 24 * 10) {
+				$last_watered_class = "alert";
+			}
+			if (time() - $this->last_watered() > 3600 * 24 * 60) {
+				$last_watered_class = "inactive";
+			}
+			if (time() - $this->last_watered() < 3600 * 24) {
+				$could_be_watered = false;
 			}
 
 			return [

@@ -13,17 +13,17 @@ class Time {
 
 			$last_updated_string = "";
 			if ($lag->y > 0) {
-				$last_updated_string = $lag->format("%y")." ".($lag->y > 1 ? __("years") : __("year"));
+				$last_updated_string = $last_update->format("Y-m-d");
 			} else if ($lag->m > 0) {
-				$last_updated_string = $lag->format("%m")." ".($lag->m > 1 ? __("months") : __("month"));
+				$last_updated_string = $last_update->format("Y-m-d");
 			} else if ($lag->d > 0) {
-				$last_updated_string = $lag->format("%dd, %hh, %im, %ss");
+				$last_updated_string = __("%s ago", $lag->format("%d".__("d (day/days)").", %h".__("h (hour/hours)").", %i".__("m (minute/minutes)").", %s".__("s (second/seconds)")));
 			} else if ($lag->h > 0) {
-				$last_updated_string = $lag->format("%hh, %im, %ss");
+				$last_updated_string = __("%s ago", $lag->format("%h".__("h (hour/hours)").", %i".__("m (minute/minutes)").", %s".__("s (second/seconds)")));
 			} else if ($lag->i > 0) {
-				$last_updated_string = $lag->format("%im, %ss");
+				$last_updated_string = __("%s ago", $lag->format("%i".__("m (minute/minutes)").", %s".__("s (second/seconds)")));
 			} else if ($lag->s > 0) {
-				$last_updated_string = $lag->format("%ss");
+				$last_updated_string = __("%s ago", $lag->format("%s".__("s (second/seconds)")));
 			}
 		} else {
 			$last_updated_string = __("never");

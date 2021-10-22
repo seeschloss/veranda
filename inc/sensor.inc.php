@@ -78,35 +78,13 @@ class Sensor extends Record {
 
 	function grid_row_admin() {
 		if ($this->id) {
+			$last_updated_string = Time::format_last_updated($this->last_updated());
 			$last_updated_class = "";
-
-			if ($last_updated = $this->last_updated()) {
-				$seconds = time() - $last_updated;
-				$last_update = new DateTime();
-				$last_update->setTimestamp($last_updated);
-
-				$lag = $last_update->diff(new DateTime());
-
-				$last_updated_string = "";
-				if ($lag->y > 0 or $lag->m > 0) {
-					$last_updated_string = $last_update->format("Y-m-d");
-					$last_updated_class = "inactive";
-				} else if ($lag->d > 0) {
-					$last_updated_string = $lag->format("%dd, %hh, %im, %ss");
-					$last_updated_class = "alert";
-				} else if ($lag->h > 0) {
-					$last_updated_string = $lag->format("%hh, %im, %ss");
-					$last_updated_class = "alert";
-				} else if ($lag->i > 0) {
-					if ($lag->i > 20) {
-						$last_updated_class = "alert";
-					}
-					$last_updated_string = $lag->format("%im, %ss");
-				} else if ($lag->s > 0) {
-					$last_updated_string = $lag->format("%ss");
-				}
-			} else {
-				$last_updated_string = __("never");
+			if (time() - $this->last_updated() > 60 * 20) {
+				$last_updated_class = "alert";
+			}
+			if (time() - $this->last_updated() > 3600 * 30) {
+				$last_updated_class = "inactive";
 			}
 
 			return [
@@ -145,35 +123,13 @@ class Sensor extends Record {
 
 	function grid_row() {
 		if ($this->id) {
+			$last_updated_string = Time::format_last_updated($this->last_updated());
 			$last_updated_class = "";
-
-			if ($last_updated = $this->last_updated()) {
-				$seconds = time() - $last_updated;
-				$last_update = new DateTime();
-				$last_update->setTimestamp($last_updated);
-
-				$lag = $last_update->diff(new DateTime());
-
-				$last_updated_string = "";
-				if ($lag->m > 0) {
-					$last_updated_string = $last_update->format("Y-m-d");
-					$last_updated_class = "inactive";
-				} else if ($lag->d > 0) {
-					$last_updated_string = $lag->format("%dd, %hh, %im, %ss");
-					$last_updated_class = "alert";
-				} else if ($lag->h > 0) {
-					$last_updated_string = $lag->format("%hh, %im, %ss");
-					$last_updated_class = "alert";
-				} else if ($lag->i > 0) {
-					if ($lag->i > 20) {
-						$last_updated_class = "alert";
-					}
-					$last_updated_string = $lag->format("%im, %ss");
-				} else if ($lag->s > 0) {
-					$last_updated_string = $lag->format("%ss");
-				}
-			} else {
-				$last_updated_string = __("never");
+			if (time() - $this->last_updated() > 60 * 20) {
+				$last_updated_class = "alert";
+			}
+			if (time() - $this->last_updated() > 3600 * 30) {
+				$last_updated_class = "inactive";
 			}
 
 			return [

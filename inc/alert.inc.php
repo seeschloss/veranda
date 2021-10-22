@@ -29,42 +29,7 @@ class Alert extends Record {
 
 	function grid_row_admin() {
 		if ($this->id) {
-			$status_class = "";
-
-			if ($last_alert = $this->last_alert()) {
-				switch ($this->status()) {
-					case "":
-						$status_class = "inactive";
-						break;
-					case "ok":
-						$status_class = "";
-						break;
-					default:
-						$status_class = "alert";
-						break;
-				}
-
-				$seconds = time() - $last_alert;
-				$last_update = new DateTime();
-				$last_update->setTimestamp($last_alert);
-
-				$lag = $last_update->diff(new DateTime());
-
-				$last_updated_string = "";
-				if ($lag->m > 0) {
-					$last_updated_string = $last_update->format("Y-m-d");
-				} else if ($lag->d > 0) {
-					$last_updated_string = $lag->format("%dd, %hh, %im, %ss");
-				} else if ($lag->h > 0) {
-					$last_updated_string = $lag->format("%hh, %im, %ss");
-				} else if ($lag->i > 0) {
-					$last_updated_string = $lag->format("%im, %ss");
-				} else if ($lag->s > 0) {
-					$last_updated_string = $lag->format("%ss");
-				}
-			} else {
-				$last_updated_string = __("never");
-			}
+			$last_updated_string = Time::format_last_updated($this->last_alert());
 
 			$conditions = [];
 			if ($this->min !== null) {
@@ -87,9 +52,6 @@ class Alert extends Record {
 				'dest' => $this->dest,
 				'status' => [
 					'value' => $this->status_text(),
-					'attributes' => [
-						'class' => $status_class,
-					],
 				],
 				'last-alert' => [
 					'value' => $last_updated_string,
