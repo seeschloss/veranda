@@ -105,7 +105,35 @@ class Update {
 			self::to_26();
 		}
 
+		if ($db->value("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='data_point'") == 0) {
+			self::to_27();
+		}
+
+		if ($db->value("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='device_state_data_point'") == 0) {
+			self::to_28();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_28() {
+		echo "28. Add indexes to device states\n";
+
+		$db = new DB();
+		$db->query('CREATE INDEX device_state_data_point ON devices_state (device_id, timestamp);');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+	}
+
+	static function to_27() {
+		echo "27. Add index to sensor data\n";
+
+		$db = new DB();
+		$db->query('CREATE INDEX data_point on sensors_data (sensor_id, timestamp);');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_26() {

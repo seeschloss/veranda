@@ -13,6 +13,8 @@ class Device extends Record {
 	public $created = 0;
 	public $updated = 0;
 
+	private $_last_updated = null;
+
 	static function grid_row_header_admin() {
 		return [
 			'name' => __('Name'),
@@ -671,12 +673,16 @@ class Device extends Record {
 	}
 
 	function last_updated() {
-		$state = $this->state_at(time());
-		if ($state) {
-			return $state['timestamp'];
+		if ($this->_last_updated === null) {
+			$this->_last_updated = 0;
+			$state = $this->state_at(time());
+			if ($state) {
+				$this->_last_updated = $state['timestamp'];
+			}
 		}
 
-		return 0;
+
+		return $this->_last_updated;
 	}
 
 	function chart() {
