@@ -59,6 +59,7 @@ $___['device-types'] = [
 	'lighting' => "Lighting",
 	'ventilation' => "Ventilation",
 	'humidifier' => "Humidifier",
+	'intermittent' => "Intermittent",
 ];
 
 $___['sensor-types'] = [

@@ -140,6 +140,9 @@ class Device extends Record {
 		$form->fields['comment']->label = __("Comment");
 
 		switch ($this->type) {
+			case "intermittent":
+				$form = $this->form_intermittent($form);
+				break;
 			case "humidifier":
 				$form = $this->form_humidifier($form);
 				break;
@@ -173,6 +176,24 @@ class Device extends Record {
 		$form->actions['delete']->confirmation = __("Are you sure you want to delete this device?");
 
 		return $form->html();
+	}
+
+	function form_intermittent($form) {
+		$this->parameters = $this->parameters();
+
+		$form->parameters['span-on'] = new HTML_Input("device-span-on");
+		$form->parameters['span-on']->type = "number";
+		$form->parameters['span-on']->name = "device[span][on]";
+		$form->parameters['span-on']->value = (int)$this->parameters['span']['on'];
+		$form->parameters['span-on']->label = __("Turn on for (seconds)");
+
+		$form->parameters['span-off'] = new HTML_Input("device-span-off");
+		$form->parameters['span-off']->type = "number";
+		$form->parameters['span-off']->name = "device[span][off]";
+		$form->parameters['span-off']->value = (int)$this->parameters['span']['off'];
+		$form->parameters['span-off']->label = __("Turn off for (seconds)");
+
+		return $form;
 	}
 
 	function form_humidifier($form) {
@@ -368,6 +389,9 @@ class Device extends Record {
 		}
 
 		switch ($this->type) {
+			case "intermittent":
+				$this->from_form_parameters_intermittent($data);
+				break;
 			case "humidifier":
 				$this->from_form_parameters_sensor($data);
 				break;
@@ -384,6 +408,17 @@ class Device extends Record {
 				break;
 			default:
 				break;
+		}
+	}
+
+	function from_form_parameters_intermittent($data) {
+		$this->parameters = $this->parameters();
+
+		if (isset($data['span']) and is_array($data['span'])) {
+			$this->parameters['span'] = [
+				'on' => $data['span']['on'],
+				'off' => $data['span']['off'],
+			];
 		}
 	}
 
@@ -505,6 +540,8 @@ class Device extends Record {
 
 	function action() {
 		switch ($this->type) {
+			case "intermittent":
+				return $this->check_span();
 			case "humidifier":
 				return $this->check_humidity_inside_range();
 			case "heating":
@@ -516,6 +553,35 @@ class Device extends Record {
 			default:
 				return "nop";
 		}
+	}
+
+	function check_span() {
+		$this->parameters = $this->parameters();
+
+		if (isset($this->parameters['span']['on']) and $this->parameters['span']['on'] and
+		    isset($this->parameters['span']['off']) and $this->parameters['span']['off']) {
+
+
+			$state_now = $this->state_at(time())['state'];
+			$new_state = 'nop';
+			if ($state_now == 'on') {
+				$states_past = $this->state_between(time() - $this->parameters['span']['on'], time());
+
+				if (array_search('off', $states_past) === false) {
+					$new_state = 'off';
+				}
+			} else if ($state_now == 'off') {
+				$states_past = $this->state_between(time() - $this->parameters['span']['off'], time());
+
+				if (array_search('on', $states_past) === false) {
+					$new_state = 'on';
+				}
+			}
+
+			return $new_state;
+		}
+
+		return "nop";
 	}
 
 	function check_temperature() {
@@ -706,6 +772,16 @@ class Device extends Record {
 		return $html;
 	}
 
+	function details_intermittent() {
+		$this->parameters = $this->parameters();
+
+		$html = "";
+
+		$html = $this->chart();
+
+		return $html;
+	}
+
 	function details_humidity() {
 		$this->parameters = $this->parameters();
 
@@ -774,6 +850,9 @@ class Device extends Record {
 		$html = "";
 
 		switch ($this->type) {
+			case "intermittent":
+				$html .= $this->details_intermittent();
+				break;
 			case "humidifier":
 				$html .= $this->details_humidity();
 				break;
