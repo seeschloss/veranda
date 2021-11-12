@@ -32,6 +32,26 @@ class Time {
 		return $last_updated_string;
 	}
 
+	public static function artificial_period($timestamp) {
+		$light_devices = Device::select(['type' => 'lighting']);
+
+		foreach ($light_devices as $light_device) {
+			if ($timestamp < time()) {
+				$state = $light_device->state_at($timestamp)['state'];
+				if ($state == 'on') {
+					return 'day';
+				}
+			} else {
+				$state = $light_device->check_period_future($timestamp);
+				if ($state == 'on') {
+					return 'day';
+				}
+			}
+		}
+
+		return 'night';
+	}
+
 	public static function period($timestamp) {
 		$sunrise = date_sunrise($timestamp,
 				SUNFUNCS_RET_TIMESTAMP,

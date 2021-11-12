@@ -193,6 +193,18 @@ class Device extends Record {
 		$form->parameters['span-off']->value = (int)$this->parameters['span']['off'];
 		$form->parameters['span-off']->label = __("Turn off for (seconds)");
 
+		$form->parameters['span-night-on'] = new HTML_Input("device-span-night-on");
+		$form->parameters['span-night-on']->type = "number";
+		$form->parameters['span-night-on']->name = "device[span-night][on]";
+		$form->parameters['span-night-on']->value = (int)$this->parameters['span-night']['on'];
+		$form->parameters['span-night-on']->label = __("Turn on for (seconds) at night");
+
+		$form->parameters['span-night-off'] = new HTML_Input("device-span-night-off");
+		$form->parameters['span-night-off']->type = "number";
+		$form->parameters['span-night-off']->name = "device[span-night][off]";
+		$form->parameters['span-night-off']->value = (int)$this->parameters['span-night']['off'];
+		$form->parameters['span-night-off']->label = __("Turn off for (seconds) at night");
+
 		return $form;
 	}
 
@@ -420,6 +432,13 @@ class Device extends Record {
 				'off' => $data['span']['off'],
 			];
 		}
+
+		if (isset($data['span-night']) and is_array($data['span-night'])) {
+			$this->parameters['span-night'] = [
+				'on' => $data['span-night']['on'],
+				'off' => $data['span-night']['off'],
+			];
+		}
 	}
 
 	function from_form_parameters_power($data) {
@@ -558,24 +577,39 @@ class Device extends Record {
 	function check_span() {
 		$this->parameters = $this->parameters();
 
-		if (isset($this->parameters['span']['on']) and $this->parameters['span']['on'] and
-		    isset($this->parameters['span']['off']) and $this->parameters['span']['off']) {
+		$span_on = 0;
+		$span_off = 0;
+		if (Time::artificial_period(time()) == "night") {
+			if (isset($this->parameters['span-night']['on']) and $this->parameters['span-night']['on'] and
+				isset($this->parameters['span-night']['off']) and $this->parameters['span-night']['off']) {
+				$span_on = $this->parameters['span-night']['on'];
+				$span_off = $this->parameters['span-night']['off'];
+			}
+		} else {
+			if (isset($this->parameters['span']['on']) and $this->parameters['span']['on'] and
+				isset($this->parameters['span']['off']) and $this->parameters['span']['off']) {
+				$span_on = $this->parameters['span']['on'];
+				$span_off = $this->parameters['span']['off'];
+			}
+		}
 
-
+		if ($span_on > 0 and $span_off > 0) {
 			$state_now = $this->state_at(time())['state'];
 			$new_state = 'nop';
 			if ($state_now == 'on') {
-				$states_past = $this->state_between(time() - $this->parameters['span']['on'], time());
+				$states_past = $this->state_between(time() - $span_on, time());
 
 				if (array_search('off', $states_past) === false) {
 					$new_state = 'off';
 				}
 			} else if ($state_now == 'off') {
-				$states_past = $this->state_between(time() - $this->parameters['span']['off'], time());
+				$states_past = $this->state_between(time() - $span_off, time());
 
 				if (array_search('on', $states_past) === false) {
 					$new_state = 'on';
 				}
+			} else {
+				$new_state = 'on';
 			}
 
 			return $new_state;
@@ -613,6 +647,24 @@ class Device extends Record {
 		}
 
 		return "nop";
+	}
+
+	function check_period_future($time) {
+		$this->parameters = $this->parameters();
+
+		if (isset($this->parameters['period']['start']) and $this->parameters['period']['start'] and
+		    isset($this->parameters['period']['stop']) and $this->parameters['period']['stop']) {
+
+			$time = gmdate('H', $time) * 3600 + gmdate('i', $time) * 60 + gmdate('s', $time);
+
+			if ($time >= $this->parameters['period']['start'] and $time < $this->parameters['period']['stop']) {
+				return 'on';
+			} else {
+				return 'off';
+			}
+		}
+
+		return "off";
 	}
 
 	function check_period() {
