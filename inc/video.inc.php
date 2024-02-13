@@ -27,7 +27,7 @@ class Video extends Record {
 			$this->path .= '-' . $this->quality;
 		}
 
-		$this->path .= '.webm';
+		$this->path .= '.mp4';
 	}
 
 	function path() {
@@ -38,15 +38,15 @@ class Video extends Record {
 				$this->path .= '-' . $this->quality;
 			}
 
-			$this->path .= '.webm';
+			$this->path .= '.mp4';
 		}
 
 		return $this->path;
 	}
 
 	function make_with_legend() {
-		$legend_file = tempnam("/tmp", "veranda_legend"); unlink($legend_file); $legend_file .= '.webm';
-		$video_file = tempnam("/tmp", "veranda_legend"); unlink($video_file); $video_file .= '.webm';
+		$legend_file = tempnam("/tmp", "veranda_legend"); unlink($legend_file); $legend_file .= '.mp4';
+		$video_file = tempnam("/tmp", "veranda_legend"); unlink($video_file); $video_file .= '.mp4';
 
 		$this->make_video($video_file);
 		$height = (int)`/usr/bin/ffprobe -v quiet -print_format flat -select_streams v:0 -show_entries stream=height '{$video_file}' | cut -d= -f2`;
@@ -132,17 +132,13 @@ class Video extends Record {
 
 		$playlist = tempnam("/tmp", "veranda");
 
-		if ($this->files) {
-			$lines = array_map(function($file) {
-				return "file '{$file}'\n";
-			}, $this->files);
-		} else if ($this->photos) {
-			$lines = array_map(function($photo) {
-				return "file '{$photo->best_quality()}'\n";
-			}, $this->photos);
+		if (empty($this->files) and $this->photos) {
+			$this->files = array_map(function($photo) { return $photo->best_quality(); }, $this->photos);
 		}
 
-		file_put_contents($playlist, implode("duration ".(1/$this->fps)."\n", $lines));
+		$this->files = array_filter($this->files, function($file) { return file_exists($file) and filesize($file) > 0; });
+
+		file_put_contents($playlist, implode("duration ".(1/$this->fps)."\n", array_map(function($file) { return "file '{$file}'\n"; }, $this->files)));
 
 		$vf = [
 			"deflicker=size=7:mode=median",
@@ -169,11 +165,19 @@ class Video extends Record {
 		
 		$keyrate = $this->fps/2; // one keyframe every 0,5 second
 
+		`/usr/bin/ffmpeg -loglevel fatal -y -safe 0 \
+			-f concat -i "{$playlist}" -r {$this->fps} -g {$keyrate} \
+			-c:v h264 -crf 30 {$vf} {$filter} \
+			-movflags +faststart \
+			"{$path}"`;
+
+		/*
 		`/usr/bin/ffmpeg -y -safe 0 \
 			-f concat -i "{$playlist}" -vsync vfr \
 			-c:v vp8 -crf 30 -b:v 0 {$vf} {$filter} -threads 8 -pix_fmt yuv420p -g {$keyrate} \
 			-r {$this->fps} \
 			"{$path}"`;
+		*/
 
 		unlink($playlist);
 

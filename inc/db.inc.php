@@ -34,7 +34,9 @@ class DB {
 				period TEXT,
 				path_original TEXT,
 				path_balanced TEXT,
-				path_averaged TEXT
+				path_averaged TEXT,
+				video_id INTEGER,
+				archived INTEGER
 			);',
 			'CREATE TABLE videos (
 				id INTEGER PRIMARY KEY,

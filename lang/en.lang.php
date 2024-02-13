@@ -68,8 +68,10 @@ $___['sensor-types'] = [
 	'brightness' => "Brightness",
 	'rx-power' => "Signal",
 	'weight' => "Weight",
-	'electricity' => "Électricité",
+	'electricity' => "Electricity",
+	'water' => "Water",
 	'gas' => "Gas",
+	'voltage' => "Voltage",
 	'generic' => "Generic",
 ];
 

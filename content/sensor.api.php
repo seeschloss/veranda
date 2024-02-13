@@ -28,6 +28,20 @@ $response = [
   'raw' => (float)$data['raw'],
 ];
 
+header("X-Sensor-Value: ".(float)$data['value']);
+header("X-Sensor-Value-Raw: ".(float)$data['raw']);
+
+if (isset($_REQUEST['total-since'])) {
+  $response['total-since'] = array_sum(array_filter($sensor->data_between($_REQUEST['total-since'], $timestamp), function($value) { return $value < 100; }));
+  header("X-Sensor-Value-Total-Since: ".(float)$response['total-since']);
+}
+
+if (isset($_REQUEST['total-rolling'])) {
+  $from = (int)$timestamp - (int)$_REQUEST['total-rolling'];
+  $response['total-rolling'] = array_sum(array_filter($sensor->data_between($from, $timestamp), function($value) { return $value < 100; }));
+  header("X-Sensor-Value-Total-Rolling: ".(float)$response['total-rolling']);
+}
+
 $old_serialize_precision = ini_get('serialize_precision');
 ini_set('serialize_precision', 8);
 echo json_encode($response, JSON_PRETTY_PRINT);

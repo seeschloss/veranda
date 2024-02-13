@@ -13,8 +13,11 @@ class Calendar {
 class GregorianCalendar extends Calendar {
 	private $gregorian_year;
 
-	function __construct() {
-		$this->gregorian_year = gmdate('Y');
+	function __construct($year = null) {
+		if ($year === null) {
+			$year = gmdate('Y');
+		}
+		$this->gregorian_year = $year;
 	}
 
 	function html() {

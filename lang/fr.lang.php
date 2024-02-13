@@ -69,7 +69,9 @@ $___['sensor-types'] = [
 	'rx-power' => "Signal",
 	'weight' => "Poids",
 	'electricity' => "Électricité",
+	'water' => "Eau",
 	'gas' => "Gaz",
+	'voltage' => "Tension",
 	'generic' => "Générique",
 ];
 

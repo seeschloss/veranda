@@ -95,5 +95,9 @@ class Time {
 
 		return 'night';
 	}
+
+	public static function hour() {
+		return (new DateTime("now", new DateTimeZone($GLOBALS['config']['location']['timezone'])))->format("H");
+	}
 }
 

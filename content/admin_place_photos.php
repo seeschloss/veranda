@@ -1,14 +1,22 @@
 <?php // vim: ft=html:et:sw=2:sts=2:ts=2
 
-$photos = Photo::select(['place_id' => $place->id], 'timestamp ASC');
+if (!isset($year)) {
+  $year = date('Y');
+}
+
+$calendar = new GregorianCalendar($year);
+
+$photos = Photo::select([
+    'place_id' => $place->id,
+    'timestamp' => '> '.mktime(0, 0, 0, 1, 0, $year),
+    'timestamp' => '< '.mktime(0, 0, 0, 1, 1, $year + 1),
+], 'timestamp ASC');
 $db = new DB();
 $result = $db->query("SELECT COUNT(*) as count, timestamp/86400 as day FROM ".Photo::$table." WHERE place_id={$place->id} GROUP BY day ORDER BY day ASC");
 $counts = [];
 if ($result) while ($row = $result->fetch()) {
   $counts[$row['day'] * 86400] = (int)$row['count'];
 }
-
-$calendar = new GregorianCalendar();
 
 foreach ($counts as $day => $count) {
   $date = strtotime("today midnight", $day);

@@ -7,8 +7,7 @@ if (isset($_REQUEST['state'])) {
     $device->record_state($_REQUEST['state'], time());
   }
 } else {
-  echo $device->action();
-  echo "\n";
+  echo $device->action_json();
 }
 
 

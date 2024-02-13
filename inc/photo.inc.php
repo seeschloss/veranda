@@ -12,6 +12,8 @@ class Photo extends Record {
 	public $path_original = "";
 	public $path_balanced = "";
 	public $path_averaged = "";
+	public $archived = 0;
+	public $video_id = 0;
 
 	static function grid_row_header_admin() {
 		return [
@@ -290,6 +292,8 @@ class Photo extends Record {
 			'path_original' => $db->escape($this->path_original),
 			'path_balanced' => $db->escape($this->path_balanced),
 			'path_averaged' => $db->escape($this->path_averaged),
+			'video_id' => (int)$this->video_id,
+			'archived' => (int)$this->archived,
 		];
 
 		$query = 'INSERT INTO `'.self::$table.'` (' . implode(',', array_keys($fields))   . ') '.
@@ -312,6 +316,8 @@ class Photo extends Record {
 			'path_original' => $db->escape($this->path_original),
 			'path_balanced' => $db->escape($this->path_balanced),
 			'path_averaged' => $db->escape($this->path_averaged),
+			'video_id' => (int)$this->video_id,
+			'archived' => (int)$this->archived,
 		];
 
 		$query = 'UPDATE photos SET ' . implode(', ', array_map(function($k, $v) { return $k . '=' . $v; }, array_keys($fields), $fields)) .

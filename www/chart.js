@@ -259,13 +259,13 @@ var chart_histogram_display = function(id, title, raw_data) {
 			}
 		}
 
+		console.log(data);
 		x.domain([
-			d3.min(data, sensor => d3.min(sensor.values, point => point.date)) - 12*3600*1000,
-			+new Date() + 31*24*3600*1000
+			d3.min(data, sensor => d3.min(sensor.values, point => point.date)),
+			+new Date()
 		]);
-		var bands = d3.timeMonth.every(1).range(
-			d3.min(data, sensor => d3.min(sensor.values, point => point.date)) - 12*3600*1000,
-			+new Date() + 31*24*3600*1000
+		var bands = d3.timeMinute.every(5).range(
+				x.domain()[0], x.domain()[1]
 		);
 
 		let legend_offset_x = 0;
@@ -312,7 +312,7 @@ var chart_histogram_display = function(id, title, raw_data) {
 			.attr("class", "axis axis--x")
 			.attr("transform", "translate(0," + height + ")")
 			.call(d3.axisBottom(x)
-				.tickFormat(d => locale.format("%d %b")(d))
+				.tickFormat(d => locale.format("%d/%m %H:%M")(d))
 			)
 			.selectAll("text")
 			.attr("transform", "translate(-6, 0) rotate(-45)")
@@ -546,13 +546,23 @@ var chart_line_display = function(id, title, raw_data, daylight) {
 
 		y_scales.values().forEach((scale, i) => {
 			if (scale.unit === undefined) {
-				scale.scale = d3.scaleOrdinal()
-					.range([height*0.66, margin.top + height*0.33])
+				scale.scale = d3.scaleLinear()
+					.range([height*0.8, margin.top + height*0.2])
 					.domain([0, 1]);
+
+				scale.line = d3.line()
+					.curve(d3.curveStepAfter)
+					.x(d => x(d.date))
+					.y(d => scale.scale(d.value));
 			} else if (scale.type == "humidity") {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])
 					.domain([0, 100]);
+
+				scale.line = d3.line()
+					.curve(d3.curveMonotoneX)
+					.x(d => x(d.date))
+					.y(d => scale.scale(d.value));
 			} else {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])
@@ -560,12 +570,12 @@ var chart_line_display = function(id, title, raw_data, daylight) {
 						d3.min(data.filter(sensor => sensor.type == scale.type), sensor => d3.min(sensor.values, point => point.value)) - 2,
 						d3.max(data.filter(sensor => sensor.type == scale.type), sensor => d3.max(sensor.values, point => point.value)) + 2
 					]);
-			}
 
-			scale.line = d3.line()
-				.curve(d3.curveMonotoneX)
-				.x(d => x(d.date))
-				.y(d => scale.scale(d.value));
+				scale.line = d3.line()
+					.curve(d3.curveMonotoneX)
+					.x(d => x(d.date))
+					.y(d => scale.scale(d.value));
+			}
 
 			if (i % 2 == 0) {
 				g.append("g")

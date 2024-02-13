@@ -199,8 +199,14 @@ class Sensor extends Record {
 		$form->fields['archived']->label = __("Archived");
 
 		switch ($this->type) {
+			case "water":
+				$form = $this->form_water($form);
+				break;
 			case "electricity":
 				$form = $this->form_electricity($form);
+				break;
+			case "generic":
+				$form = $this->form_generic($form);
 				break;
 			default:
 				break;
@@ -225,6 +231,24 @@ class Sensor extends Record {
 		return $form->html();
 	}
 
+	function form_water($form) {
+		$this->parameters = $this->parameters();
+
+		$form->parameters['price'] = [
+			'label' => __("Price"),
+			'value' => "",
+		];
+
+		$form->parameters['price-value'] = new HTML_Input("sensor-price");
+		$form->parameters['price-value']->type = "number";
+		$form->parameters['price-value']->attributes['step'] = "0.00001";
+		$form->parameters['price-value']->name = "sensor[price]";
+		$form->parameters['price-value']->value = $this->parameters['price'];
+		$form->parameters['price-value']->label = "€/m³";
+
+		return $form;
+	}
+
 	function form_electricity($form) {
 		$this->parameters = $this->parameters();
 
@@ -239,6 +263,29 @@ class Sensor extends Record {
 		$form->parameters['price-value']->name = "sensor[price]";
 		$form->parameters['price-value']->value = $this->parameters['price'];
 		$form->parameters['price-value']->label = "€/kwH";
+
+		return $form;
+	}
+
+	function form_generic($form) {
+		$this->parameters = $this->parameters();
+
+		$form->parameters['unit'] = [
+			'label' => __("Unit"),
+			'value' => "",
+		];
+
+		$form->parameters['unit-name-value'] = new HTML_Input("sensor-unit-name");
+		$form->parameters['unit-name-value']->type = "text";
+		$form->parameters['unit-name-value']->name = "sensor[unit-name]";
+		$form->parameters['unit-name-value']->value = $this->parameters['unit-name'];
+		$form->parameters['unit-name-value']->label = __("Name");
+
+		$form->parameters['unit-symbol-value'] = new HTML_Input("sensor-unit-symbol");
+		$form->parameters['unit-symbol-value']->type = "text";
+		$form->parameters['unit-symbol-value']->name = "sensor[unit-symbol]";
+		$form->parameters['unit-symbol-value']->value = $this->parameters['unit-symbol'];
+		$form->parameters['unit-symbol-value']->label = __("Symbol");
 
 		return $form;
 	}
@@ -275,10 +322,22 @@ class Sensor extends Record {
 		}
 
 		switch ($this->type) {
+			case "water":
+				$this->from_form_parameters_water($data);
 			case "electricity":
 				$this->from_form_parameters_electricity($data);
+			case "generic":
+				$this->from_form_parameters_generic($data);
 			default:
 				break;
+		}
+	}
+
+	function from_form_parameters_water($data) {
+		$this->parameters = $this->parameters();
+
+		if (isset($data['price'])) {
+			$this->parameters['price'] = $data['price'];
 		}
 	}
 
@@ -287,6 +346,18 @@ class Sensor extends Record {
 
 		if (isset($data['price'])) {
 			$this->parameters['price'] = $data['price'];
+		}
+	}
+
+	function from_form_parameters_generic($data) {
+		$this->parameters = $this->parameters();
+
+		if (isset($data['unit-name'])) {
+			$this->parameters['unit-name'] = $data['unit-name'];
+		}
+
+		if (isset($data['unit-symbol'])) {
+			$this->parameters['unit-symbol'] = $data['unit-symbol'];
 		}
 	}
 
@@ -354,6 +425,42 @@ class Sensor extends Record {
 		$this->parameters = $this->parameters();
 	}
 
+	function check_water_data_consistency($value, $timestamp) {
+		// value is in L
+
+		$new_data = (float)$value;
+		$previous_data = $this->data_at($timestamp - 1);
+
+		if ($previous_data == $new_data) {
+			return true;
+		} else if (!$previous_data) {
+			return true;
+		} else if (!empty($previous_data['value'])) {
+			$difference = $new_data - $previous_data['value'];
+			$span_h = ($timestamp - $previous_data['timestamp']) / 3600;
+
+			if ($difference < 0) {
+				// let's keep negative moves for now since anomalously high
+				// wrong values have to get corrected at one point
+
+				//return false;
+				if ($value < $previous_data['value']*0.1) {
+					// only 10% of last value ? this is a number that wraps to zero
+					return true;
+				}
+			}
+
+			$L_per_hour = $difference/$span_h;
+
+			if ($L_per_hour > 1000) {
+				// more than 1000 L/h over any period is probably wrong
+//				return false;
+			}
+		}
+		
+		return true;
+	}
+
 	function check_electricity_data_consistency($value, $timestamp) {
 		// value is in kWh
 
@@ -390,7 +497,7 @@ class Sensor extends Record {
 	function check_temperature_data_consistency($value, $timestamp) {
 		// this is intended for monitoring the outside or indoor
 		// temperature, not an oven or a freezer
-		if ($value > 50 or $value < -50) {
+		if ($value > 70 or $value < -50) {
 			return false;
 		}
 
@@ -427,12 +534,40 @@ class Sensor extends Record {
 
 	function check_data_consistency($value, $timestamp) {
 		switch ($this->type) {
+			case 'water':
+				return $this->check_water_data_consistency($value, $timestamp);
 			case 'electricity':
 				return $this->check_electricity_data_consistency($value, $timestamp);
 			case 'temperature':
 				return $this->check_temperature_data_consistency($value, $timestamp);
 			default:
 				return true;
+		}
+	}
+
+	function adjust_value($value, $timestamp) {
+		switch ($this->type) {
+			case 'water':
+			case 'electricity':
+				$new_data = (float)$value;
+				$previous_data = $this->data_at($timestamp - 1);
+
+				if (!$previous_data) {
+					return 0;
+				}
+
+				$difference = $new_data - $previous_data['raw'];
+				if ($difference >= 0) {
+					return $difference;
+				} else if ($value < $previous_data['raw']*0.1) {
+					// only 10% of last value ? meter has likely wrapped to 0
+					// let's start over
+					return $new_data;
+				}
+				break;
+
+			default:
+				return $value;
 		}
 	}
 
@@ -444,6 +579,8 @@ class Sensor extends Record {
 		if (!$this->check_data_consistency($value, $timestamp)) {
 			return 0;
 		}
+
+		$value = $this->adjust_value($value, $timestamp);
 
 		$fields = [
 			'sensor_id' => (int)$this->id,
@@ -494,7 +631,7 @@ class Sensor extends Record {
 		}
 	}
 
-	function data_between($start, $stop, $interval = 0) {
+	function data_between($start, $stop, $interval = 0, $group_function = null) {
 		$db = new DB();
 
 		$query = 'SELECT value, timestamp '.
@@ -521,7 +658,7 @@ class Sensor extends Record {
 		}
 
 		if ($interval) {
-			$data = $this->group_data($data, $interval);
+			$data = $this->group_data($data, $interval, $group_function);
 		}
 
 		return $data;
@@ -558,7 +695,43 @@ class Sensor extends Record {
 		return $data;
 	}
 
-	function group_data($data, $interval) {
+	function data_daily_between($start, $stop) {
+		$data = [];
+
+		if ($start === 0) {
+			$first_data = $this->data_after(0);
+
+			if (!$first_data) {
+				return [];
+			}
+
+			$start = max($first_data['timestamp'], $start);
+		}
+
+		$start = strtotime("first day of this week", $start);
+		$stop = strtotime("last day of this week", $stop);
+
+		for ($day = $start; $day < $stop; $day = strtotime("first day of next month", $day)) {
+			$period_start = $day;
+			$period_stop = strtotime("first day of next month", $day);
+
+			$value_start = $this->interpolated_value_at($period_start);
+			$value_stop = $this->interpolated_value_at($period_stop);
+
+			$value = $value_stop - $value_start;
+
+			$data[$day] = $value;
+		}
+
+		var_dump($data);
+		return $data;
+	}
+
+	function group_data($data, $interval, $function = null) {
+		if ($function === null) {
+			$function = function($values) { return Math::mean($values, 15); };
+		}
+
 		$grouped_data = [];
 
 		foreach ($data as $timestamp => $value) {
@@ -572,7 +745,7 @@ class Sensor extends Record {
 		}
 
 		foreach ($grouped_data as $timestamp => $values) {
-			$grouped_data[$timestamp] = Math::mean($values, 15);
+			$grouped_data[$timestamp] = $function($values);
 		}
 
 		return $grouped_data;
@@ -592,8 +765,14 @@ class Sensor extends Record {
 				return 'Kg';
 			case 'electricity':
 				return 'kWh';
+			case 'water':
+				return 'L';
 			case 'gas':
 				return 'ppm';
+			case 'voltage':
+				return 'V';
+			case 'generic':
+				return $this->parameters['unit-symbol'];
 			default:
 				return '';
 		}
@@ -604,7 +783,7 @@ class Sensor extends Record {
 	}
 
 	function axis_label() {
-		return  _a('sensor-types', $sensor->type);
+		return  $this->parameters['unit-name'] ?? _a('sensor-types', $sensor->type);
 	}
 
 	function value_at($timestamp) {
@@ -669,7 +848,35 @@ class Sensor extends Record {
 	}
 
 	function chart() {
-		return $this->chart_line("1-week").$this->chart_minmax("all");
+		switch ($this->type) {
+			case 'water':
+			case 'electricity':
+				return $this->chart_histogram("1-day");
+
+			default:
+				return $this->chart_line("1-week").$this->chart_minmax("all");
+		}
+	}
+
+	function chart_histogram($period = "1-week") {
+		$chart = new Chart();
+		$chart->id = "sensor-{$this->id}-line";
+		$chart->title = $this->name;
+		$chart->size = "large";
+		$chart->period = $period;
+		$chart->type = "histogram";
+		$chart->parameters = [
+			'sensors' => [
+				$this->id => [
+					'value' => [
+						'id' => $this->id,
+						'color' => '#2F2F2F',
+					],
+				],
+			]
+		];
+
+		return $chart->html();
 	}
 
 	function chart_line($period = "1-week") {
@@ -728,6 +935,11 @@ class Sensor extends Record {
 
 	function dimensions() {
 		switch ($this->type) {
+			case 'water':
+				return [
+					'value' => __("value"),
+					'cost' => ("cost"),
+				];
 			case 'electricity':
 				return [
 					'value' => __("value"),

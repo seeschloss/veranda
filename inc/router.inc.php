@@ -16,6 +16,7 @@ class Router {
 		$this->routes = [
 			'/data/device/([0-9]+)' => [$this, 'handle_device_data'],
 			'/data/sensor/([0-9]+)' => [$this, 'handle_sensor_data'],
+			'/data/sensor' => [$this, 'handle_sensor_data_json'],
 			'/data/place/([0-9]+)/photo' => [$this, 'handle_place_photo'],
 
 			'/admin/device/([0-9]+)' => [$this, 'show_admin_device'],
@@ -25,8 +26,11 @@ class Router {
 			'/admin/plant/([0-9]+)/locate' => [$this, 'show_admin_plant_locate'],
 			'/admin/plant/([0-9]+)' => [$this, 'show_admin_plant'],
 			'/admin/plants' => [$this, 'show_admin_plants'],
+			'/admin/place/([0-9]+)/photos/20[0-9][0-9]' => [$this, 'show_admin_place_photos_year'],
 			'/admin/place/([0-9]+)/photos/[0-9]*' => [$this, 'show_admin_place_photos_day'],
 			'/admin/place/([0-9]+)/photos' => [$this, 'show_admin_place_photos'],
+			'/admin/place/([0-9]+)/videos/[0-9]*' => [$this, 'show_admin_place_videos_day'],
+			'/admin/place/([0-9]+)/videos' => [$this, 'show_admin_place_videos'],
 			'/admin/place/([0-9]+)' => [$this, 'show_admin_place'],
 			'/admin/places' => [$this, 'show_admin_places'],
 			'/admin/photo/([0-9]+)' => [$this, 'show_admin_photo'],
@@ -51,6 +55,7 @@ class Router {
 			'/place/([0-9]+)' => [$this, 'show_place'],
 			'/places' => [$this, 'show_places'],
 			'/sensor/([0-9]+)' => [$this, 'show_sensor'],
+			'/sensor/([0-9]+)/refresh' => [$this, 'show_sensor_refresh'],
 			'/sensors' => [$this, 'show_sensors'],
 			'/device/([0-9]+)' => [$this, 'show_device'],
 			'/devices' => [$this, 'show_devices'],
@@ -60,8 +65,16 @@ class Router {
 			'/' => [$this, 'show_dashboard'],
 		];
 
+		$this->json = false;
+		$this->plain = true;
 		if (isset($_SERVER['HTTP_ACCEPT']) and $_SERVER['HTTP_ACCEPT'] == 'application/json') {
-			$this->json = true;
+			if (isset($_SERVER['HTTP_X_VERANDA_CLIENT_VERSION']) and $_SERVER['HTTP_X_VERANDA_CLIENT_VERSION'] == 1) {
+				$this->json = true;
+				$this->plain = true;
+			} else {
+				$this->json = true;
+				$this->plain = false;
+			}
 		}
 
 		if (isset($_SERVER['HTTP_X_MODAL']) and $_SERVER['HTTP_X_MODAL'] == 'modal') {
@@ -350,6 +363,27 @@ HTML;
 		return true;
 	}
 
+	public function show_admin_place_photos_year($parts, $get, $post) {
+		$this->theme->admin = true;
+		$this->theme->content_file = 'admin_place_photos.php';
+
+		$place_id = (int)$parts[3];
+
+		$place = new Place();
+		$place->load(['id' => $place_id]);
+
+		$this->theme->content_env = ['place' => $place, 'year' => (int)$parts[5]];
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
 	public function show_admin_place_photos_day($parts, $get, $post) {
 		$this->theme->admin = true;
 		$this->theme->content_file = 'admin_place_photos_day.php';
@@ -374,6 +408,48 @@ HTML;
 	public function show_admin_place_photos($parts, $get, $post) {
 		$this->theme->admin = true;
 		$this->theme->content_file = 'admin_place_photos.php';
+
+		$place_id = (int)$parts[3];
+
+		$place = new Place();
+		$place->load(['id' => $place_id]);
+
+		$this->theme->content_env = ['place' => $place];
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
+	public function show_admin_place_videos_day($parts, $get, $post) {
+		$this->theme->admin = true;
+		$this->theme->content_file = 'admin_place_videos_day.php';
+
+		$place_id = (int)$parts[3];
+
+		$place = new Place();
+		$place->load(['id' => $place_id]);
+
+		$this->theme->content_env = ['place' => $place, 'day' => (int)$parts[5]];
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
+	public function show_admin_place_videos($parts, $get, $post) {
+		$this->theme->admin = true;
+		$this->theme->content_file = 'admin_place_videos.php';
 
 		$place_id = (int)$parts[3];
 
@@ -766,6 +842,30 @@ HTML;
 		return true;
 	}
 
+	public function show_sensor_refresh($parts, $get, $post) {
+		$this->theme->content_file = 'sensor-refresh.php';
+
+		$sensor_id = (int)$parts[2];
+
+		$sensor = new Sensor();
+		$sensor->load(['id' => $sensor_id]);
+
+		if (!$sensor->place->public) {
+			http_response_code(404);
+		} else {
+			$this->theme->content_env = ['sensor' => $sensor];
+
+			if ($this->json) {
+				header('Content-Type: application/json;charset=UTF-8');
+				print $this->theme->bare();
+			} else {
+				print $this->theme->html();
+			}
+		}
+
+		return true;
+	}
+
 	public function show_device($parts, $get, $post) {
 		$this->theme->content_file = 'device.php';
 
@@ -819,9 +919,13 @@ HTML;
 			http_response_code(404);
 			$this->theme->content = '';
 		}
-
-		header('Content-Type: application/json;charset=UTF-8');
-		print $this->theme->bare();
+		if ($this->plain) {
+			header('Content-Type: text/plain;charset=UTF-8');
+			print $this->theme->json_to_bare('action');
+		} else {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->json();
+		}
 
 		return true;
 	}
@@ -840,6 +944,55 @@ HTML;
 
 		header('Content-Type: application/json;charset=UTF-8');
 		print $this->theme->bare();
+
+		return true;
+	}
+
+	public function handle_sensor_data_json($parts, $get, $post) {
+		$all_ok = true;
+
+		if (str_starts_with($_SERVER['CONTENT_TYPE'], 'application/json')) {
+			file_put_contents("/tmp/plop", file_get_contents("php://input"));
+			if ($data = json_decode(file_get_contents("php://input"), JSON_OBJECT_AS_ARRAY)) {
+				foreach ($data as $sensor_id => $sensor_data) {
+					if (is_array($sensor_data)) {
+						$value = isset($sensor_data['value']) ? $sensor_data['value'] : null;
+						$timestamp = isset($sensor_data['timestamp']) ? (int)$sensor_data['timestamp'] : time();
+						$battery = isset($sensor_data['battery']) ? (float)$sensor_data['battery'] : null;
+					} else {
+						$value = $sensor_data;
+						$timestamp = time();
+						$battery = null;
+					}
+
+					if (strtolower($value) == 'nan') {
+						$value = NAN;
+					} else {
+						$value = (float)$value;
+					}
+
+					$sensor = new Sensor();
+					if ($value and $sensor->load(['id' => $sensor_id])) {
+						if (!is_nan($value)) {
+							// NaN just means there's nothing to record, it's not an error either
+							$response = $sensor->record_data($value, $timestamp, $battery);
+							
+							if ($response < 0) {
+								$all_ok = false;
+							}
+						}
+					} else {
+						$all_ok = false;
+					}
+				}
+			}
+		}
+
+		if ($all_ok) {
+			http_response_code(201);
+		} else {
+			http_response_code(500);
+		}
 
 		return true;
 	}

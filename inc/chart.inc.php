@@ -338,7 +338,7 @@ class Chart extends Record {
 				return strtotime('-1 hour');
 			case '1-day':
 			case '1 day':
-				return strtotime('today midnight');
+				return strtotime('today midnight - 12 hours');
 			case '1-week':
 			case '1 week':
 				return strtotime('-7 days midnight');
@@ -371,7 +371,7 @@ class Chart extends Record {
 			foreach ($dimensions as $dimension => $parameters) {
 				$data[$sensor->id.'-'.$dimension] = [
 					'label' => $sensor->name,
-					'axis-label' => _a('sensor-types', $sensor->type),
+					'axis-label' => $sensor->axis_label(),
 					'type' => $sensor->type,
 					'unit' => $sensor->unit(),
 					'place' => $sensor->place()->name,
@@ -413,6 +413,35 @@ class Chart extends Record {
 		return $data;
 	}
 
+	function sensors_data_daily() {
+		$data = [];
+
+		$sensors = Sensor::select(['id' => array_map(function($sensor) { return $sensor['id']; }, $this->parameters['sensors'])]);
+
+		$start = $this->data_start();
+		$stop = time();
+
+		foreach ($this->parameters['sensors'] as $sensor_id => $dimensions) {
+			foreach ($dimensions as $dimension => $parameters) {
+				$sensor = new Sensor_Dimension();
+				$sensor->dimension = $dimension;
+				$sensor->load(['id' => $sensor_id]);
+
+				$data[$sensor->id.'-'.$dimension] = [
+					'label' => $sensor->label(),
+					'axis-label' => $sensor->axis_label(),
+					'type' => $sensor->type.'-'.$dimension,
+					'unit' => $sensor->unit(),
+					'place' => $sensor->place()->name,
+					'color' => $parameters['color'],
+					'values' => $sensor->data_between($start, $stop, 60 * 5, function($values) { return array_sum($values); }),
+				];
+			}
+		}
+
+		return $data;
+	}
+
 	function devices_data() {
 		$data = [];
 
@@ -428,7 +457,13 @@ class Chart extends Record {
 				'type' => _a('device-types', $device->type),
 				'place' => $device->place()->name,
 				'color' => $this->parameters['devices'][$device->id]['color'],
-				'values' => array_map(function($state) { return $state == "on" ? 1 : 0; }, $device->state_between($start, $stop)),
+				'values' => array_map(function($state) {
+					switch ($state) {
+						case 'on': return 1;
+						case 'off' : return 0;
+						default: return (float)$state;
+					}
+				}, $device->state_between($start, $stop)),
 			];
 		}
 
@@ -446,6 +481,14 @@ class Chart extends Record {
 	function data_monthly() {
 		if (isset($this->parameters['sensors'])) {
 			return $this->sensors_data_monthly();
+		} else {
+			return [];
+		}
+	}
+
+	function data_daily() {
+		if (isset($this->parameters['sensors'])) {
+			return $this->sensors_data_daily();
 		} else {
 			return [];
 		}
@@ -470,6 +513,10 @@ class Chart extends Record {
 			case "line":
 				$data = $this->data();
 				$html .= $this->html_line($data);
+				break;
+			case "histogram":
+				$data = $this->data_daily();
+				$html .= $this->html_histogram($data);
 				break;
 			default:
 				break;
@@ -524,6 +571,19 @@ HTML;
     <svg id='chart-{$this->id}' class="dashboard-element chart size-{$this->size}"></svg>
 	<script>
 		chart_line_display('chart-{$this->id}', '{$this->title}', {$data_json});
+	</script>
+HTML;
+
+		return $html;
+	}
+
+	function html_histogram($data) {
+		$data_json = JSON::encode($data);
+
+		$html = <<<HTML
+    <svg id='chart-{$this->id}' class="dashboard-element chart size-{$this->size}"></svg>
+	<script>
+		chart_histogram_display('chart-{$this->id}', '{$this->title}', {$data_json});
 	</script>
 HTML;
 

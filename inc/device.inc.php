@@ -269,6 +269,24 @@ class Device extends Record {
 		$form->parameters['night']->label = __("Night temperature drop");
 		$form->parameters['night']->suffix = "°C";
 
+		$inputs = array();
+		for ($hour = 0; $hour < 24; $hour += 1) {
+			$input = new HTML_Input("device-night-hours-".$hour);
+			$input->type = "checkbox";
+			$input->name = "device[night-hours][{$hour}]";
+			$input->value = 1;
+			$input->attributes['title'] = $hour."h";
+			if (isset($this->parameters['night-hours'][$hour])) {
+				$input->attributes['checked'] = "checked";
+			}
+			$inputs[$hour] = $input->element();
+		}
+
+		$form->parameters['night-hours'] = [
+			'label' => __("Night hours"),
+			'value' => join("", $inputs),
+		];
+
 		$sensors = Sensor::select(['type' => 'temperature', 'place_id' => $this->place_id]);
 
 		$form->parameters['sensor'] = [
@@ -335,7 +353,14 @@ class Device extends Record {
 	function form_ventilation($form) {
 		$this->parameters = $this->parameters();
 
-		$sensors = Sensor::select(['type' => 'humidity', 'place_id' => $this->place_id]);
+		$form->parameters['min-speed'] = new HTML_Input("device-min-speed");
+		$form->parameters['min-speed']->type = "number";
+		$form->parameters['min-speed']->step = "1";
+		$form->parameters['min-speed']->name = "device[speed][min]";
+		$form->parameters['min-speed']->value = $this->parameters['speed']['min'];
+		$form->parameters['min-speed']->label = __("Minimum speed");
+
+		$sensors = Sensor::select(['type' => ['humidity'], 'place_id' => $this->place_id]);
 
 		$form->parameters['sensor'] = [
 			'label' => __("Sensors"),
@@ -354,7 +379,7 @@ class Device extends Record {
 
 			$input_min = new HTML_Input("device-sensor-{$sensor->id}-min");
 			$input_min->type = "number";
-			$input_min->attributes['step'] = "0.1";
+			$input_min->attributes['step'] = "1";
 			$input_min->name = "device[sensor][{$sensor->id}][min]";
 			if (isset($this->parameters['sensors'][$sensor->id])) {
 				$input_min->value = $this->parameters['sensors'][$sensor->id]['min'];
@@ -363,13 +388,51 @@ class Device extends Record {
 
 			$input_max = new HTML_Input("device-sensor-{$sensor->id}-min");
 			$input_max->type = "number";
-			$input_max->attributes['step'] = "0.1";
+			$input_max->attributes['step'] = "1";
 			$input_max->name = "device[sensor][{$sensor->id}][max]";
 			if (isset($this->parameters['sensors'][$sensor->id])) {
 				$input_max->value = $this->parameters['sensors'][$sensor->id]['max'];
 			}
 
 			$form->parameters['sensor-'.$sensor->id]->suffix = "min ".$input_min->element()."% &mdash; max ".$input_max->element()."%";
+		}
+
+		$sensors = Sensor::select(['type' => ['gas']]);
+		//$sensors = Sensor::select(['type' => ['humidity', 'gas'], 'place_id' => $this->place_id]);
+
+		$form->parameters['sensor'] = [
+			'label' => __("Sensors"),
+			'value' => "",
+		];
+
+		foreach ($sensors as $sensor) {
+			$form->parameters['sensor-'.$sensor->id] = new HTML_Input("device-sensor-".$sensor->id);
+			$form->parameters['sensor-'.$sensor->id]->type = "checkbox";
+			$form->parameters['sensor-'.$sensor->id]->name = "device[sensor][{$sensor->id}][id]";
+			$form->parameters['sensor-'.$sensor->id]->value = $sensor->id;
+			$form->parameters['sensor-'.$sensor->id]->label = "{$sensor->name} ({$sensor->value_text()})";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$form->parameters['sensor-'.$sensor->id]->attributes['checked'] = "checked";
+			}
+
+			$input_min = new HTML_Input("device-sensor-{$sensor->id}-min");
+			$input_min->type = "number";
+			$input_min->attributes['step'] = "1";
+			$input_min->name = "device[sensor][{$sensor->id}][min]";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$input_min->value = $this->parameters['sensors'][$sensor->id]['min'];
+			}
+
+
+			$input_max = new HTML_Input("device-sensor-{$sensor->id}-min");
+			$input_max->type = "number";
+			$input_max->attributes['step'] = "1";
+			$input_max->name = "device[sensor][{$sensor->id}][max]";
+			if (isset($this->parameters['sensors'][$sensor->id])) {
+				$input_max->value = $this->parameters['sensors'][$sensor->id]['max'];
+			}
+
+			$form->parameters['sensor-'.$sensor->id]->suffix = "min ".$input_min->element()." ppm &mdash; max ".$input_max->element()." ppm";
 		}
 
 		return $form;
@@ -410,16 +473,26 @@ class Device extends Record {
 			case "heating":
 				$this->from_form_parameters_power($data);
 				$this->from_form_parameters_night($data);
+				$this->from_form_parameters_night_hours($data);
 				$this->from_form_parameters_sensor($data);
 				break;
 			case "lighting":
 				$this->from_form_parameters_lighting($data);
 				break;
 			case "ventilation":
+				$this->from_form_parameters_ventilation($data);
 				$this->from_form_parameters_sensor($data);
 				break;
 			default:
 				break;
+		}
+	}
+
+	function from_form_parameters_ventilation($data) {
+		$this->parameters = $this->parameters();
+
+		if (isset($data['speed'])) {
+			$this->parameters['speed']['min'] = (int)$data['speed']['min'];
 		}
 	}
 
@@ -454,6 +527,18 @@ class Device extends Record {
 
 		if (isset($data['night-drop'])) {
 			$this->parameters['night-drop'] = (float)$data['night-drop'];
+		}
+	}
+
+	function from_form_parameters_night_hours($data) {
+		$this->parameters = $this->parameters();
+
+		if (isset($data['night-hours']) and is_array($data['night-hours'])) {
+			$this->parameters['night-hours'] = [];
+
+			foreach ($data['night-hours'] as $hour => $night) {
+				$this->parameters['night-hours'][$hour] = true;
+			}
 		}
 	}
 
@@ -557,6 +642,17 @@ class Device extends Record {
 		return true;
 	}
 
+	function action_json() {
+		$action = ['action' => $this->action()];
+
+		switch ($this->type) {
+			case "ventilation":
+				$action['speed'] = $this->ventilation_speed();
+		}
+
+		return json_encode($action);
+	}
+
 	function action() {
 		switch ($this->type) {
 			case "intermittent":
@@ -632,7 +728,12 @@ class Device extends Record {
 				$max = isset($parameters['max']) ? $parameters['min'] : null;
 
 				if (isset($this->parameters['night-drop']) and $this->parameters['night-drop'] != 0) {
-					if (Time::period(time()) == "night") {
+					if (is_array($this->parameters['night-hours']) and !empty($this->parameters['night-hours'])) {
+						if (isset($this->parameters['night-hours'][(int)Time::hour()])) {
+							$min -= $this->parameters['night-drop'];
+							$max -= $this->parameters['night-drop'];
+						}
+					} else if (Time::period(time()) == "night") {
 						$min -= $this->parameters['night-drop'];
 						$max -= $this->parameters['night-drop'];
 					}
@@ -712,6 +813,35 @@ class Device extends Record {
 		}
 
 		return "nop";
+	}
+
+	function ventilation_speed() {
+		$this->parameters = $this->parameters();
+
+		$speed = $this->parameters['speed']['min'];
+		if (isset($this->parameters['sensors'])) {
+			foreach ($this->parameters['sensors'] as $id => $parameters) {
+				$sensor = new Sensor();
+				$sensor->load(['id' => $id]);
+
+				$value = $sensor->data_at(time());
+
+				$min = isset($parameters['min']) ? $parameters['min'] : null;
+				$max = isset($parameters['max']) ? $parameters['max'] : null;
+
+				if (isset($min) and $value['value'] < $min) {
+					$sensor_speed = $this->parameters['speed']['min'];
+				} else if (isset($max) and $value['value'] > $max) {
+					$sensor_speed = 100;
+				} else {
+					$sensor_speed = $this->parameters['speed']['min'] + floor((($value['value'] - $min) / ($max - $min)) * (100 - $this->parameters['speed']['min']));
+				}
+
+				$speed = max($speed, $sensor_speed);
+			}
+		}
+
+		return $speed;
 	}
 
 	function check_humidity_inside_range() {

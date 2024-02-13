@@ -219,7 +219,16 @@ HTML;
 		return $html;
 	}
 
+	function json_to_bare($key) {
+		$json = json_decode($this->content_string());
+		return $json->{$key}."\n";
+	}
+
 	function bare() {
+		return $this->content_string()."\n";
+	}
+
+	function json() {
 		return $this->content_string();
 	}
 

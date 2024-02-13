@@ -113,7 +113,34 @@ class Update {
 			self::to_28();
 		}
 
+		if (!$db->query('SELECT archived FROM photos')) {
+			self::to_29();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_29() {
+		echo "29. Add video_id and archived to table `photos`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE photos ADD video_id INTEGER');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+		$db->query('UPDATE photos SET video_id=0');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+
+		$db->query('ALTER TABLE photos ADD archived INTEGER');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
+		$db->query('UPDATE photos SET archived=0');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_28() {
