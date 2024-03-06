@@ -470,12 +470,23 @@ class Chart extends Record {
 		return $data;
 	}
 
+	function events_data() {
+		return ['events' => $this->parameters['events']];
+	}
+
 	function data($interval = 0) {
+		$data = [];
 		if (isset($this->parameters['sensors'])) {
-			return $this->sensors_data($interval);
+			$data += $this->sensors_data($interval);
 		} else {
-			return $this->devices_data();
+			$data += $this->devices_data();
 		}
+
+		if (isset($this->parameters['events'])) {
+			$data += $this->events_data();
+		}
+
+		return $data;
 	}
 
 	function data_monthly() {

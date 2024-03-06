@@ -304,6 +304,13 @@ form.dl-form {
 	max-width: 600px;
 }
 
+form.dl-form h2 {
+	font-size: 110%;
+	text-align: center;
+	margin-bottom: 0;
+	margin-left: 20%;
+}
+
 form.dl-form > dl {
 	display: flex;
 	flex-direction: row;

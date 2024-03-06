@@ -259,7 +259,6 @@ var chart_histogram_display = function(id, title, raw_data) {
 			}
 		}
 
-		console.log(data);
 		x.domain([
 			d3.min(data, sensor => d3.min(sensor.values, point => point.date)),
 			+new Date()
@@ -406,8 +405,22 @@ var chart_line_display = function(id, title, raw_data, daylight) {
 
 		var x = d3.scaleTime().range([0, width]);
 
+		let events = [];
 		let data = [];
 		let y_scales = d3.map();
+
+		if (raw_data.events) for (var event_id in raw_data.events) {
+			if (raw_data.events.hasOwnProperty(event_id)) {
+				let e = raw_data.events[event_id];
+
+				events.push({
+					id: event_id,
+					timestamp: e.timestamp,
+					title: e.title,
+					details: e.details,
+				});
+			}
+		}
 		
 		for (var sensor_id in raw_data) {
 			if (raw_data.hasOwnProperty(sensor_id)) {
@@ -628,6 +641,24 @@ var chart_line_display = function(id, title, raw_data, daylight) {
 					.attr("height", height - margin.top - 1)
 		}
 
+		events.forEach((e, i) => {
+			let element_event = g.selectAll("rect.event")
+				.data(days)
+				.enter().append("rect")
+					.attr("class", "event")
+					.attr("fill", "red")
+					.attr("opacity", "0.3")
+					.attr("x", d => {
+						var time = new Date(e.timestamp * 1000);
+
+						d.x = Math.min(Math.max(0, x(time)), width);
+						d.width = 2;
+						return d.x;
+						})
+					.attr("y", margin.top)
+					.attr("width", d => d.width)
+					.attr("height", height - margin.top - 1)
+		});
 		data.forEach((sensor, i) => {
 			let path = g.selectAll("line.sensor-" + sensor.id)
 				.data([sensor.values])

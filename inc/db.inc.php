@@ -56,6 +56,13 @@ class DB {
 				updated INTEGER,
 				created INTEGER
 			);',
+			'CREATE TABLE place_events (
+				id INTEGER PRIMARY KEY,
+				place_id INTEGER,
+				title TEXT,
+				details TEXT,
+				timestamp INTEGER
+			);',
 			'CREATE TABLE sensors (
 				id INTEGER PRIMARY KEY,
 				place_id INTEGER,

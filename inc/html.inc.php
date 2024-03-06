@@ -72,28 +72,11 @@ class HTML_Input_Datetime extends HTML_Input {
 
 		$attributes['id'] = $this->id;
 		$attributes['name'] = $this->name;
-		$attributes['type'] = "date";
+		$attributes['type'] = "datetime-local";
 
 		if ($this->value) {
-			$attributes['value'] = gmdate("Y-m-d", $this->value);
-		}
-
-		foreach ($attributes as $name => $value) {
-			$html .= $name.'="'.$value.'" ';
-		}
-
-		$html .= '/>';
-
-		$html .= '<input ';
-
-		$attributes = $this->attributes;
-
-		$attributes['id'] = $this->id."-time";
-		$attributes['name'] = $this->name."-time";
-		$attributes['type'] = "time";
-
-		if ($this->value) {
-			$attributes['value'] = gmdate("H:i:s", $this->value);
+			$date = (new DateTimeImmutable())->setTimestamp($this->value)->setTimezone(new DateTimeZone($GLOBALS['config']['location']['timezone']));
+			$attributes['value'] = $date->format("Y-m-d H:i");
 		}
 
 		foreach ($attributes as $name => $value) {
@@ -381,17 +364,29 @@ class HTML_Form {
 
 	public function html() {
 		$fields_html = array_reduce($this->fields, function($html, $field) {
+			$field_html = "";
 			if ($field instanceof HTML_Form_Element) {
-				$field_html = "<dt>{$field->label()}</dt><dd>{$field->element()}</dd>";
+				if ($field->type != 'hidden') {
+					$field_html = "<dt>{$field->label()}</dt><dd>{$field->element()}</dd>";
 
-				if (isset($field->type) and $field->type == "file") {
-					$this->enctype = "multipart/form-data";
+					if (isset($field->type) and $field->type == "file") {
+						$this->enctype = "multipart/form-data";
+					}
 				}
 			} else if (is_array($field)) {
 				$field_html = "<dt>{$field['label']}</dt><dd>{$field['value']}</dd>";
 			}
 
 			return $html.$field_html;
+		}, "");
+		$hidden_fields_html = array_reduce($this->fields, function($html, $field) {
+			$hidden_field_html = "";
+
+			if ($field instanceof HTML_Form_Element and $field->type == 'hidden') {
+				$hidden_field_html = $field->element();
+			}
+
+			return $html.$hidden_field_html;
 		}, "");
 
 		$parameters_html = array_reduce($this->parameters, function($html, $parameter) {
@@ -417,8 +412,14 @@ class HTML_Form {
 			return "{$key}='{$value}'";
 		}, array_keys($this->attributes), $this->attributes));
 
+		$title = '';
+		if ($this->title) {
+			$title = '<h2>'.$this->title.'</h2>';
+		}
+
 		$html = <<<HTML
 	<form target="{$this->target}" method="{$this->method}" enctype="{$this->enctype}" {$attributes}>
+		{$hidden_fields_html}{$title}
 		<dl class='form-fields'>{$fields_html}</dl>
 		{$parameters_html}
 		<span class="actions">{$actions_html}</span>

@@ -27,6 +27,13 @@ if (isset($_POST['action']) and isset($_POST['place'])) {
   }
 }
 
+if (isset($_POST['action']) and $_POST['action'] == 'insert-event' and isset($_POST['place_event'])) {
+  $event = new Place_Event();
+  if ($event->from_form($_POST['place_event'])) {
+    $event->insert();
+  }
+}
+
 ?>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="<?= $GLOBALS['config']['base_path'] ?>/suncalc.js"></script>

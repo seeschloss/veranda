@@ -117,7 +117,30 @@ class Update {
 			self::to_29();
 		}
 
+		if ($db->value("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='place_events'") == 0) {
+			self::to_30();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_30() {
+		echo "30. Create table `place_events`\n";
+
+		$db = new DB();
+		$db->query(
+			'CREATE TABLE place_events (
+				id INTEGER PRIMARY KEY,
+				place_id INTEGER,
+				title TEXT,
+				details TEXT,
+				timestamp INTEGER
+			);'
+		);
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_29() {

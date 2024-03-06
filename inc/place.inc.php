@@ -80,6 +80,26 @@ class Place extends Record {
 			$html .= $dashboard_photo->html();
 		}
 
+		$events = Place_Event::select(['place_id' => $this->id], 'timestamp DESC');
+
+		if (count($events)) {
+			$dl = new Html_DL();
+			$dl->elements['title'] = array(
+				'title' => __('Events'),
+				'value' => '',
+				'attributes' => [
+					'class' => 'title',
+				],
+			);
+			$dl->elements += array_map(function($event) {
+				return [
+					'title' => gmdate('Y-m-d H:i:s', $event->timestamp),
+					'value' => '<b>'.$event->title.'</b>'.$event->details,
+				];
+			}, $events);
+			$html .= $dl->html();
+		}
+
 		$sensors = Sensor::select(['place_id' => $this->id]);
 
 		$chart = new Chart();
@@ -89,6 +109,13 @@ class Place extends Record {
 		$chart->period = "1-week";
 		$chart->type = "line";
 		$chart->parameters = [
+			'events' => array_map(function($event) {
+				return [
+					'timestamp' => $event->timestamp,
+					'title' => $event->title,
+					'details' => $event->details,
+				];
+			}, $events),
 			'sensors' => array_map(function($sensor) {
 				return [
 					'value' => [
@@ -154,7 +181,16 @@ class Place extends Record {
 		$form->actions['delete']->value = "delete";
 		$form->actions['delete']->confirmation = __("Are you sure you want to delete this place?");
 
-		return $form->html();
+		$html = $form->html();
+
+		if ($this->id) {
+			$event = new Place_Event();
+			$event->place_id = $this->id;
+
+			$html .= $event->form();
+		}
+
+		return $html;
 	}
 
 	function from_form($data) {
