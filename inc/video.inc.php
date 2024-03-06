@@ -166,7 +166,7 @@ class Video extends Record {
 		$keyrate = $this->fps/2; // one keyframe every 0,5 second
 
 		`/usr/bin/ffmpeg -loglevel fatal -y -safe 0 \
-			-f concat -i "{$playlist}" -r {$this->fps} -g {$keyrate} \
+			-f concat -i "{$playlist}" -r {$this->fps} -g {$keyrate} -pix_fmt yuv420p \
 			-c:v h264 -crf 30 {$vf} {$filter} \
 			-movflags +faststart \
 			"{$path}"`;
