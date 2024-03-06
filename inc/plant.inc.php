@@ -359,10 +359,12 @@ HTML;
 		$playlist = tempnam("/tmp", "veranda");
 
 		foreach ($photos as $photo) {
-			$filename = tempnam("/tmp", "veranda_photo_".$this->id); unlink($filename); $filename .= ".jpg";
-			file_put_contents($filename, $this->box_image($photo));
+			if ($photo->best_quality()) {
+				$filename = tempnam("/tmp", "veranda_photo_".$this->id); unlink($filename); $filename .= ".jpg";
+				file_put_contents($filename, $this->box_image($photo));
 
-			$photo_files[] = $filename;
+				$photo_files[] = $filename;
+			}
 		}
 
 		$video = new Video();
@@ -385,21 +387,25 @@ HTML;
 			return "";
 		}
 
-		if ($photo = $this->place()->photo_at(time())) {
+		if ($photo = $this->place()->photo_at(time()) and $photo->best_quality()) {
 			return '<img src="data:image/jpg;base64,'.base64_encode($this->box_image($photo)).'" />';
 		}
 	}
 
 	function box_image($photo) {
-		$original = imagecreatefromjpeg($photo->best_quality());
-		$cropped = imagecreatetruecolor($this->box_width, $this->box_height);
+		if ($photo->best_quality()) {
+			$original = imagecreatefromjpeg($photo->best_quality());
+			$cropped = imagecreatetruecolor($this->box_width, $this->box_height);
 
-		imagecopy($cropped, $original, 0, 0, $this->box_x, $this->box_y, $this->box_width, $this->box_height);
+			imagecopy($cropped, $original, 0, 0, $this->box_x, $this->box_y, $this->box_width, $this->box_height);
 
-		ob_start();
-		imagejpeg($cropped);
-		imagedestroy($cropped);
-		return ob_get_clean();
+			ob_start();
+			imagejpeg($cropped);
+			imagedestroy($cropped);
+			return ob_get_clean();
+		}
+
+		return "";
 	}
 
 	function box_colour($timestamp = null) {
