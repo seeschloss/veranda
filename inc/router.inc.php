@@ -955,6 +955,10 @@ HTML;
 			file_put_contents("/tmp/plop", file_get_contents("php://input"));
 			if ($data = json_decode(file_get_contents("php://input"), JSON_OBJECT_AS_ARRAY)) {
 				foreach ($data as $sensor_id => $sensor_data) {
+					if (str_ends_with($sensor_id, "_battery")) {
+						continue;
+					}
+
 					if (is_array($sensor_data)) {
 						$value = isset($sensor_data['value']) ? $sensor_data['value'] : null;
 						$timestamp = isset($sensor_data['timestamp']) ? (int)$sensor_data['timestamp'] : time();
@@ -962,7 +966,11 @@ HTML;
 					} else {
 						$value = $sensor_data;
 						$timestamp = time();
-						$battery = null;
+						if (isset($data["${sensor_id}_battery"]) and $data["${sensor_id}_battery"] != "nan") {
+							$battery = $data["${sensor_id}_battery"];
+						} else {
+							$battery = null;
+						}
 					}
 
 					if (strtolower($value) == 'nan') {
