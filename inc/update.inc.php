@@ -121,7 +121,29 @@ class Update {
 			self::to_30();
 		}
 
+		if ($db->value("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='files'") == 0) {
+			self::to_31();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_31() {
+		echo "31. Create table `files`\n";
+
+		$db = new DB();
+		$db->query(
+			'CREATE TABLE files (
+				id INTEGER PRIMARY KEY,
+				path TEXT,
+				name TEXT,
+				size INTEGER
+			);'
+		);
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_30() {

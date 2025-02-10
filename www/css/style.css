@@ -368,6 +368,10 @@ form.dl-form > dl > dd > select {
 	flex: 1;
 }
 
+form.dl-form > dl > dd > input[type="file"] {
+	width: 50%;
+}
+
 form.dl-form > dl > dd > input[type="radio"],
 form.dl-form > dl > dd > input[type="checkbox"] {
 	flex: 0;

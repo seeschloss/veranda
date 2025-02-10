@@ -22,6 +22,7 @@ require_once dirname(__FILE__).'/router.inc.php';
 require_once dirname(__FILE__).'/temperature_archive.inc.php';
 require_once dirname(__FILE__).'/photo.inc.php';
 require_once dirname(__FILE__).'/video.inc.php';
+require_once dirname(__FILE__).'/file.inc.php';
 require_once dirname(__FILE__).'/place_event.inc.php';
 require_once dirname(__FILE__).'/place.inc.php';
 require_once dirname(__FILE__).'/sensor.inc.php';

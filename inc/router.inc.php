@@ -26,9 +26,8 @@ class Router {
 			'/admin/plant/([0-9]+)/locate' => [$this, 'show_admin_plant_locate'],
 			'/admin/plant/([0-9]+)' => [$this, 'show_admin_plant'],
 			'/admin/plants' => [$this, 'show_admin_plants'],
-			'/admin/place/([0-9]+)/photos/20[0-9][0-9]' => [$this, 'show_admin_place_photos_year'],
+			'/admin/place/([0-9]+)/photos(/20[0-9][0-9])?' => [$this, 'show_admin_place_photos_year'],
 			'/admin/place/([0-9]+)/photos/[0-9]*' => [$this, 'show_admin_place_photos_day'],
-			'/admin/place/([0-9]+)/photos' => [$this, 'show_admin_place_photos'],
 			'/admin/place/([0-9]+)/videos/[0-9]*' => [$this, 'show_admin_place_videos_day'],
 			'/admin/place/([0-9]+)/videos' => [$this, 'show_admin_place_videos'],
 			'/admin/place/([0-9]+)' => [$this, 'show_admin_place'],
@@ -49,6 +48,7 @@ class Router {
 			'/video/([0-9]+)/([0-9]+)' => [$this, 'show_video'],
 			'/photo/([0-9]+)/([0-9]+)/[a-z]*' => [$this, 'show_photo'],
 			'/photo/([0-9]+)/([0-9]+)' => [$this, 'show_photo'],
+			'/file/([0-9]+)/(.+)' => [$this, 'show_file'],
 			'/photos/?' => [$this, 'show_photos'],
 			'/plant/([0-9]+)' => [$this, 'show_plant'],
 			'/plants' => [$this, 'show_plants'],
@@ -372,7 +372,9 @@ HTML;
 		$place = new Place();
 		$place->load(['id' => $place_id]);
 
-		$this->theme->content_env = ['place' => $place, 'year' => (int)$parts[5]];
+		$year = (int)($parts[5] ?? date('Y'));
+
+		$this->theme->content_env = ['place' => $place, 'year' => $year];
 
 		if ($this->json) {
 			header('Content-Type: application/json;charset=UTF-8');
@@ -619,6 +621,22 @@ HTML;
 			print $this->theme->html();
 		}
 
+		return true;
+	}
+
+	public function show_file($parts, $get, $post) {
+		$file_id = (int)$parts[2];
+		$file_name = $parts[3];
+
+		$file = new File();
+		if ($file->load(['id' => $file_id, 'name' => $file_name])) {
+			header("Content-Type: text/plain");
+			header("Content-Length: ".$file->size);
+			readfile($file->path);
+		} else {
+			http_response_code(404);
+		}
+		
 		return true;
 	}
 
@@ -891,6 +909,8 @@ HTML;
 	}
 
 	function auth_api() {
+		$authentified = false;
+
 		$submitted_api_key = "";
 		if (isset($_REQUEST['key'])) {
 			$submitted_api_key = $_REQUEST['key'];
@@ -901,10 +921,34 @@ HTML;
 		}
 
 		if (!empty($GLOBALS['config']['api-key'])) {
-			if ($GLOBALS['config']['api-key'] != $submitted_api_key) {
-				header('HTTP/1.0 403 Forbidden');
-				die();
+			if ($GLOBALS['config']['api-key'] === $submitted_api_key) {
+				$authentified = true;
 			}
+		}
+
+		if (!$authentified) {
+			foreach (Device::select(['type' => 'microcontroller']) as $device) {
+				$parameters = $device->parameters();
+				if (!empty($parameters['api-key']) and $parameters['api-key'] === $submitted_api_key) {
+					$authentified = true;
+
+					if ($parameters['firmware-version']) {
+						header("X-Firmware-Version: ".$parameters['firmware-version']);
+					}
+
+					$file = new File();
+					if ($file->load(['id' => $parameters['firmware']])) {
+						header("X-Firmware-URL: ".$file->url());
+					}
+
+					break;
+				}
+			}
+		}
+
+		if (!$authentified) {
+			header('HTTP/1.0 403 Forbidden');
+			die();
 		}
 	}
 

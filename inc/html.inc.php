@@ -394,6 +394,10 @@ class HTML_Form {
 		$parameters_html = array_reduce($this->parameters, function($html, $parameter) {
 			if ($parameter instanceof HTML_Form_Element) {
 				$parameter_html = "<dt>{$parameter->label()}</dt><dd>{$parameter->element()}</dd>";
+
+				if (isset($parameter->type) and $parameter->type == "file") {
+					$this->enctype = "multipart/form-data";
+				}
 			} else if (is_array($parameter)) {
 				$parameter_html = "<dt>{$parameter['label']}</dt><dd>{$parameter['value']}</dd>";
 			}
@@ -415,7 +419,7 @@ class HTML_Form {
 		}, array_keys($this->attributes), $this->attributes));
 
 		$title = '';
-		if ($this->title) {
+		if (!empty($this->title)) {
 			$title = '<h2>'.$this->title.'</h2>';
 		}
 

@@ -155,6 +155,9 @@ class Device extends Record {
 			case "ventilation":
 				$form = $this->form_ventilation($form);
 				break;
+			case "microcontroller":
+				$form = $this->form_microcontroller($form);
+				break;
 			default:
 				break;
 		}
@@ -438,6 +441,48 @@ class Device extends Record {
 		return $form;
 	}
 
+	function form_microcontroller($form) {
+		$this->parameters = $this->parameters();
+
+		$form->parameters['api-key'] = new HTML_Input("device-api-key");
+		$form->parameters['api-key']->type = "text";
+		$form->parameters['api-key']->name = "device[api-key]";
+		$form->parameters['api-key']->value = $this->parameters['api-key'];
+		$form->parameters['api-key']->label = __("API key");
+
+		$form->parameters['interval'] = new HTML_Input("device-interval");
+		$form->parameters['interval']->type = "number";
+		$form->parameters['interval']->name = "device[interval]";
+		$form->parameters['interval']->value = (int)$this->parameters['interval'];
+		$form->parameters['interval']->label = __("Wake-up interval (seconds)");
+
+		$form->parameters['jpeg-quality'] = new HTML_Input("device-jpeg-quality");
+		$form->parameters['jpeg-quality']->type = "number";
+		$form->parameters['jpeg-quality']->name = "device[jpeg-quality]";
+		$form->parameters['jpeg-quality']->value = (int)$this->parameters['jpeg-quality'];
+		$form->parameters['jpeg-quality']->label = __("JPEG quality (0-100)");
+
+		$form->parameters['firmware-version'] = new HTML_Input("device-firmware-version");
+		$form->parameters['firmware-version']->type = "text";
+		$form->parameters['firmware-version']->name = "device[firmware-version]";
+		$form->parameters['firmware-version']->value = $this->parameters['firmware-version'];
+		$form->parameters['firmware-version']->label = __("Latest firmware version");
+
+		$form->parameters['firmware'] = new HTML_Input("device-firmware");
+		$form->parameters['firmware']->type = "file";
+		$form->parameters['firmware']->name = "device[firmware]";
+		$form->parameters['firmware']->label = __("Latest firmware");
+
+		if (!empty($this->parameters['firmware'])) {
+			$file = new File();
+			$file->load(['id' => $this->parameters['firmware']]);
+
+			$form->parameters['firmware']->suffix = '<a href="'.$file->url().'">'.$file->name.'</a>';
+		}
+
+		return $form;
+	}
+
 	function from_form($data) {
 		if (isset($data['id'])) {
 			$this->id = (int)$data['id'];
@@ -482,6 +527,9 @@ class Device extends Record {
 			case "ventilation":
 				$this->from_form_parameters_ventilation($data);
 				$this->from_form_parameters_sensor($data);
+				break;
+			case "microcontroller":
+				$this->from_form_parameters_microcontroller($data);
 				break;
 			default:
 				break;
@@ -570,6 +618,27 @@ class Device extends Record {
 				'start' => $start_h * 3600 + $start_m * 60,
 				'stop' => $stop_h * 3600 + $stop_m * 60
 			];
+		}
+	}
+
+	function from_form_parameters_microcontroller($data) {
+		$this->parameters = $this->parameters();
+
+		foreach (['api-key', 'interval', 'jpeg-quality', 'firmware-version'] as $parameter) {
+			if (isset($data[$parameter])) {
+				$this->parameters[$parameter] = $data[$parameter];
+			}
+		}
+
+		if (!empty($_FILES['device']['tmp_name']['firmware'])) {
+			$contents = file_get_contents($_FILES['device']['tmp_name']['firmware']);
+			$name = $_FILES['device']['name']['firmware'];
+
+			$file = new File();
+			$file->name = $name;
+			$file->save($contents);
+
+			$this->parameters['firmware'] = $file->id;
 		}
 	}
 

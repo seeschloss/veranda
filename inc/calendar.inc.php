@@ -20,10 +20,10 @@ class GregorianCalendar extends Calendar {
 		$this->gregorian_year = $year;
 	}
 
-	function html() {
+	function html($previous_year_link = "", $next_year_link = "") {
 		$html = '<section class="calendar gregorian">';
 
-		$html .= '<h1>'.$this->gregorian_year.'</h1>';
+		$html .= '<h1>'.implode(" ", [$previous_year_link, $this->gregorian_year, $next_year_link]).'</h1>';
 
 		for ($month = 1; $month <= 12; $month++) {
 			$calendar_month = new GregorianCalendarMonth($this->gregorian_year, $month);
