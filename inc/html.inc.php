@@ -303,6 +303,8 @@ class HTML_Form_Element {
 	public $name = "";
 	public $value = "";
 	public $label = "";
+	public $type = "";
+	public $title = "";
 
 	public $suffix = "";
 

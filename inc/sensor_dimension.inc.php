@@ -54,8 +54,8 @@ class Sensor_Dimension extends Sensor {
 		return $this->dimension == 'value' ? $data : $this->convert_dimension($data);
 	}
 
-	function data_between($start, $stop, $interval = 0, $group_function = null) {
-		$data = parent::data_between($start, $stop, $interval, $group_function);
+	function data_between($start, $stop, $interval = 0, $group_function = null, $column = "value") {
+		$data = parent::data_between($start, $stop, $interval, $group_function, $column);
 
 		if ($this->dimension == 'value') {
 			return $data;

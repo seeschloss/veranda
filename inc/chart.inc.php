@@ -359,8 +359,6 @@ class Chart extends Record {
 	function sensors_data($interval = 0) {
 		$data = [];
 
-		$sensors = Sensor::select(['id' => array_map(function($sensor) { return $sensor['id']; }, $this->parameters['sensors'])]);
-
 		$start = $this->data_start();
 		$stop = time();
 
@@ -370,13 +368,13 @@ class Chart extends Record {
 
 			foreach ($dimensions as $dimension => $parameters) {
 				$data[$sensor->id.'-'.$dimension] = [
-					'label' => $sensor->name,
-					'axis-label' => $sensor->axis_label(),
+					'label' => $parameters['label'] ?? $sensor->name,
+					'axis-label' => $parameters['axis-label'] ?? $sensor->axis_label(),
 					'type' => $sensor->type,
-					'unit' => $sensor->unit(),
+					'unit' => $parameters['unit'] ?? $sensor->unit(),
 					'place' => $sensor->place()->name,
 					'color' => $parameters['color'],
-					'values' => $sensor->data_between($start, $stop, $interval),
+					'values' => $sensor->data_between($start, $stop, $interval, null, $dimension == "battery" ? "battery" : null),
 				];
 			}
 		}

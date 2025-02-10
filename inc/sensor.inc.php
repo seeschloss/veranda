@@ -631,10 +631,10 @@ class Sensor extends Record {
 		}
 	}
 
-	function data_between($start, $stop, $interval = 0, $group_function = null) {
+	function data_between($start, $stop, $interval = 0, $group_function = null, $column = "value") {
 		$db = new DB();
 
-		$query = 'SELECT value, timestamp '.
+		$query = 'SELECT '.$column.' value, timestamp '.
 		           'FROM sensors_data '.
 				  'WHERE timestamp BETWEEN '.(int)$start.' AND '.(int)$stop.' '.
 				    'AND sensor_id = '.(int)$this->id.' '.
@@ -644,6 +644,10 @@ class Sensor extends Record {
 		$result = $db->query($query);
 		$tare = 0;
 		while ($record = $result->fetch(PDO::FETCH_ASSOC)) {
+			if ($record['value'] === null) {
+				continue;
+			}
+
 			$value = (float)$record['value'];
 
 			if ($this->type == "weight") {
@@ -772,7 +776,7 @@ class Sensor extends Record {
 			case 'voltage':
 				return 'V';
 			case 'generic':
-				return $this->parameters['unit-symbol'];
+				return $this->parameters['unit-symbol'] ?? "";
 			default:
 				return '';
 		}
@@ -783,7 +787,7 @@ class Sensor extends Record {
 	}
 
 	function axis_label() {
-		return  $this->parameters['unit-name'] ?? _a('sensor-types', $sensor->type);
+		return  $this->parameters['unit-name'] ?? _a('sensor-types', $this->type);
 	}
 
 	function value_at($timestamp) {
@@ -854,7 +858,12 @@ class Sensor extends Record {
 				return $this->chart_histogram("1-day");
 
 			default:
-				return $this->chart_line("1-week").$this->chart_minmax("all");
+				$chart_battery = "";
+				$data = $this->data_at(time());
+				if ($data and $data['battery'] != "") {
+					$chart_battery = $this->chart_battery("1-week");
+				}
+				return $this->chart_line("1-week").$this->chart_minmax("all").$chart_battery;
 		}
 	}
 
@@ -892,6 +901,30 @@ class Sensor extends Record {
 					'value' => [
 						'id' => $this->id,
 						'color' => '#2F2F2F',
+					],
+				],
+			]
+		];
+
+		return $chart->html();
+	}
+
+	function chart_battery($period = "1-week") {
+		$chart = new Chart();
+		$chart->id = "sensor-{$this->id}-battery";
+		$chart->title = $this->name;
+		$chart->size = "large";
+		$chart->period = $period;
+		$chart->type = "line";
+		$chart->parameters = [
+			'sensors' => [
+				$this->id => [
+					'battery' => [
+						'id' => $this->id,
+						'color' => '#2F2F2F',
+						'label' => __("Battery"),
+						'unit' => "%",
+						'axis-label' => __("Battery"),
 					],
 				],
 			]

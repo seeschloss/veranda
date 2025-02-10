@@ -221,7 +221,7 @@ HTML;
 
 	function json_to_bare($key) {
 		$json = json_decode($this->content_string());
-		return $json->{$key}."\n";
+		return ($json->{$key} ?? "")."\n";
 	}
 
 	function bare() {

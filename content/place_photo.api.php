@@ -2,12 +2,19 @@
 
 $response = [];
 
-file_put_contents("/tmp/body", $body);
 file_put_contents("/tmp/body-test", "plop");
 
 if (!isset($_FILES) or empty($_FILES)) {
   $body = file_get_contents('php://input');
-  if ($body and $decoded = base64_decode($body)) {
+file_put_contents("/tmp/body", $body);
+  if ($body[0] == "\xFF" and $body[1] == "\xD8" and $body[2] == "\xFF") {
+    // JPEG
+    $data = $body;
+  } else {
+    $data = base64_decode($body);
+  }
+  if ($data) {
+file_put_contents("/tmp/data", $data);
     $timestamp = isset($_REQUEST['timestamp']) ? (int)$_REQUEST['timestamp'] : time();
     $period = isset($_REQUEST['period']) ? $_REQUEST['period'] : $place->period($timestamp);
 
@@ -15,7 +22,7 @@ if (!isset($_FILES) or empty($_FILES)) {
     $photo->place_id = $place->id;
     $photo->timestamp = $timestamp;
     $photo->period = $period;
-    $photo->save($decoded);
+    $photo->save($data);
 
     $response[] = [
       'photo_id' => $photo->id,

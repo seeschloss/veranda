@@ -47,9 +47,9 @@ class Lang {
 
 		if (isset(static::$translated_arrays[$string])) {
 			if (count($args)) {
-				return static::$translated_arrays[$string][$args[0]];
+				return static::$translated_arrays[$string][$args[0]] ?? "";
 			} else {
-				return static::$translated_arrays[$string];
+				return static::$translated_arrays[$string] ?? "";
 			}
 		} else {
 			return $string;
