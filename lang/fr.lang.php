@@ -73,6 +73,7 @@ $___['sensor-types'] = [
 	'water' => "Eau",
 	'gas' => "Gaz",
 	'voltage' => "Tension",
+	'current' => "Intensité",
 	'generic' => "Générique",
 ];
 

@@ -775,6 +775,8 @@ class Sensor extends Record {
 				return 'ppm';
 			case 'voltage':
 				return 'V';
+			case 'current':
+				return 'A';
 			case 'generic':
 				return $this->parameters['unit-symbol'] ?? "";
 			default:

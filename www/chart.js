@@ -18,6 +18,19 @@ var chart_min_max_display = function(id, title, raw_data) {
 			if (raw_data.hasOwnProperty(sensor_id)) {
 				let sensor_data = raw_data[sensor_id];
 
+				switch(sensor_data.unit) {
+					case "A":
+					case "V":
+						if (Object.entries(sensor_data.values).every(value => value[1] < 1)) {
+							sensor_data.unit = "m" + sensor_data.unit;
+							Object.keys(sensor_data.values).forEach(function(key, value) {
+								sensor_data.values[key] = sensor_data.values[key] * 1000;
+							});
+						}
+
+						break;
+				}
+
 				let all_values = [];
 				for (var timestamp in sensor_data.values) {
 					if (sensor_data.values.hasOwnProperty(timestamp)) {
@@ -228,6 +241,19 @@ var chart_histogram_display = function(id, title, raw_data) {
 			if (raw_data.hasOwnProperty(sensor_id)) {
 				let sensor_data = raw_data[sensor_id];
 
+				switch(sensor_data.unit) {
+					case "A":
+					case "V":
+						if (Object.entries(sensor_data.values).every(value => value[1] < 1)) {
+							sensor_data.unit = "m" + sensor_data.unit;
+							Object.keys(sensor_data.values).forEach(function(key, value) {
+								sensor_data.values[key] = sensor_data.values[key] * 1000;
+							});
+						}
+
+						break;
+				}
+
 				let all_values = [];
 				for (var timestamp in sensor_data.values) {
 					if (sensor_data.values.hasOwnProperty(timestamp)) {
@@ -425,6 +451,19 @@ var chart_line_display = function(id, title, raw_data, daylight) {
 		for (var sensor_id in raw_data) {
 			if (raw_data.hasOwnProperty(sensor_id)) {
 				let sensor_data = raw_data[sensor_id];
+
+				switch(sensor_data.unit) {
+					case "A":
+					case "V":
+						if (Object.entries(sensor_data.values).every(value => value[1] < 1)) {
+							sensor_data.unit = "m" + sensor_data.unit;
+							Object.keys(sensor_data.values).forEach(function(key, value) {
+								sensor_data.values[key] = sensor_data.values[key] * 1000;
+							});
+						}
+
+						break;
+				}
 
 				let all_values = [];
 				for (var timestamp in sensor_data.values) {

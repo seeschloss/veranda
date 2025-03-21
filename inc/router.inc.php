@@ -939,6 +939,7 @@ HTML;
 					$file = new File();
 					if ($file->load(['id' => $parameters['firmware']])) {
 						header("X-Firmware-URL: ".$file->url());
+						header("X-Firmware-MD5: ".md5($file->path));
 					}
 
 					break;
