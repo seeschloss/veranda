@@ -755,7 +755,7 @@ class Sensor extends Record {
 		return $grouped_data;
 	}
 
-	function unit() {
+	function unit($si_multiplier = 1) {
 		switch ($this->type) {
 			case 'temperature':
 				return '°C';
@@ -768,15 +768,35 @@ class Sensor extends Record {
 			case 'weight':
 				return 'Kg';
 			case 'electricity':
-				return 'kWh';
+				switch ($si_multiplier) {
+					case '1000':
+						return 'kWh';
+					default:
+						return 'Wh';
+				}
 			case 'water':
-				return 'L';
+				switch ($si_multiplier) {
+					case '1000':
+						return 'mL';
+					default:
+						return 'L';
+				}
 			case 'gas':
 				return 'ppm';
 			case 'voltage':
-				return 'V';
+				switch ($si_multiplier) {
+					case '1000':
+						return 'mV';
+					default:
+						return 'V';
+				}
 			case 'current':
-				return 'A';
+				switch ($si_multiplier) {
+					case '1000':
+						return 'mA';
+					default:
+						return 'A';
+				}
 			case 'generic':
 				return $this->parameters['unit-symbol'] ?? "";
 			default:
@@ -821,13 +841,25 @@ class Sensor extends Record {
 
 		$data = $this->data_at(time());
 		if ($data) {
-			$text = $data['value'];
+			$si_multiplier = 1;
+			switch ($this->type) {
+				case "current":
+				case "voltage":
+				case "water":
+				case "electricity":
+				case "weight":
+					if ($data['value'] < 1) {
+						$si_multiplier = 1000;
+					}
+			}
+
+			$text = $data['value'] * $si_multiplier;
 
 			if ($this->type != "temperature" and $this->type != "humidity") {
 				$text .= " ";
 			}
 			
-			$text .= $this->unit();
+			$text .= $this->unit($si_multiplier);
 		}
 
 		return $text;

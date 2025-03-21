@@ -3,7 +3,7 @@
 class Sensor_Dimension extends Sensor {
 	public $dimension;
 
-	function unit() {
+	function unit($si_multiplier = 1) {
 		switch ($this->dimension) {
 			case 'value':
 				return parent::unit();
