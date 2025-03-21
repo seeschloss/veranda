@@ -1020,12 +1020,15 @@ HTML;
 
 					if (strtolower($value) == 'nan') {
 						$value = NAN;
-					} else {
+					} else if ($value !== "") {
 						$value = (float)$value;
+					} else {
+						$all_ok = false;
+						continue;
 					}
 
 					$sensor = new Sensor();
-					if ($value and $sensor->load(['id' => $sensor_id])) {
+					if ($sensor->load(['id' => $sensor_id])) {
 						if (!is_nan($value)) {
 							// NaN just means there's nothing to record, it's not an error either
 							$response = $sensor->record_data($value, $timestamp, $battery);
