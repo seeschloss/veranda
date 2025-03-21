@@ -648,16 +648,20 @@ HTML;
 		$photo->load(['id' => $photo_id]);
 
 		if ($photo->place_id == $place_id) {
-			header("Content-Type: image/jpeg");
+			$file = $photo->best_quality();
+
 			if (isset($parts[4]) and $parts[4] == "original") {
-				header("Content-Length: ".filesize($photo->path_original));
-				readfile($photo->path_original);
+				$file = $photo->path_original;
 			} else if (isset($parts[4])) {
-				header("Content-Length: ".filesize($photo->path($parts[4])));
-				readfile($photo->path($parts[4]));
+				$file = $photo->path($parts[4]);
+			}
+
+			if (file_exists($file)) {
+				header("Content-Type: image/jpeg");
+				header("Content-Length: ".filesize($file));
+				readfile($file);
 			} else {
-				header("Content-Length: ".filesize($photo->best_quality()));
-				readfile($photo->best_quality());
+				http_response_code(404);
 			}
 		} else {
 			http_response_code(404);
