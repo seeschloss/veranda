@@ -16,9 +16,38 @@ class Video extends Record {
 	public $photos = [];
 	public $blur = false;
 
+	public $hardware_encoding = true;
+	public $encoding_format = "x264";
+
 	public $files = [];
 
 	private $_legend_file = "";
+
+	function ffmpeg_bin() {
+		return $this->hardware_encoding ? "/usr/bin/ffmpeg -vaapi_device /dev/dri/renderD128" : "/usr/bin/ffmpeg";
+	}
+
+	function ffmpeg_filter_append() {
+		return $this->hardware_encoding ? "format=nv12|vaapi,hwupload" : "";
+	}
+
+	function ffmpeg_codec() {
+		if ($this->hardware_encoding) {
+			return "-an -c:v hevc_vaapi -profile:v main -pix_fmt vaapi -movflags +faststart";
+		}
+
+		switch ($this->encoding_format) {
+			case "mp4":
+			case "x265":
+				return "-an -c:v libx265 -crf 24 -profile:v main -pix_fmt yuv420p -movflags +faststart";
+			case "av1":
+				return "-an -c:v libsvtav1 -qp 30 -tile-columns 2 -tile-rows 2 -pix_fmt yuv420p";
+		}
+	}
+
+	function ffmpeg_extension() {
+		return "mp4";
+	}
 
 	function set_filename($filename) {
 		$this->path = self::$directory.'/'.$filename;
@@ -27,7 +56,7 @@ class Video extends Record {
 			$this->path .= '-' . $this->quality;
 		}
 
-		$this->path .= '.mp4';
+		$this->path .= '.'.$this->ffmpeg_extension();
 	}
 
 	function path() {
@@ -38,15 +67,15 @@ class Video extends Record {
 				$this->path .= '-' . $this->quality;
 			}
 
-			$this->path .= '.mp4';
+			$this->path .= '.'.$this->ffmpeg_extension();
 		}
 
 		return $this->path;
 	}
 
 	function make_with_legend() {
-		$legend_file = tempnam("/tmp", "veranda_legend"); unlink($legend_file); $legend_file .= '.mp4';
-		$video_file = tempnam("/tmp", "veranda_legend"); unlink($video_file); $video_file .= '.mp4';
+		$legend_file = tempnam("/tmp", "veranda_legend"); unlink($legend_file); $legend_file .= '.'.$this->ffmpeg_extension();
+		$video_file = tempnam("/tmp", "veranda_legend"); unlink($video_file); $video_file .= '.'.$this->ffmpeg_extension();
 
 		$this->make_video($video_file);
 		$height = (int)`/usr/bin/ffprobe -v quiet -print_format flat -select_streams v:0 -show_entries stream=height '{$video_file}' | cut -d= -f2`;
@@ -62,10 +91,15 @@ class Video extends Record {
 	}
 
 	function stack_videos($left, $right, $destination) {
-		`/usr/bin/ffmpeg -y \
+		$filter_complex = "[0][1] hstack";
+		if ($this->ffmpeg_filter_append()) {
+			$filter_complex .= ",".$this->ffmpeg_filter_append();
+		}
+
+		`{$this->ffmpeg_bin()} -y \
 			-i {$left} -i {$right} \
-			-filter_complex '[0][1]hstack' \
-			-c:v vp9 -crf 30 -b:v 0 -threads 8 -pix_fmt yuv420p \
+			-filter_complex "{$filter_complex}" \
+			{$this->ffmpeg_codec()} \
 			-r {$this->fps} \
 			"{$destination}"`;
 
@@ -103,10 +137,11 @@ class Video extends Record {
 
 		file_put_contents($playlist, implode("duration ".(1/$this->fps)."\n", $lines));
 
-		`/usr/bin/ffmpeg -y -safe 0 \
-			-f concat -i "{$playlist}" -vsync vfr \
-			-c:v vp9 -crf 30 -b:v 0 {$vf} -threads 8 -pix_fmt yuv420p \
-			-r {$this->fps} \
+		$keyrate = $this->fps/2; // one keyframe every 0,5 second
+
+		`{$this->ffmpeg_bin()} -loglevel fatal -y -safe 0 \
+			-f concat -i "{$playlist}" -r {$this->fps} -g {$keyrate} \
+			{$this->ffmpeg_codec()} {$vf} \
 			"{$path}"`;
 
 		unlink($playlist);
@@ -140,46 +175,61 @@ class Video extends Record {
 
 		file_put_contents($playlist, implode("duration ".(1/$this->fps)."\n", array_map(function($file) { return "file '{$file}'\n"; }, $this->files)));
 
-		$vf = [
+		$video_filters = [
 			"deflicker=size=7:mode=median",
 		];
 
 		if ($this->quality == "hd") {
 		} else if (!$this->quality) {
-			$vf[] = "scale=1080:-2";
+			$video_filters[] = "scale=1080:-2";
 		} else {
-			$vf[] = "scale=".$this->quality;
-		}
-
-		if (count($vf)) {
-			$vf = " -vf ".join(",", $vf);
-		} else {
-			$vf = "";
+			$video_filters[] = "scale=".$this->quality;
 		}
 
 		if ($this->blur) {
-			$filter = "-filter:v setpts=0.5*PTS,hqdn3d=4:3:6:4";
-		} else {
-			$filter = "";
+			$video_filters[] = "setpts=0.5*PTS,hqdn3d=4:3:6:4";
+		}
+
+		if ($this->ffmpeg_filter_append()) {
+			$video_filters[] = $this->ffmpeg_filter_append();
 		}
 		
+		if (count($video_filters)) {
+			$video_filters = "-filter:v ".join(",", array_map(fn($a) => "'{$a}'", $video_filters));
+		} else {
+			$video_filters = "";
+		}
+
 		$keyrate = $this->fps/2; // one keyframe every 0,5 second
 
-		`/usr/bin/ffmpeg -loglevel fatal -y -safe 0 \
-			-f concat -i "{$playlist}" -r {$this->fps} -g {$keyrate} -pix_fmt yuv420p \
-			-c:v h264 -crf 30 {$vf} {$filter} \
-			-movflags +faststart \
+		`{$this->ffmpeg_bin()} -y -safe 0 \
+			-f concat -i "{$playlist}" -r {$this->fps} -g {$keyrate} \
+			{$this->ffmpeg_codec()} {$video_filters} \
 			"{$path}"`;
-
-		/*
-		`/usr/bin/ffmpeg -y -safe 0 \
-			-f concat -i "{$playlist}" -vsync vfr \
-			-c:v vp8 -crf 30 -b:v 0 {$vf} {$filter} -threads 8 -pix_fmt yuv420p -g {$keyrate} \
-			-r {$this->fps} \
-			"{$path}"`;
-		*/
 
 		unlink($playlist);
+
+		$place = current($this->photos)->place();
+		if ($place->mask) {
+			$file = new File();
+			$file->load(['id' => $place->mask]);
+
+			$video_file = tempnam("/tmp", "veranda_legend"); unlink($video_file); $video_file .= '.'.$this->ffmpeg_extension();
+			rename($path, $video_file);
+
+			$filter_complex = "[0:v][1:v] overlay=0:0";
+			if ($this->ffmpeg_filter_append()) {
+				$filter_complex .= ",".$this->ffmpeg_filter_append();
+			}
+
+			`{$this->ffmpeg_bin()} -loglevel fatal -y \
+				-i "{$video_file}" -i "{$file->path}" \
+				{$this->ffmpeg_codec()} \
+				-filter_complex "{$filter_complex}" \
+				"{$path}"`;
+
+			unlink($video_file);
+		}
 
 		return file_exists($path);
 	}

@@ -8,6 +8,7 @@ class Place extends Record {
 	public $type = "";
 	public $public = true;
 	public $comment = "";
+	public $mask = null;
 	public $created = 0;
 	public $updated = 0;
 
@@ -165,6 +166,18 @@ class Place extends Record {
 		$form->fields['comment']->value = $this->comment;
 		$form->fields['comment']->label = __("Comment");
 
+		$form->fields['mask'] = new HTML_Input("place-mask");
+		$form->fields['mask']->type = "file";
+		$form->fields['mask']->name = "place[mask]";
+		$form->fields['mask']->label = __("Photo mask");
+
+		if (!empty($this->mask)) {
+			$file = new File();
+			$file->load(['id' => $this->mask]);
+
+			$form->fields['mask']->suffix = '<a href="'.$file->url().'">'.$file->name.'</a>';
+		}
+
 		$form->actions['save'] = new HTML_Button("place-save");
 		$form->actions['save']->name = "action";
 		$form->actions['save']->label = __("Save");
@@ -217,6 +230,17 @@ class Place extends Record {
 		if (isset($data['comment'])) {
 			$this->comment = $data['comment'];
 		}
+
+		if (!empty($_FILES['place']['tmp_name']['mask'])) {
+			$contents = file_get_contents($_FILES['place']['tmp_name']['mask']);
+			$name = $_FILES['place']['name']['mask'];
+
+			$file = new File();
+			$file->name = $name;
+			$file->save($contents);
+
+			$this->mask = $file->id;
+		}
 	}
 
 	function save() {
@@ -231,6 +255,7 @@ class Place extends Record {
 			'type' => $db->escape($this->type),
 			'public' => (int)$this->public,
 			'comment' => $db->escape($this->comment),
+			'mask' => $db->escape($this->mask),
 			'created' => time(),
 			'updated' => time(),
 		];
@@ -253,6 +278,7 @@ class Place extends Record {
 			'type' => $db->escape($this->type),
 			'public' => (int)$this->public,
 			'comment' => $db->escape($this->comment),
+			'mask' => $db->escape($this->mask),
 			'updated' => time(),
 		];
 

@@ -53,6 +53,7 @@ class DB {
 				type TEXT,
 				public INTEGER,
 				comment TEXT,
+				mask TEXT,
 				updated INTEGER,
 				created INTEGER
 			);',
@@ -169,7 +170,12 @@ class DB {
 	}
 
 	function query($query) {
-		$result = self::$resource->query($query);
+		try {
+			$result = self::$resource->query($query);
+		} catch (PDOException $e) {
+			$result = false;
+		}
+
 		if (!$result) {
 			$error = $this->error();
 			if (class_exists('Logger')) {

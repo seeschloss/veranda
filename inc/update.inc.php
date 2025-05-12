@@ -125,7 +125,21 @@ class Update {
 			self::to_31();
 		}
 
+		if (!$db->query('SELECT mask FROM places')) {
+			self::to_32();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_32() {
+		echo "32. Add mask to table `places`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE places ADD mask TEXT');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_31() {
