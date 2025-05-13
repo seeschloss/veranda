@@ -42,4 +42,22 @@ class Math {
 
 		return $result;
 	}
+
+	static function great_circle_distance($lat1, $lon1, $lat2, $lon2) {
+		// cf. https://www.movable-type.co.uk/scripts/latlong.html
+
+		$r = 6372.8 * 1000;
+
+		$lat1_rad = deg2rad($lat1);
+		$lon1_rad = deg2rad($lon1);
+		$lat2_rad = deg2rad($lat2);
+		$lon2_rad = deg2rad($lon2);
+
+		$alpha = ($lat2_rad - $lat1_rad)/2;
+		$beta = ($lon2_rad - $lon1_rad)/2;
+		$a = pow(sin($alpha), 2) + cos($lat1_rad) * cos($lat2_rad) * pow(sin($beta), 2);
+		$c = 2 * atan2(sqrt($a), sqrt(1-$a));
+		$distance = $r * $c;
+		return $distance;
+	}
 }
