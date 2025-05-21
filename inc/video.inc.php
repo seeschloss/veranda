@@ -17,7 +17,7 @@ class Video extends Record {
 	public $blur = false;
 
 	public $hardware_encoding = true;
-	public $encoding_format = "x264";
+	public $encoding_format = "x265";
 
 	public $files = [];
 
@@ -282,12 +282,12 @@ class Video extends Record {
 		$latest_videos = [];
 
 		foreach (Place::select($conditions) as $place) {
-			$videos = self::select(['place_id' => $place->id, 'start > 0'], 'stop DESC', 1);
+			$videos = self::select(['place_id' => $place->id, 'start > 0'], 'id DESC', 1);
 			if (count($videos)) {
 				$latest_videos[] = array_shift($videos);
 			}
 
-			$videos = self::select(['place_id' => $place->id, 'start' => 0], 'stop DESC', 1);
+			$videos = self::select(['place_id' => $place->id, 'start' => 0], 'id DESC', 1);
 			if (count($videos)) {
 				$latest_videos[] = array_shift($videos);
 			}
