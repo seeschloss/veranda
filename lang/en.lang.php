@@ -74,6 +74,7 @@ $___['sensor-types'] = [
 	'gas' => "Gas",
 	'voltage' => "Voltage",
 	'current' => "Current",
+	'duration' => "Duration",
 	'generic' => "Generic",
 ];
 
@@ -165,6 +166,7 @@ $__['Small'] = "Small";
 $__['State'] = "State";
 $__['state'] = "state";
 $__['Status'] = "Status";
+$__['Symbol'] = "Symbol";
 $__['Temperature'] = "Temperature";
 $__['Timeout'] = "Timeout";
 $__['Title'] = "Title";
@@ -172,6 +174,7 @@ $__['To'] = "To";
 $__['Turn off at'] = "Turn off at";
 $__['Turn on at'] = "Turn on at";
 $__['Type'] = "Type";
+$__['Unit'] = "Unit";
 $__['Value'] = "Value";
 $__['Veranda alert: %s - %s - %s'] = "Veranda alert: %s - %s - %s";
 $__['Wake-up interval (seconds)'] = "Wake-up interval (seconds)";

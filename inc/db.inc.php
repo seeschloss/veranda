@@ -66,6 +66,7 @@ class DB {
 			);',
 			'CREATE TABLE sensors (
 				id INTEGER PRIMARY KEY,
+				internal_name TEXT,
 				place_id INTEGER,
 				name TEXT,
 				type TEXT,

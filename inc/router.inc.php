@@ -9,6 +9,8 @@ class Router {
 	public $json = false;
 	public $bare = false;
 
+	public $authenticated_device = null;
+
 	public function __construct($site, $theme) {
 		$this->site = $site;
 		$this->theme = $theme;
@@ -18,6 +20,7 @@ class Router {
 			'/data/sensor/([0-9]+)' => [$this, 'handle_sensor_data'],
 			'/data/sensor' => [$this, 'handle_sensor_data_json'],
 			'/data/place/([0-9]+)/photo' => [$this, 'handle_place_photo'],
+			'/data/photo' => [$this, 'handle_place_photo'],
 
 			'/admin/device/([0-9]+)' => [$this, 'show_admin_device'],
 			'/admin/devices' => [$this, 'show_admin_devices'],
@@ -933,15 +936,24 @@ HTML;
 		if (!$authentified) {
 			foreach (Device::select(['type' => 'microcontroller']) as $device) {
 				$parameters = $device->parameters();
+
 				if (!empty($parameters['api-key']) and $parameters['api-key'] === $submitted_api_key) {
 					$authentified = true;
+				} else if (!empty($parameters['board-id']) and isset($_SERVER['HTTP_X_BOARD_ID']) and $parameters['board-id'] === $_SERVER['HTTP_X_BOARD_ID']) {
+					$authentified = true;
+				} else {
+					continue;
+				}
 
-					if ($parameters['firmware-version']) {
+				if ($authentified) {
+					$this->authenticated_device = $device;
+
+					if (!empty($parameters['firmware-version'])) {
 						header("X-Firmware-Version: ".$parameters['firmware-version']);
 					}
 
 					$file = new File();
-					if ($file->load(['id' => $parameters['firmware']])) {
+					if (!empty($parameters['firmware']) and $file->load(['id' => $parameters['firmware']])) {
 						header("X-Firmware-URL: ".$file->url());
 						header("X-Firmware-MD5: ".md5($file->path));
 					}
@@ -1032,7 +1044,25 @@ HTML;
 					}
 
 					$sensor = new Sensor();
-					if ($sensor->load(['id' => $sensor_id])) {
+					$sensor->load(['id' => $sensor_id]);
+
+					if (!$sensor->id) {
+						$sensor->load(['internal_name' => $sensor_id]);
+					}
+
+					if (!$sensor->id and is_array($sensor_data) and preg_match("/^[a-z][0-9a-z_]+$/", $sensor_id)) {
+						$sensor->internal_name = $sensor_id;
+						$sensor->name = $sensor_data['name'] ?? ucfirst($sensor_id);
+						$sensor->type = $sensor_data['type'] ?? "generic";
+
+						if ($this->authenticated_device and $this->authenticated_device->place_id) {
+							$sensor->place_id = $this->authenticated_device->place_id;
+						}
+
+						$sensor->save();
+					}
+
+					if ($sensor->id) {
 						if (!is_nan($value)) {
 							// NaN just means there's nothing to record, it's not an error either
 							$response = $sensor->record_data($value, $timestamp, $battery);
@@ -1058,7 +1088,11 @@ HTML;
 	}
 
 	public function handle_place_photo($parts, $get, $post) {
-		$place_id = (int)$parts[3];
+		if (isset($parts[3]) and $parts[3]) {
+			$place_id = (int)$parts[3];
+		} else if (isset($this->authenticated_device) and $this->authenticated_device->place_id) {
+			$place_id = $this->authenticated_device->place_id;
+		}
 
 		$place = new Place();
 		if ($place->load(['id' => $place_id])) {

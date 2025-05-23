@@ -40,7 +40,7 @@ class Device extends Record {
 				'name' => "<a href='{$GLOBALS['config']['base_path']}/admin/device/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
 				'type' => _a('device-types', $this->type),
-				'state' => $this->state_at(time())['state'],
+				'state' => $this->state_at(time())['state'] ?? "",
 				'updated' => [
 					'value' => $last_updated_string,
 					'attributes' => [
@@ -450,6 +450,12 @@ class Device extends Record {
 		$form->parameters['api-key']->value = $this->parameters['api-key'];
 		$form->parameters['api-key']->label = __("API key");
 
+		$form->parameters['board-id'] = new HTML_Input("device-board-id");
+		$form->parameters['board-id']->type = "text";
+		$form->parameters['board-id']->name = "device[board-id]";
+		$form->parameters['board-id']->value = $this->parameters['board-id'];
+		$form->parameters['board-id']->label = __("Board ID");
+
 		$form->parameters['interval'] = new HTML_Input("device-interval");
 		$form->parameters['interval']->type = "number";
 		$form->parameters['interval']->name = "device[interval]";
@@ -624,7 +630,7 @@ class Device extends Record {
 	function from_form_parameters_microcontroller($data) {
 		$this->parameters = $this->parameters();
 
-		foreach (['api-key', 'interval', 'jpeg-quality', 'firmware-version'] as $parameter) {
+		foreach (['api-key', 'board-id', 'interval', 'jpeg-quality', 'firmware-version'] as $parameter) {
 			if (isset($data[$parameter])) {
 				$this->parameters[$parameter] = $data[$parameter];
 			}

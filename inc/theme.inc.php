@@ -199,7 +199,7 @@ HTML;
 	<head>
 		<title>{$this->title()}</title>
 		<link rel="stylesheet" href="{$GLOBALS['config']['base_path']}/css/style.css" />
-		<link rel="shortcut icon" type="image/jpeg" href="{$GLOBALS['config']['base_path']}/ginkgo.png?" />
+		<link rel="shortcut icon" type="image/jpeg" href="{$GLOBALS['config']['favicon_url']}" />
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1.0">
 		{$this->head}
 	</head>

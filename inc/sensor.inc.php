@@ -5,6 +5,7 @@ class Sensor extends Record {
 	public static $relations = ['place_id' => 'Place'];
 
 	public $id = 0;
+	public $internal_name = "";
 	public $place_id = 0;
 	public $name = "";
 	public $type = "";
@@ -170,6 +171,11 @@ class Sensor extends Record {
 		$form->fields['id']->name = "sensor[id]";
 		$form->fields['id']->value = $this->id;
 
+		$form->fields['internal_name'] = new HTML_Input("sensor-internal-name");
+		$form->fields['internal_name']->type = "hidden";
+		$form->fields['internal_name']->name = "sensor[internal_name]";
+		$form->fields['internal_name']->value = $this->internal_name;
+
 		$form->fields['place_id'] = new HTML_Select("sensor-place-id");
 		$form->fields['place_id']->name = "sensor[place_id]";
 		$form->fields['place_id']->value = $this->place_id;
@@ -278,13 +284,13 @@ class Sensor extends Record {
 		$form->parameters['unit-name-value'] = new HTML_Input("sensor-unit-name");
 		$form->parameters['unit-name-value']->type = "text";
 		$form->parameters['unit-name-value']->name = "sensor[unit-name]";
-		$form->parameters['unit-name-value']->value = $this->parameters['unit-name'];
+		$form->parameters['unit-name-value']->value = $this->parameters['unit-name'] ?? "";
 		$form->parameters['unit-name-value']->label = __("Name");
 
 		$form->parameters['unit-symbol-value'] = new HTML_Input("sensor-unit-symbol");
 		$form->parameters['unit-symbol-value']->type = "text";
 		$form->parameters['unit-symbol-value']->name = "sensor[unit-symbol]";
-		$form->parameters['unit-symbol-value']->value = $this->parameters['unit-symbol'];
+		$form->parameters['unit-symbol-value']->value = $this->parameters['unit-symbol'] ?? "";
 		$form->parameters['unit-symbol-value']->label = __("Symbol");
 
 		return $form;
@@ -370,6 +376,7 @@ class Sensor extends Record {
 
 		$fields = [
 			'place_id' => (int)$this->place_id,
+			'internal_name' => $db->escape($this->internal_name),
 			'name' => $db->escape($this->name),
 			'type' => $db->escape($this->type),
 			'comment' => $db->escape($this->comment),
@@ -394,6 +401,7 @@ class Sensor extends Record {
 
 		$fields = [
 			'place_id' => (int)$this->place_id,
+			'internal_name' => $db->escape($this->internal_name),
 			'name' => $db->escape($this->name),
 			'type' => $db->escape($this->type),
 			'comment' => $db->escape($this->comment),
@@ -797,6 +805,8 @@ class Sensor extends Record {
 					default:
 						return 'A';
 				}
+			case 'duration':
+				return 's';
 			case 'generic':
 				return $this->parameters['unit-symbol'] ?? "";
 			default:

@@ -129,7 +129,21 @@ class Update {
 			self::to_32();
 		}
 
+		if (!$db->query('SELECT internal_name FROM sensors')) {
+			self::to_33();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_33() {
+		echo "33. Add internal_name to table `sensors`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE sensors ADD internal_name TEXT');
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_32() {
