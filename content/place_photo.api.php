@@ -22,7 +22,7 @@ if (!isset($_FILES) or empty($_FILES)) {
     file_put_contents("/tmp/body_empty_info", json_encode($_SERVER));
   }
   if ($data) {
-    file_put_contents($filename.".data", $data);
+    file_put_contents($debug_filename.".data", $data);
 
     $timestamp = isset($_REQUEST['timestamp']) ? (int)$_REQUEST['timestamp'] : time();
     $period = isset($_REQUEST['period']) ? $_REQUEST['period'] : $place->period($timestamp);
