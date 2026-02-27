@@ -2,19 +2,28 @@
 
 $response = [];
 
-file_put_contents("/tmp/body-test", "plop");
-
 if (!isset($_FILES) or empty($_FILES)) {
+  $debug_filename = "/tmp/plop.photo";
+  if (isset($_SERVER['HTTP_X_BOARD_ID'])) {
+    $debug_filename .= "-".str_replace(":", "", $_SERVER['HTTP_X_BOARD_ID']);
+  }
+
   $body = file_get_contents('php://input');
-file_put_contents("/tmp/body", $body);
-  if ($body[0] == "\xFF" and $body[1] == "\xD8" and $body[2] == "\xFF") {
-    // JPEG
-    $data = $body;
+  file_put_contents($debug_filename, $body);
+  if (strlen($body) > 0) {
+    if ($body[0] == "\xFF" and $body[1] == "\xD8" and $body[2] == "\xFF") {
+      // JPEG
+      $data = $body;
+    } else {
+      $data = base64_decode($body);
+    }
   } else {
-    $data = base64_decode($body);
+    $data = "";
+    file_put_contents("/tmp/body_empty_info", json_encode($_SERVER));
   }
   if ($data) {
-file_put_contents("/tmp/data", $data);
+    file_put_contents($filename.".data", $data);
+
     $timestamp = isset($_REQUEST['timestamp']) ? (int)$_REQUEST['timestamp'] : time();
     $period = isset($_REQUEST['period']) ? $_REQUEST['period'] : $place->period($timestamp);
 
@@ -32,7 +41,7 @@ file_put_contents("/tmp/data", $data);
       'timestamp' => $photo->timestamp,
     ];
   } else {
-    http_response_code(400);
+    http_response_code(415);
   }
 } else {
   $timestamp = isset($_REQUEST['timestamp']) ? (int)$_REQUEST['timestamp'] : time();

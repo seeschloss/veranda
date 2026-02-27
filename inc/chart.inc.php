@@ -115,7 +115,8 @@ class Chart extends Record {
 
 		foreach ($this->parameters['sensors'] as $sensor_id => $sensor_params) {
 			if (!isset($sensors[$sensor_id])) {
-				$sensors[$sensor_id] = Sensor::load(['id' => $sensor_id]);
+				$sensors[$sensor_id] = new Sensor();
+				$sensors[$sensor_id]->load(['id' => $sensor_id]);
 			}
 		}
 
@@ -133,7 +134,7 @@ class Chart extends Record {
 
 				$input_color = new HTML_Input_Color("chart-sensor-{$sensor->id}-{$dimension}-color");
 				$input_color->name = "chart[sensors][{$sensor->id}][$dimension][color]";
-				$input_color->value = $this->parameters['sensors'][$sensor->id][$dimension]['color'];
+				$input_color->value = $this->parameters['sensors'][$sensor->id][$dimension]['color'] ?? "";
 
 				if (isset($this->parameters['sensors'][$sensor->id][$dimension])) {
 					$form->parameters['sensor-'.$sensor->id.'-'.$dimension]->attributes['checked'] = "checked";

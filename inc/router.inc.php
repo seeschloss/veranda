@@ -1013,7 +1013,13 @@ HTML;
 		$all_ok = true;
 
 		if (str_starts_with($_SERVER['CONTENT_TYPE'], 'application/json')) {
-			file_put_contents("/tmp/plop", file_get_contents("php://input"));
+			$filename = "/tmp/plop.".$_SERVER['CONTENT_LENGTH'];
+			if (isset($_SERVER['HTTP_X_BOARD_ID'])) {
+				$filename .= "-".str_replace(":", "", $_SERVER['HTTP_X_BOARD_ID']);
+			}
+
+			file_put_contents($filename, file_get_contents("php://input"));
+			file_put_contents($filename.".headers", print_r($_SERVER, true));
 			if ($data = json_decode(file_get_contents("php://input"), JSON_OBJECT_AS_ARRAY)) {
 				foreach ($data as $sensor_id => $sensor_data) {
 					if (str_ends_with($sensor_id, "_battery")) {
@@ -1047,7 +1053,11 @@ HTML;
 					$sensor->load(['id' => $sensor_id]);
 
 					if (!$sensor->id) {
-						$sensor->load(['internal_name' => $sensor_id]);
+						if ($this->authenticated_device and $this->authenticated_device->place_id) {
+							$sensor->load(['internal_name' => $sensor_id, 'place_id' => $this->authenticated_device->place_id]);
+						} else {
+							$sensor->load(['internal_name' => $sensor_id]);
+						}
 					}
 
 					if (!$sensor->id and is_array($sensor_data) and preg_match("/^[a-z][0-9a-z_]+$/", $sensor_id)) {

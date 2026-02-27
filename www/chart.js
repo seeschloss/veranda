@@ -194,6 +194,7 @@ var chart_min_max_display = function(id, title, raw_data) {
 					.attr("y", d => y_scales.get(sensor.type).scale(d.max))
 					.attr("width", d => bandWidth * sensor.width)
 					.attr("height", d => d3.max([2, y_scales.get(sensor.type).scale(d.min) - y_scales.get(sensor.type).scale(d.max)]))
+					.append("title").text(d => "Min: " + d.min.toFixed(2) + ", max: " + d.max.toFixed(2) + ", avg: " + d.avg.toFixed(2))
 
 			let avg = g.selectAll(".avg.sensor-" + sensor.id)
 				.data(sensor.values)

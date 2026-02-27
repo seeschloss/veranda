@@ -16,7 +16,7 @@ class Video extends Record {
 	public $photos = [];
 	public $blur = false;
 
-	public $hardware_encoding = true;
+	public $hardware_encoding = false;
 	public $encoding_format = "x265";
 
 	public $files = [];

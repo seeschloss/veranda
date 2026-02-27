@@ -182,6 +182,8 @@ class Photo extends Record {
 	}
 
 	function save_balanced() {
+		return false;
+
 		$photos = Photo::select([
 			'place_id' => $this->place_id,
 			'timestamp BETWEEN '.strtotime("yesterday 12:00:00", $this->timestamp).' AND '.strtotime("yesterday 13:00:00", $this->timestamp),

@@ -805,6 +805,13 @@ class Sensor extends Record {
 					default:
 						return 'A';
 				}
+			case 'energy':
+				switch ($si_multiplier) {
+					case '1000':
+						return 'mAh';
+					default:
+						return 'Ah';
+				}
 			case 'duration':
 				return 's';
 			case 'generic':
@@ -854,11 +861,12 @@ class Sensor extends Record {
 			$si_multiplier = 1;
 			switch ($this->type) {
 				case "current":
+				case "energy":
 				case "voltage":
 				case "water":
 				case "electricity":
 				case "weight":
-					if ($data['value'] < 1) {
+					if ($data['value'] < 1 and $data['value'] > -1) {
 						$si_multiplier = 1000;
 					}
 			}

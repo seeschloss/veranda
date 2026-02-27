@@ -74,6 +74,7 @@ $___['sensor-types'] = [
 	'gas' => "Gaz",
 	'voltage' => "Tension",
 	'current' => "Intensité",
+	'energy' => "Énergie",
 	'duration' => "Durée",
 	'generic' => "Générique",
 ];
