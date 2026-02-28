@@ -83,7 +83,7 @@ class Device extends Record {
 				'name' => "<a href='{$GLOBALS['config']['base_path']}/device/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
 				'type' => _a('device-types', $this->type),
-				'state' => $this->state_at(time())['state'],
+				'state' => $this->state_at(time())['state'] ?? "",
 				'updated' => [
 					'value' => $last_updated_string,
 					'attributes' => [
@@ -453,7 +453,7 @@ class Device extends Record {
 		$form->parameters['board-id'] = new HTML_Input("device-board-id");
 		$form->parameters['board-id']->type = "text";
 		$form->parameters['board-id']->name = "device[board-id]";
-		$form->parameters['board-id']->value = $this->parameters['board-id'];
+		$form->parameters['board-id']->value = $this->parameters['board-id'] ?? "";
 		$form->parameters['board-id']->label = __("Board ID");
 
 		$form->parameters['interval'] = new HTML_Input("device-interval");

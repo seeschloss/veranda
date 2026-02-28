@@ -616,6 +616,18 @@ var chart_line_display = function(id, title, raw_data, daylight) {
 					.curve(d3.curveMonotoneX)
 					.x(d => x(d.date))
 					.y(d => scale.scale(d.value));
+			} else if (scale.type == "voltage") {
+				scale.scale = d3.scaleLinear()
+					.range([height, margin.top])
+					.domain([
+						0,
+						d3.max(data.filter(sensor => sensor.type == scale.type), sensor => d3.max(sensor.values, point => point.value)) + 2
+					]);
+
+				scale.line = d3.line()
+					.curve(d3.curveMonotoneX)
+					.x(d => x(d.date))
+					.y(d => scale.scale(d.value));
 			} else {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])

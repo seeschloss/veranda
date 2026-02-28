@@ -44,7 +44,7 @@ class Router {
 			'/admin/dashboard-photo/([0-9]+)' => [$this, 'show_admin_dashboard_photo'],
 			'/admin/dashboard' => [$this, 'show_admin_dashboard'],
 			'/admin/logout' => [$this, 'handle_admin_logout'],
-			'/admin' => [$this, 'show_admin_plants'],
+			'/admin' => [$this, 'show_admin_sensors'],
 
 			'/water' => [$this, 'show_water'],
 

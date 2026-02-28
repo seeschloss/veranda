@@ -27,135 +27,210 @@ HTML;
 	}
 
 	function sidebar_admin() {
-		$plants_list = implode("", array_map(function($plant) {
-			return <<<HTML
-				<li><a href="{$GLOBALS['config']['base_path']}/admin/plant/{$plant->id}">{$plant->name}</a></li>
-HTML;
-		}, Plant::select([], 'name')));
+		$menu_entries = [];
 
-		$places_list = implode("", array_map(function($place) {
-			return <<<HTML
-				<li><a href="{$GLOBALS['config']['base_path']}/admin/place/{$place->id}">{$place->name}</a></li>
-HTML;
-		}, Place::select([], 'name')));
+		if ($GLOBALS['config']['features']['plants']) {
+			$menu_entries['plants'] = [
+				'id' => "plants",
+				'title' => $GLOBALS['__']('Plants'),
+				'path' => $GLOBALS['config']['base_path'].'/admin/plants',
+				'submenu' => implode("",
+					array_map(
+						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/admin/plant/{$entry->id}\">{$entry->name}</a></li>",
+						Plant::select([], 'name')
+					)
+				),
+			];
+		}
 
-		$sensors_list = implode("", array_map(function($sensor) {
-			return <<<HTML
-				<li><a href="{$GLOBALS['config']['base_path']}/admin/sensor/{$sensor->id}">{$sensor->name}</a></li>
-HTML;
-		}, Sensor::select(['sensors.archived' => 0], 'name')));
+		if ($GLOBALS['config']['features']['places']) {
+			$menu_entries['places'] = [
+				'id' => "places",
+				'title' => $GLOBALS['__']('Places'),
+				'path' => $GLOBALS['config']['base_path'].'/admin/places',
+				'submenu' => implode("",
+					array_map(
+						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/admin/place/{$entry->id}\">{$entry->name}</a></li>",
+						Place::select([], 'name')
+					)
+				),
+			];
+		}
 
-		$devices_list = implode("", array_map(function($device) {
-			return <<<HTML
-				<li><a href="{$GLOBALS['config']['base_path']}/admin/device/{$device->id}">{$device->name}</a></li>
+		if ($GLOBALS['config']['features']['sensors']) {
+			$menu_entries['sensors'] = [
+				'id' => "sensors",
+				'title' => $GLOBALS['__']('Sensors'),
+				'path' => $GLOBALS['config']['base_path'].'/admin/sensors',
+				'submenu' => implode("",
+					array_map(
+						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/admin/sensor/{$entry->id}\">{$entry->name}</a></li>",
+						Sensor::select([], 'name')
+					)
+				),
+			];
+		}
+
+		if ($GLOBALS['config']['features']['devices']) {
+			$menu_entries['devices'] = [
+				'id' => "devices",
+				'title' => $GLOBALS['__']('Devices'),
+				'path' => $GLOBALS['config']['base_path'].'/admin/devices',
+				'submenu' => implode("",
+					array_map(
+						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/admin/devices/{$entry->id}\">{$entry->name}</a></li>",
+						Device::select([], 'name')
+					)
+				),
+			];
+		}
+
+		if ($GLOBALS['config']['features']['alerts']) {
+			$menu_entries['alerts'] = [
+				'id' => "alerts",
+				'title' => $GLOBALS['__']('Alerts'),
+				'path' => $GLOBALS['config']['base_path'].'/admin/alerts',
+			];
+		}
+
+		if ($GLOBALS['config']['features']['photos']) {
+			$menu_entries['photos'] = [
+				'id' => "photos",
+				'title' => $GLOBALS['__']('Photos'),
+				'path' => $GLOBALS['config']['base_path'].'/admin/photos',
+			];
+		}
+
+		if ($GLOBALS['config']['features']['videos']) {
+			$menu_entries['videos'] = [
+				'id' => "videos",
+				'title' => $GLOBALS['__']('Videos'),
+				'path' => $GLOBALS['config']['base_path'].'/admin/videos',
+			];
+		}
+
+		$menu_entries['dashboard'] = [
+			'id' => "dashboard",
+			'title' => $GLOBALS['__']('Dashboard'),
+			'path' => $GLOBALS['config']['base_path'].'/admin/dashboard',
+		];
+
+		$entries_html = join("", array_map(function($entry) {
+			$submenu = "";
+
+			if (isset($entry['submenu'])) {
+				$submenu = <<<HTML
+					<input id="submenu-{$entry['id']}" type="checkbox" class="handle" /><label for="submenu-{$entry['id']}"></label><ul>{$entry['submenu']}</ul>
 HTML;
-		}, Device::select([], 'name')));
+			}
+
+			return <<<HTML
+				<li class="submenu">
+					<a href="{$entry['path']}">{$entry['title']}</a>
+					{$submenu}
+				</li>
+HTML;
+		}, $menu_entries));
 
 		return <<<HTML
 	<ul>
-		<li class="submenu">
-			<a href="{$GLOBALS['config']['base_path']}/admin/plants">{$GLOBALS['__']('Plants')}</a>
-			<input id="submenu-plants" type="checkbox" class="handle" /><label for="submenu-plants"></label><ul>{$plants_list}</ul>
-		</li>
-		<li class="submenu">
-			<a href="{$GLOBALS['config']['base_path']}/admin/places">{$GLOBALS['__']('Places')}</a>
-			<input id="submenu-places" type="checkbox" class="handle" /><label for="submenu-places"></label><ul>{$places_list}</ul>
-		</li>
-		<li class="submenu">
-			<a href="{$GLOBALS['config']['base_path']}/admin/sensors">{$GLOBALS['__']('Sensors')}</a>
-			<input id="submenu-sensors" type="checkbox" class="handle" /><label for="submenu-sensors"></label><ul>{$sensors_list}</ul>
-		</li>
-		<li class="submenu">
-			<a href="{$GLOBALS['config']['base_path']}/admin/devices">{$GLOBALS['__']('Devices')}</a>
-			<input id="submenu-devices" type="checkbox" class="handle" /><label for="submenu-devices"></label><ul>{$devices_list}</ul>
-		</li>
-		<li><a href="{$GLOBALS['config']['base_path']}/admin/alerts">{$GLOBALS['__']('Alerts')}</a></li>
-		<li><a href="{$GLOBALS['config']['base_path']}/admin/photos">{$GLOBALS['__']('Photos')}</a></li>
-		<li><a href="{$GLOBALS['config']['base_path']}/admin/videos">{$GLOBALS['__']('Videos')}</a></li>
-		<li><a href="{$GLOBALS['config']['base_path']}/admin/dashboard">{$GLOBALS['__']('Dashboard')}</a></li>
-		<li class='admin-logout'><a href="https://logout@veranda.seos.fr/admin/logout">{$GLOBALS['__']('Logout')}</a></li>
+		{$entries_html}
+		<li class='admin-logout'><a href="https://logout@athena.seos.fr/admin/logout">{$GLOBALS['__']('Logout')}</a></li>
 	</ul>
 HTML;
 	}
 
 	function sidebar_public() {
-		$html = <<<HTML
-			<ul>
-				<li><a href="{$GLOBALS['config']['base_path']}/">{$GLOBALS['__']('Home')}</a></li>
-HTML;
+		$menu_entries = [];
 
-		if ($plants = Plant::select([], 'name')) {
-			$plants_list = implode("", array_map(function($plant) {
-				return <<<HTML
-					<li><a href="{$GLOBALS['config']['base_path']}/plant/{$plant->id}">{$plant->name}</a></li>
-HTML;
-			}, $plants));
-
-			$html .= <<<HTML
-			<li class="submenu">
-				<a href="{$GLOBALS['config']['base_path']}/plants">{$GLOBALS['__']('Plants')}</a>
-				<input id="submenu-plants" type="checkbox" class="handle" /><label for="submenu-plants"></label><ul>{$plants_list}</ul>
-			</li>
-HTML;
+		if ($GLOBALS['config']['features']['plants']) {
+			$menu_entries['plants'] = [
+				'id' => "plants",
+				'title' => $GLOBALS['__']('Plants'),
+				'path' => $GLOBALS['config']['base_path'].'/plants',
+				'submenu' => implode("",
+					array_map(
+						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/plant/{$entry->id}\">{$entry->name}</a></li>",
+						Plant::select([], 'name')
+					)
+				),
+			];
 		}
 
-		if ($places = Place::select(['places.public' => 1], 'name')) {
-			$places_list = implode("", array_map(function($place) {
-				return <<<HTML
-					<li><a href="{$GLOBALS['config']['base_path']}/place/{$place->id}">{$place->name}</a></li>
-HTML;
-			}, $places));
-
-			$html .= <<<HTML
-			<li class="submenu">
-				<a href="{$GLOBALS['config']['base_path']}/places">{$GLOBALS['__']('Places')}</a>
-				<input id="submenu-places" type="checkbox" class="handle" /><label for="submenu-places"></label><ul>{$places_list}</ul>
-			</li>
-HTML;
+		if ($GLOBALS['config']['features']['places']) {
+			$menu_entries['places'] = [
+				'id' => "places",
+				'title' => $GLOBALS['__']('Places'),
+				'path' => $GLOBALS['config']['base_path'].'/places',
+				'submenu' => implode("",
+					array_map(
+						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/place/{$entry->id}\">{$entry->name}</a></li>",
+						Place::select([], 'name')
+					)
+				),
+			];
 		}
 
-		if ($sensors = Sensor::select(['places.public' => 1, 'sensors.archived' => 0], 'name')) {
-			$sensors_list = implode("", array_map(function($sensor) {
-				return <<<HTML
-					<li><a href="{$GLOBALS['config']['base_path']}/sensor/{$sensor->id}">{$sensor->name}</a></li>
-HTML;
-			}, $sensors));
-
-			$html .= <<<HTML
-			<li class="submenu">
-				<a href="{$GLOBALS['config']['base_path']}/sensors">{$GLOBALS['__']('Sensors')}</a>
-				<input id="submenu-sensors" type="checkbox" class="handle" /><label for="submenu-sensors"></label><ul>{$sensors_list}</ul>
-			</li>
-HTML;
+		if ($GLOBALS['config']['features']['sensors']) {
+			$menu_entries['sensors'] = [
+				'id' => "sensors",
+				'title' => $GLOBALS['__']('Sensors'),
+				'path' => $GLOBALS['config']['base_path'].'/sensors',
+				'submenu' => implode("",
+					array_map(
+						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/sensor/{$entry->id}\">{$entry->name}</a></li>",
+						Sensor::select([], 'name')
+					)
+				),
+			];
 		}
 
-		if ($devices = Device::select(['places.public' => 1], 'name')) {
-			$devices_list = implode("", array_map(function($device) {
-				return <<<HTML
-					<li><a href="{$GLOBALS['config']['base_path']}/device/{$device->id}">{$device->name}</a></li>
-HTML;
-			}, $devices));
-
-			$html .= <<<HTML
-			<li class="submenu">
-				<a href="{$GLOBALS['config']['base_path']}/devices">{$GLOBALS['__']('Devices')}</a>
-				<input id="submenu-devices" type="checkbox" class="handle" /><label for="submenu-devices"></label><ul>{$devices_list}</ul>
-			</li>
-HTML;
+		if ($GLOBALS['config']['features']['devices']) {
+			$menu_entries['devices'] = [
+				'id' => "devices",
+				'title' => $GLOBALS['__']('Devices'),
+				'path' => $GLOBALS['config']['base_path'].'/devices',
+				'submenu' => implode("",
+					array_map(
+						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/devices/{$entry->id}\">{$entry->name}</a></li>",
+						Device::select([], 'name')
+					)
+				),
+			];
 		}
 
-		if ($photos = Photo::select_latest_by_place(['places.public' => 1], 'name')) {
-			$html .= <<<HTML
-			<li><a href="{$GLOBALS['config']['base_path']}/photos">{$GLOBALS['__']('Photos')}</a></li>
-HTML;
+		if ($GLOBALS['config']['features']['photos']) {
+			$menu_entries['photos'] = [
+				'id' => "photos",
+				'title' => $GLOBALS['__']('Photos'),
+				'path' => $GLOBALS['config']['base_path'].'/photos',
+			];
 		}
 
-		$html .= <<<HTML
+		$entries_html = join("", array_map(function($entry) {
+			$submenu = "";
+
+			if (isset($entry['submenu'])) {
+				$submenu = <<<HTML
+					<input id="submenu-{$entry['id']}" type="checkbox" class="handle" /><label for="submenu-{$entry['id']}"></label><ul>{$entry['submenu']}</ul>
+HTML;
+			}
+
+			return <<<HTML
+				<li class="submenu">
+					<a href="{$entry['path']}">{$entry['title']}</a>
+					{$submenu}
+				</li>
+HTML;
+		}, $menu_entries));
+
+		return <<<HTML
+	<ul>
+		<li><a href="{$GLOBALS['config']['base_path']}/">{$GLOBALS['__']('Home')}</a></li>
+		{$entries_html}
 		<li class='admin-login'><a href="{$GLOBALS['config']['base_path']}/admin">{$GLOBALS['__']('Log in')}</a></li>
 	</ul>
 HTML;
-
-		return $html;
 	}
 
 	function sidebar() {
