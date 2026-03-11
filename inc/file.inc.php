@@ -21,7 +21,6 @@ class File extends Record {
 
 	static function write_to($file, $data) {
 		file_put_contents($file, $data);
-		print "Writing ".strlen($data)." bytes to ".$file."...\n";
 	}
 
 	function path() {
@@ -38,8 +37,14 @@ class File extends Record {
 		return $this->path;
 	}
 
-	function url() {
-		return $GLOBALS['config']['base_path']."/file/{$this->id}/{$this->name}";
+	function url($ssl = true) {
+		$url = $GLOBALS['config']['base_path']."/file/{$this->id}/{$this->name}";
+
+		if (!$ssl) {
+			$url = str_replace("https://", "http://", $url);
+		}
+
+		return $url;
 	}
 
 	function insert() {
@@ -59,5 +64,23 @@ class File extends Record {
 		$this->id = $db->insert_id();
 
 		return $this->id;
+	}
+
+	function parse_firmware_version() {
+		if (file_exists($this->path()) and filesize($this->path()) < 1024 * 1024 * 50) {
+			$data = file_get_contents($this->path());
+
+			$tag = "ATHENA_FIRMWARE_VERSION:";
+
+			if (($pos = strpos($data, $tag)) !== false) {
+				if (($end = strpos($data, "\0", $pos)) !== false) {
+					$version = substr($data, $pos + strlen($tag), $end - $pos - strlen($tag));
+
+					return $version;
+				}
+			}
+		}
+
+		return null;
 	}
 }

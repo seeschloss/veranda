@@ -81,7 +81,7 @@ class Sensor extends Record {
 		if ($this->id) {
 			$last_updated_string = Time::format_last_updated($this->last_updated());
 			$last_updated_class = "";
-			if (time() - $this->last_updated() > 60 * 20) {
+			if (time() - $this->last_updated() > 60 * 40) {
 				$last_updated_class = "alert";
 			}
 			if (time() - $this->last_updated() > 3600 * 30) {
@@ -126,7 +126,7 @@ class Sensor extends Record {
 		if ($this->id) {
 			$last_updated_string = Time::format_last_updated($this->last_updated());
 			$last_updated_class = "";
-			if (time() - $this->last_updated() > 60 * 20) {
+			if (time() - $this->last_updated() > 60 * 40) {
 				$last_updated_class = "alert";
 			}
 			if (time() - $this->last_updated() > 3600 * 30) {

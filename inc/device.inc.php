@@ -645,6 +645,10 @@ class Device extends Record {
 			$file->save($contents);
 
 			$this->parameters['firmware'] = $file->id;
+
+			if ($firmware_version = $file->parse_firmware_version()) {
+				$this->parameters['firmware-version'] = $firmware_version;
+			}
 		}
 	}
 

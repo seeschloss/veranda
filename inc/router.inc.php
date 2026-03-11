@@ -954,8 +954,8 @@ HTML;
 
 					$file = new File();
 					if (!empty($parameters['firmware']) and $file->load(['id' => $parameters['firmware']])) {
-						header("X-Firmware-URL: ".$file->url());
-						header("X-Firmware-MD5: ".md5($file->path));
+						header("X-Firmware-Update: ".$file->url(ssl: false));
+						header("X-Firmware-SHA256: ".hash_file("sha256", $file->path));
 					}
 
 					break;
