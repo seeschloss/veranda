@@ -117,6 +117,8 @@ class DB {
 				device_id INTEGER,
 				place_id INTEGER,
 				state TEXT,
+				firmware_version TEXT,
+				battery REAL,
 				timestamp INTEGER
 			);',
 			'CREATE TABLE plant_notes (

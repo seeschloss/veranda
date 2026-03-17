@@ -15,7 +15,7 @@ class File extends Record {
 	}
 
 	function save_file($data) {
-		self::write_to($this->path(), $data);
+		self::write_to($this->path(md5($data).'-'), $data);
 		$this->size = strlen($data);
 	}
 
@@ -23,7 +23,7 @@ class File extends Record {
 		file_put_contents($file, $data);
 	}
 
-	function path() {
+	function path($prefix = null) {
 		if (!$this->path) {
 			$directory = self::$directory.'/'.gmdate('Y-m-d');
 
@@ -31,7 +31,11 @@ class File extends Record {
 				mkdir($directory);
 			}
 
-			$this->path = $directory.'/'.$this->name;
+			if ($prefix === null) {
+				$prefix = md5(rand()).'-';
+			}
+
+			$this->path = $directory.'/'.$prefix.$this->name;
 		}
 
 		return $this->path;
@@ -71,6 +75,42 @@ class File extends Record {
 			$data = file_get_contents($this->path());
 
 			$tag = "ATHENA_FIRMWARE_VERSION:";
+
+			if (($pos = strpos($data, $tag)) !== false) {
+				if (($end = strpos($data, "\0", $pos)) !== false) {
+					$version = substr($data, $pos + strlen($tag), $end - $pos - strlen($tag));
+
+					return $version;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	function parse_firmware_board() {
+		if (file_exists($this->path()) and filesize($this->path()) < 1024 * 1024 * 50) {
+			$data = file_get_contents($this->path());
+
+			$tag = "ATHENA_BOARD:";
+
+			if (($pos = strpos($data, $tag)) !== false) {
+				if (($end = strpos($data, "\0", $pos)) !== false) {
+					$version = substr($data, $pos + strlen($tag), $end - $pos - strlen($tag));
+
+					return $version;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	function parse_firmware_modem() {
+		if (file_exists($this->path()) and filesize($this->path()) < 1024 * 1024 * 50) {
+			$data = file_get_contents($this->path());
+
+			$tag = "ATHENA_MODEM:";
 
 			if (($pos = strpos($data, $tag)) !== false) {
 				if (($end = strpos($data, "\0", $pos)) !== false) {

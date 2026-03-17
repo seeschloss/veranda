@@ -21,6 +21,8 @@ class Device extends Record {
 			'place' => __('Place'),
 			'type' => __('Type'),
 			'state' => __('State'),
+			'battery' => __('Battery'),
+			'firmware_version' => __('Version'),
 			'updated' => __('Last update'),
 		];
 	}
@@ -36,11 +38,15 @@ class Device extends Record {
 				$last_updated_class = "inactive";
 			}
 
+			$state = $this->state_at(time());
+
 			return [
 				'name' => "<a href='{$GLOBALS['config']['base_path']}/admin/device/{$this->id}'>{$this->name}</a>",
 				'place' => $this->place()->name,
 				'type' => _a('device-types', $this->type),
-				'state' => $this->state_at(time())['state'] ?? "",
+				'state' => $state['state'] ?? "",
+				'battery' => $state['battery'] ?? "",
+				'firmware_version' => $state['firmware_version'] ?? "",
 				'updated' => [
 					'value' => $last_updated_string,
 					'attributes' => [
@@ -52,7 +58,7 @@ class Device extends Record {
 			return [
 				'name' => [
 					'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/device/{$this->id}'>".__('Add a new device')."</a>",
-					'attributes' => ['colspan' => 5],
+					'attributes' => ['colspan' => 7],
 				],
 			];
 		}
@@ -484,6 +490,18 @@ class Device extends Record {
 			$file->load(['id' => $this->parameters['firmware']]);
 
 			$form->parameters['firmware']->suffix = '<a href="'.$file->url().'">'.$file->name.'</a>';
+
+			if ($firmware_version = $file->parse_firmware_version()) {
+				$form->parameters['firmware']->suffix .= "<br />".$firmware_version;
+			}
+
+			if ($firmware_board = $file->parse_firmware_board()) {
+				$form->parameters['firmware']->suffix .= "/".$firmware_board;
+			}
+
+			if ($firmware_modem = $file->parse_firmware_modem()) {
+				$form->parameters['firmware']->suffix .= "/".$firmware_modem;
+			}
 		}
 
 		return $form;
@@ -947,14 +965,16 @@ class Device extends Record {
 		return "nop";
 	}
 
-	function record_state($state, $timestamp) {
+	function record_state($state, $timestamp, $firmware_version = "", $battery = -1) {
 		$db = new DB();
 
 		$fields = [
 			'device_id' => (int)$this->id,
 			'place_id' => (int)$this->place_id,
 			'state' => $db->escape($state),
-			'timestamp' => $timestamp,
+			'firmware_version' => $db->escape($firmware_version),
+			'battery' => (float)$battery,
+			'timestamp' => (int)$timestamp,
 		];
 
 		$query = 'INSERT INTO devices_state (' . implode(',', array_keys($fields)) . ') '.
@@ -968,7 +988,7 @@ class Device extends Record {
 	function state_at($timestamp) {
 		$db = new DB();
 
-		$query = 'SELECT state, timestamp '.
+		$query = 'SELECT state, battery, firmware_version, timestamp '.
 		           'FROM devices_state '.
 				  'WHERE timestamp <= '.(int)$timestamp.' '.
 				    'AND device_id = '.(int)$this->id.' '.
@@ -984,7 +1004,7 @@ class Device extends Record {
 	function state_between($start, $stop) {
 		$db = new DB();
 
-		$query = 'SELECT state, timestamp '.
+		$query = 'SELECT state, battery, firmware_version, timestamp '.
 		           'FROM devices_state '.
 				  'WHERE timestamp BETWEEN '.(int)$start.' AND '.(int)$stop.' '.
 				    'AND device_id = '.(int)$this->id.' '.

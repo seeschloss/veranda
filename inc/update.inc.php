@@ -133,7 +133,23 @@ class Update {
 			self::to_33();
 		}
 
+		if (!$db->query('SELECT firmware_version FROM devices_state')) {
+			self::to_34();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_34() {
+		echo "34. Add firmware_version and battery to table `devices_state`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE devices_state ADD firmware_version TEXT');
+		$db->query('ALTER TABLE devices_state ADD battery REAL');
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_33() {

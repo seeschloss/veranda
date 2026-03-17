@@ -948,6 +948,23 @@ HTML;
 				if ($authentified) {
 					$this->authenticated_device = $device;
 
+					if (isset($_SERVER['HTTP_X_FIRMWARE_VERSION'])) {
+						$version = $_SERVER['HTTP_X_FIRMWARE_VERSION'];
+						$battery = $_SERVER['HTTP_X_BOARD_BATTERY'] ?? -1;
+
+						$hardware = [];
+
+						if (isset($_SERVER['HTTP_X_FIRMWARE_BOARD'])) {
+							$hardware['board'] = $_SERVER['HTTP_X_FIRMWARE_BOARD'];
+						}
+
+						if (isset($_SERVER['HTTP_X_FIRMWARE_MODEM'])) {
+							$hardware['modem'] = $_SERVER['HTTP_X_FIRMWARE_MODEM'];
+						}
+
+						$device->record_state($version, time(), !empty($hardware) ? json_encode($hardware) : "", $battery);
+					}
+
 					if (!empty($parameters['firmware-version'])) {
 						header("X-Firmware-Version: ".$parameters['firmware-version']);
 					}
