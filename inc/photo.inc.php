@@ -19,6 +19,7 @@ class Photo extends Record {
 		return [
 			'place' => __('Place'),
 			'timestamp' => __('Date'),
+			'size' => __('Size'),
 			'link' => __('Link'),
 			'link-original' => __('Original'),
 		];
@@ -28,6 +29,7 @@ class Photo extends Record {
 		return [
 			'place' => "<a href='{$GLOBALS['config']['base_path']}/admin/place/{$this->place_id}/photos'>{$this->place()->name}</a>",
 			'timestamp' => gmdate("r", $this->timestamp),
+			'size' => $this->human_filesize(),
 			'link' => "<a href='{$GLOBALS['config']['base_path']}/photo/{$this->place_id}/{$this->id}'>/photo/{$this->place_id}/{$this->id}</a>",
 			'link-original' => "<a href='{$GLOBALS['config']['base_path']}/photo/{$this->place_id}/{$this->id}/original'>/photo/{$this->place_id}/{$this->id}/original</a>",
 		];
@@ -38,7 +40,7 @@ class Photo extends Record {
 			'place' => [
 				'value' => "<a href='{$GLOBALS['config']['base_path']}/admin/photo/0'>".__('Add a new photo')."</a>",
 				'attributes' => [
-					'colspan' => 4,
+					'colspan' => 5,
 				],
 			],
 		];
@@ -381,6 +383,12 @@ class Photo extends Record {
 		}
 
 		return $photos;
+	}
+
+	function human_filesize() {
+		$bytes = filesize($this->path_original);
+		$i = floor(log($bytes, 1024));
+		return round($bytes / pow(1024, $i), [0,0,2,2,3][$i]).['B','kB','MB','GB','TB'][$i];
 	}
 }
 
