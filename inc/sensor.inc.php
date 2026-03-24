@@ -765,6 +765,8 @@ class Sensor extends Record {
 
 	function unit($si_multiplier = 1) {
 		switch ($this->type) {
+			case 'signal':
+				return 'dBm';
 			case 'temperature':
 				return '°C';
 			case 'humidity':
@@ -860,6 +862,7 @@ class Sensor extends Record {
 		if ($data) {
 			$si_multiplier = 1;
 			switch ($this->type) {
+				case "signal":
 				case "current":
 				case "energy":
 				case "voltage":

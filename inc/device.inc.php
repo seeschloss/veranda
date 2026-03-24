@@ -472,7 +472,13 @@ class Device extends Record {
 		$form->parameters['jpeg-quality']->type = "number";
 		$form->parameters['jpeg-quality']->name = "device[jpeg-quality]";
 		$form->parameters['jpeg-quality']->value = (int)$this->parameters['jpeg-quality'];
-		$form->parameters['jpeg-quality']->label = __("JPEG quality (0-100)");
+		$form->parameters['jpeg-quality']->label = __("JPEG quality (0-63)");
+
+		$form->parameters['brightness-threshold'] = new HTML_Input("device-brightness-threshold");
+		$form->parameters['brightness-threshold']->type = "number";
+		$form->parameters['brightness-threshold']->name = "device[brightness-threshold]";
+		$form->parameters['brightness-threshold']->value = (int)$this->parameters['brightness-threshold'];
+		$form->parameters['brightness-threshold']->label = __("Brightness threshold (0-20000)");
 
 		$form->parameters['firmware-version'] = new HTML_Input("device-firmware-version");
 		$form->parameters['firmware-version']->type = "text";
@@ -648,7 +654,7 @@ class Device extends Record {
 	function from_form_parameters_microcontroller($data) {
 		$this->parameters = $this->parameters();
 
-		foreach (['api-key', 'board-id', 'interval', 'jpeg-quality', 'firmware-version'] as $parameter) {
+		foreach (['api-key', 'board-id', 'interval', 'jpeg-quality', 'brightness-threshold', 'firmware-version'] as $parameter) {
 			if (isset($data[$parameter])) {
 				$this->parameters[$parameter] = $data[$parameter];
 			}

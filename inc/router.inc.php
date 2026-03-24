@@ -969,6 +969,14 @@ HTML;
 						header("X-Firmware-Version: ".$parameters['firmware-version']);
 					}
 
+					if (!empty($parameters['jpeg-quality'])) {
+						header("X-Jpeg-Quality: ".$parameters['jpeg-quality']);
+					}
+
+					if (!empty($parameters['brightness-threshold'])) {
+						header("X-Brightness-Threshold: ".$parameters['brightness-threshold']);
+					}
+
 					$file = new File();
 					if (!empty($parameters['firmware']) and $file->load(['id' => $parameters['firmware']])) {
 						header("X-Firmware-Update: ".$file->url(ssl: false));
