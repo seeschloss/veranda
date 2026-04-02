@@ -965,22 +965,8 @@ HTML;
 						$device->record_state($version, time(), !empty($hardware) ? json_encode($hardware) : "", $battery);
 					}
 
-					if (!empty($parameters['firmware-version'])) {
-						header("X-Firmware-Version: ".$parameters['firmware-version']);
-					}
-
-					if (!empty($parameters['jpeg-quality'])) {
-						header("X-Jpeg-Quality: ".$parameters['jpeg-quality']);
-					}
-
-					if (!empty($parameters['brightness-threshold'])) {
-						header("X-Brightness-Threshold: ".$parameters['brightness-threshold']);
-					}
-
-					$file = new File();
-					if (!empty($parameters['firmware']) and $file->load(['id' => $parameters['firmware']])) {
-						header("X-Firmware-Update: ".$file->url(ssl: false));
-						header("X-Firmware-SHA256: ".hash_file("sha256", $file->path));
+					foreach ($device->response_headers() as $header => $value) {
+						header("{$header}: {$value}");
 					}
 
 					break;

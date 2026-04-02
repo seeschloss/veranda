@@ -466,7 +466,13 @@ class Device extends Record {
 		$form->parameters['interval']->type = "number";
 		$form->parameters['interval']->name = "device[interval]";
 		$form->parameters['interval']->value = (int)$this->parameters['interval'];
-		$form->parameters['interval']->label = __("Wake-up interval (seconds)");
+		$form->parameters['interval']->label = __("Wake-up interval (minutes)");
+
+		$form->parameters['interval-night'] = new HTML_Input("device-interval");
+		$form->parameters['interval-night']->type = "number";
+		$form->parameters['interval-night']->name = "device[interval-night]";
+		$form->parameters['interval-night']->value = (int)$this->parameters['interval-night'];
+		$form->parameters['interval-night']->label = __("Wake-up interval at night (minutes)");
 
 		$form->parameters['jpeg-quality'] = new HTML_Input("device-jpeg-quality");
 		$form->parameters['jpeg-quality']->type = "number";
@@ -654,7 +660,7 @@ class Device extends Record {
 	function from_form_parameters_microcontroller($data) {
 		$this->parameters = $this->parameters();
 
-		foreach (['api-key', 'board-id', 'interval', 'jpeg-quality', 'brightness-threshold', 'firmware-version'] as $parameter) {
+		foreach (['api-key', 'board-id', 'interval', 'interval-night', 'jpeg-quality', 'brightness-threshold', 'firmware-version'] as $parameter) {
 			if (isset($data[$parameter])) {
 				$this->parameters[$parameter] = $data[$parameter];
 			}
@@ -1155,5 +1161,49 @@ class Device extends Record {
 		}
 
 		return $html;
+	}
+
+	function response_headers() {
+		$this->parameters = $this->parameters();
+
+		$headers = [];
+
+		if (!empty($this->parameters['firmware-version'])) {
+			$headers['X-Firmware-Version'] = $this->parameters['firmware-version'];
+		}
+
+		if (!empty($this->parameters['jpeg-quality'])) {
+			$headers['X-Jpeg-Quality'] = $this->parameters['jpeg-quality'];
+		}
+
+		if (!empty($this->parameters['brightness-threshold'])) {
+			$headers['X-Brightness-Threshold'] = $this->parameters['brightness-threshold'];
+		}
+
+		if (!empty($this->parameters['interval']) and (int)$this->parameters['interval-night'] > 0) {
+			if (!empty($this->parameters['interval-night']) and (int)$this->parameters['interval-night'] > 0) {
+				if (Time::period(time()) == "night") {
+					if (Time::period(time() + $this->parameters['interval-night']*60) == "night") {
+						// We will send the "night" interval only if it doesn't make us miss sunrise
+						// we could still miss it depending on the ratio of the intervals
+						$headers['X-Sleep-Minutes'] = $this->parameters['interval-night'];
+					} else {
+						$headers['X-Sleep-Minutes'] = $this->parameters['interval'];
+					}
+				} else {
+					$headers['X-Sleep-Minutes'] = $this->parameters['interval'];
+				}
+			} else {
+				$headers['X-Sleep-Minutes'] = $this->parameters['interval'];
+			}
+		}
+
+		$file = new File();
+		if (!empty($parameters['firmware']) and $file->load(['id' => $parameters['firmware']])) {
+			$headers['X-Firmware-Update'] = $file->url(ssl: false);
+			$headers['X-Firmware-SHA256'] = hash_file("sha256", $file->path);
+		}
+
+		return $headers;
 	}
 }
