@@ -165,7 +165,7 @@ HTML;
 				'submenu' => implode("",
 					array_map(
 						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/place/{$entry->id}\">{$entry->name}</a></li>",
-						Place::select([], 'name')
+						Place::select(['public' => 1], 'name')
 					)
 				),
 			];
@@ -176,12 +176,6 @@ HTML;
 				'id' => "sensors",
 				'title' => $GLOBALS['__']('Sensors'),
 				'path' => $GLOBALS['config']['base_path'].'/sensors',
-				'submenu' => implode("",
-					array_map(
-						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/sensor/{$entry->id}\">{$entry->name}</a></li>",
-						Sensor::select([], 'name')
-					)
-				),
 			];
 		}
 
@@ -192,8 +186,8 @@ HTML;
 				'path' => $GLOBALS['config']['base_path'].'/devices',
 				'submenu' => implode("",
 					array_map(
-						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/devices/{$entry->id}\">{$entry->name}</a></li>",
-						Device::select([], 'name')
+						fn($entry) => "<li><a href=\"{$GLOBALS['config']['base_path']}/device/{$entry->id}\">{$entry->name}</a></li>",
+						Device::select(['places.public' => 1], 'name')
 					)
 				),
 			];
