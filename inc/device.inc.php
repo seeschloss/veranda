@@ -977,6 +977,10 @@ class Device extends Record {
 		return "nop";
 	}
 
+	function record_log($data) {
+		// TODO
+	}
+
 	function record_state($state, $timestamp, $firmware_version = "", $battery = -1) {
 		$db = new DB();
 
@@ -1139,6 +1143,20 @@ class Device extends Record {
 		return $html;
 	}
 
+	function details_microcontroller() {
+		$html = "";
+
+		$this->parameters = $this->parameters();
+
+		$log_filename = "/tmp/plop.log-".str_replace(":", "", $this->parameters['board-id']);
+
+		if (file_exists($log_filename)) {
+			$html = "<pre>".file_get_contents($log_filename)."</pre>";
+		}
+
+		return $html;
+	}
+
 	function details() {
 		$html = "";
 
@@ -1158,6 +1176,9 @@ class Device extends Record {
 			case "ventilation":
 				$html .= $this->details_ventilation();
 				break;
+			case 'microcontroller':
+				$html .= $this->details_microcontroller();
+				break;
 		}
 
 		return $html;
@@ -1176,7 +1197,7 @@ class Device extends Record {
 			$headers['X-Jpeg-Quality'] = $this->parameters['jpeg-quality'];
 		}
 
-		if (!empty($this->parameters['brightness-threshold'])) {
+		if (isset($this->parameters['brightness-threshold']) and $this->parameters['brightness-threshold'] >= 0) {
 			$headers['X-Brightness-Threshold'] = $this->parameters['brightness-threshold'];
 		}
 
@@ -1199,7 +1220,7 @@ class Device extends Record {
 		}
 
 		$file = new File();
-		if (!empty($parameters['firmware']) and $file->load(['id' => $parameters['firmware']])) {
+		if (!empty($this->parameters['firmware']) and $file->load(['id' => $this->parameters['firmware']])) {
 			$headers['X-Firmware-Update'] = $file->url(ssl: false);
 			$headers['X-Firmware-SHA256'] = hash_file("sha256", $file->path);
 		}

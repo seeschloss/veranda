@@ -19,6 +19,7 @@ class Router {
 			'/data/device/([0-9]+)' => [$this, 'handle_device_data'],
 			'/data/sensor/([0-9]+)' => [$this, 'handle_sensor_data'],
 			'/data/sensor' => [$this, 'handle_sensor_data_json'],
+			'/data/log' => [$this, 'handle_log_data'],
 			'/data/place/([0-9]+)/photo' => [$this, 'handle_place_photo'],
 			'/data/photo' => [$this, 'handle_place_photo'],
 
@@ -1016,6 +1017,32 @@ HTML;
 
 		header('Content-Type: application/json;charset=UTF-8');
 		print $this->theme->bare();
+
+		return true;
+	}
+
+	public function handle_log_data($parts, $get, $post) {
+		$all_ok = false;
+
+		$filename = "/tmp/plop.log";
+		if (isset($_SERVER['HTTP_X_BOARD_ID'])) {
+			$filename .= "-".str_replace(":", "", $_SERVER['HTTP_X_BOARD_ID']);
+		}
+
+		file_put_contents($filename, file_get_contents("php://input"));
+		file_put_contents($filename.".headers", print_r($_SERVER, true));
+		if ($data = file_get_contents("php://input")) {
+			if (isset($this->authenticated_device)) {
+				$this->authenticated_device->record_log($data);
+				$all_ok = true;
+			}
+		}
+
+		if ($all_ok) {
+			http_response_code(201);
+		} else {
+			http_response_code(500);
+		}
 
 		return true;
 	}
