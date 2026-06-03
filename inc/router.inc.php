@@ -1162,6 +1162,9 @@ HTML;
 		if ($place->load(['id' => $place_id])) {
 			$this->theme->content_file = 'place_photo.api.php';
 			$this->theme->content_env = ['place' => $place];
+			if ($this->authenticated_device) {
+				$this->theme->content_env['rotation'] = $this->authenticated_device->parameters['image-rotation'] ?? 0;
+			}
 		} else {
 			http_response_code(404);
 			$this->theme->content = '';

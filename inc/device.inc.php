@@ -480,6 +480,12 @@ class Device extends Record {
 		$form->parameters['jpeg-quality']->value = (int)$this->parameters['jpeg-quality'];
 		$form->parameters['jpeg-quality']->label = __("JPEG quality (0-63)");
 
+		$form->parameters['image-rotation'] = new HTML_Input("device-image-rotation");
+		$form->parameters['image-rotation']->type = "number";
+		$form->parameters['image-rotation']->name = "device[image-rotation]";
+		$form->parameters['image-rotation']->value = (int)$this->parameters['image-rotation'];
+		$form->parameters['image-rotation']->label = __("Image rotation (0-360°)");
+
 		$form->parameters['brightness-threshold'] = new HTML_Input("device-brightness-threshold");
 		$form->parameters['brightness-threshold']->type = "number";
 		$form->parameters['brightness-threshold']->name = "device[brightness-threshold]";
@@ -660,7 +666,7 @@ class Device extends Record {
 	function from_form_parameters_microcontroller($data) {
 		$this->parameters = $this->parameters();
 
-		foreach (['api-key', 'board-id', 'interval', 'interval-night', 'jpeg-quality', 'brightness-threshold', 'firmware-version'] as $parameter) {
+		foreach (['api-key', 'board-id', 'interval', 'interval-night', 'jpeg-quality', 'image-rotation', 'brightness-threshold', 'firmware-version'] as $parameter) {
 			if (isset($data[$parameter])) {
 				$this->parameters[$parameter] = $data[$parameter];
 			}

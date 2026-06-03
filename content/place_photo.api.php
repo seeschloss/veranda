@@ -31,6 +31,7 @@ if (!isset($_FILES) or empty($_FILES)) {
     $photo->place_id = $place->id;
     $photo->timestamp = $timestamp;
     $photo->period = $period;
+    $photo->rotation = $rotation ?? 0;
     $photo->save($data);
 
     $response[] = [
@@ -52,6 +53,7 @@ if (!isset($_FILES) or empty($_FILES)) {
     $photo->place_id = $place->id;
     $photo->timestamp = $timestamp;
     $photo->period = $period;
+    $photo->rotation = $rotation ?? 0;
     $photo->save(file_get_contents($file['tmp_name']));
     unlink($file['tmp_name']);
 

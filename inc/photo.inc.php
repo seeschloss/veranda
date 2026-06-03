@@ -15,6 +15,8 @@ class Photo extends Record {
 	public $archived = 0;
 	public $video_id = 0;
 
+	public $rotation = 0;
+
 	static function grid_row_header_admin() {
 		return [
 			'place' => __('Place'),
@@ -214,6 +216,15 @@ class Photo extends Record {
 	}
 
 	function save_file($data) {
+		if ($this->rotation != 0) {
+			ob_get_clean();
+			$handle = imagecreatefromstring($data);
+			$handle = imagerotate($handle, $this->rotation, 0);
+			ob_start();
+			imagejpeg($handle, NULL, 70);
+			$data = ob_get_clean();
+		}
+
 		date_default_timezone_set("UTC");
 		switch ($this->period) {
 			case "twilight":
