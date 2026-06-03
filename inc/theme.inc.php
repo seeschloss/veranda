@@ -201,6 +201,14 @@ HTML;
 			];
 		}
 
+		if ($GLOBALS['config']['features']['videos']) {
+			$menu_entries['videos'] = [
+				'id' => "videos",
+				'title' => $GLOBALS['__']('Videos'),
+				'path' => $GLOBALS['config']['base_path'].'/videos',
+			];
+		}
+
 		$entries_html = join("", array_map(function($entry) {
 			$submenu = "";
 

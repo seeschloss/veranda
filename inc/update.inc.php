@@ -137,7 +137,22 @@ class Update {
 			self::to_34();
 		}
 
+		if (!$db->query('SELECT title FROM videos')) {
+			self::to_35();
+		}
+
 		echo "All done.\n";
+	}
+
+	static function to_35() {
+		echo "35. Add title table `videos`\n";
+
+		$db = new DB();
+		$db->query('ALTER TABLE videos ADD title TEXT');
+
+		if ($db->error()) {
+			print $db->error()."\n";
+		}
 	}
 
 	static function to_34() {

@@ -5,3 +5,4 @@ require __DIR__.'/../inc/common.inc.php';
 
 $cron = new Cron(time());
 $cron->execute();
+

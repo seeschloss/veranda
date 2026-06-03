@@ -143,6 +143,10 @@ var chart_min_max_display = function(id, title, raw_data) {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])
 					.domain([0, 100]);
+			} else if (scale.type == "signal") {
+				scale.scale = d3.scaleLinear()
+					.range([height, margin.top])
+					.domain([-110, -30]);
 			} else {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])
@@ -349,6 +353,10 @@ var chart_histogram_display = function(id, title, raw_data) {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])
 					.domain([0, 100]);
+			} else if (scale.type == "signal") {
+				scale.scale = d3.scaleLinear()
+					.range([height, margin.top])
+					.domain([-110, -30]);
 			} else {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])
@@ -607,6 +615,18 @@ var chart_line_display = function(id, title, raw_data, daylight) {
 					.curve(d3.curveStepAfter)
 					.x(d => x(d.date))
 					.y(d => scale.scale(d.value));
+			} else if (scale.type == "signal") {
+				scale.scale = d3.scaleLinear()
+					.range([height, margin.top])
+					.domain([
+						-110,
+						-30
+					]);
+
+				scale.line = d3.line()
+					.curve(d3.curveMonotoneX)
+					.x(d => x(d.date))
+					.y(d => scale.scale(d.value));
 			} else if (scale.type == "humidity") {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])
@@ -616,7 +636,7 @@ var chart_line_display = function(id, title, raw_data, daylight) {
 					.curve(d3.curveMonotoneX)
 					.x(d => x(d.date))
 					.y(d => scale.scale(d.value));
-			} else if (scale.type == "voltage") {
+			} else if (scale.type == "voltage" || scale.type == "current") {
 				scale.scale = d3.scaleLinear()
 					.range([height, margin.top])
 					.domain([

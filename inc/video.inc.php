@@ -12,6 +12,7 @@ class Video extends Record {
 	public $path = "";
 	public $fps = 10;
 	public $quality = "";
+	public $title = "";
 
 	public $photos = [];
 	public $blur = false;
@@ -248,6 +249,7 @@ class Video extends Record {
 			'path' => $db->escape($this->path),
 			'fps' => (int)$this->fps,
 			'quality' => $db->escape($this->quality),
+			'title' => $db->escape($this->title),
 		];
 
 		$query = 'INSERT INTO `'.self::$table.'` (' . implode(',', array_keys($fields))   . ') '.
@@ -258,6 +260,38 @@ class Video extends Record {
 		$this->id = $db->insert_id();
 
 		return $this->id;
+	}
+
+	function delete() {
+		$db = new DB();
+
+		$query = 'DELETE FROM `'.self::$table.'` WHERE id = '.(int)$this->id;
+
+		$db->query($query);
+
+		if (file_exists($this->path)) {
+			unlink($this->path);
+		}
+
+		return true;
+	}
+
+	static function grid_row_header() {
+		return [
+			'place' => __('Place'),
+			'start' => __('Start'),
+			'stop' => __('Stop'),
+			'link' => __('Link'),
+		];
+	}
+
+	function grid_row() {
+		return [
+			'place' => "<a href='{$GLOBALS['config']['base_path']}/place/{$this->place_id}/videos'>{$this->place->name}</a>",
+			'start' => $this->start ? gmdate("r", $this->start) : "",
+			'stop' => gmdate("r", $this->stop),
+			'link' => "<a href='{$GLOBALS['config']['base_path']}/video/{$this->place_id}/{$this->id}'>/video/{$this->place_id}/{$this->id}</a>",
+		];
 	}
 
 	static function grid_row_header_admin() {

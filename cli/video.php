@@ -13,6 +13,7 @@ $options = getopt("", [
 	"interval::",
 	"place:",
 	"quality::",
+	"title::",
 ]);
 
 if (!isset($options['place'])) {
@@ -34,6 +35,7 @@ $legend = (isset($options['legend']) and $options['legend'] == "on");
 $fps = isset($options['fps']) ? (int)$options['fps'] : 50;
 $interval = isset($options['interval']) ? (int)$options['interval'] : 900;
 $quality = isset($options['quality']) ? $options['quality'] : "hd";
+$title = isset($options['title']) ? $options['title'] : "";
 
 $start = 0;
 if (isset($options['start']) and $options['start']) {
@@ -59,6 +61,7 @@ $video->fps = $fps;
 $video->start = $start;
 $video->stop = $stop;
 $video->quality = $quality;
+$video->title = $title;
 $video->set_filename($place->id."-".$start."-".$stop);
 $conditions = [
 	'place_id' => $place->id,
@@ -76,5 +79,12 @@ if ($legend) {
 } else {
 	$video->make();
 }
-$video->insert();
+
+if ($video->insert()) {
+	$old_videos = Video::select(['title' => $title, 'place_id' => $place->id, 'id <' => $video->id]);
+	foreach ($old_videos as $old_video) {
+		$old_video->delete();
+	}
+}
+
 

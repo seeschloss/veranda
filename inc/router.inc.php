@@ -54,6 +54,7 @@ class Router {
 			'/photo/([0-9]+)/([0-9]+)' => [$this, 'show_photo'],
 			'/file/([0-9]+)/(.+)' => [$this, 'show_file'],
 			'/photos/?' => [$this, 'show_photos'],
+			'/videos/?' => [$this, 'show_videos'],
 			'/plant/([0-9]+)' => [$this, 'show_plant'],
 			'/plants' => [$this, 'show_plants'],
 			'/place/([0-9]+)' => [$this, 'show_place'],
@@ -724,6 +725,7 @@ HTML;
 					$pos += $chunk;
 				}
 			} else {
+				ob_end_clean();
 				header("Content-Type: video/webm");
 				header("Content-Length: ".filesize($video->path));
 				readfile($video->path);
@@ -799,6 +801,20 @@ HTML;
 
 		return true;
 	}
+
+	public function show_videos($parts, $get, $post) {
+		$this->theme->content_file = 'videos.php';
+
+		if ($this->json) {
+			header('Content-Type: application/json;charset=UTF-8');
+			print $this->theme->bare();
+		} else {
+			print $this->theme->html();
+		}
+
+		return true;
+	}
+
 
 	public function show_plant($parts, $get, $post) {
 		$this->theme->content_file = 'plant.php';
