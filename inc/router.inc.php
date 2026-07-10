@@ -52,6 +52,7 @@ class Router {
 			'/video/([0-9]+)/([0-9]+)' => [$this, 'show_video'],
 			'/photo/([0-9]+)/([0-9]+)/[a-z]*' => [$this, 'show_photo'],
 			'/photo/([0-9]+)/([0-9]+)' => [$this, 'show_photo'],
+			'/photo/([0-9]+)/(latest)' => [$this, 'show_photo'],
 			'/file/([0-9]+)/(.+)' => [$this, 'show_file'],
 			'/photos/?' => [$this, 'show_photos'],
 			'/videos/?' => [$this, 'show_videos'],
@@ -647,10 +648,14 @@ HTML;
 
 	public function show_photo($parts, $get, $post) {
 		$place_id = (int)$parts[2];
-		$photo_id = (int)$parts[3];
+		$photo_id = $parts[3];
 
-		$photo = new Photo();
-		$photo->load(['id' => $photo_id]);
+		if ($photo_id == "latest") {
+			$photo = array_first(Photo::select(['place_id' => $place_id], 'timestamp DESC', 1));
+		} else {
+			$photo = new Photo();
+			$photo->load(['id' => (int)$photo_id]);
+		}
 
 		if ($photo->place_id == $place_id) {
 			$file = $photo->best_quality();
@@ -683,6 +688,8 @@ HTML;
 		$video->load(['id' => $video_id]);
 
 		if ($video->place_id == $place_id) {
+			set_time_limit(0);
+
 			if (isset($_SERVER['HTTP_RANGE'])) {
 				if (!preg_match('/bytes=(\d+)-(\d+)?/', $_SERVER['HTTP_RANGE'], $matches)) {
 					header('HTTP/1.1 416 Requested Range Not Satisfiable');
@@ -693,7 +700,7 @@ HTML;
 				$offset = intval($matches[1]);
 
 				if (isset($matches[2])) {
-					$end = $intval($matches[2]);
+					$end = intval($matches[2]);
 
 					if ($offset > $end) {
 						header('HTTP/1.1 416 Requested Range Not Satisfiable');
@@ -701,14 +708,15 @@ HTML;
 						return true;
 					}
 
-					$length = $end - $offset;
+					$length = $end - $offset + 1;
 				}
 				else {
-					$length = filesize($video->path) - $offset;
+					$length = filesize($video->path) - $offset + 1;
 				}
 
 				header('HTTP/1.1 206 Partial Content');
-				header("Content-Type: video/webm");
+				header('Accept-Ranges: bytes');
+				header("Content-Type: video/mp4");
 				header("Content-Length: ".$length);
 				header('Content-Range: bytes ' . $offset . '-' . ($offset + $length - 1) . '/' . filesize($video->path));
 
@@ -717,6 +725,10 @@ HTML;
 				
 				$pos = 0;
 				while ($pos < $length) {
+					if (connection_aborted()) {
+						break;
+					}
+
 					$chunk = min($length - $pos, 1024*8);
 
 					echo fread($f, $chunk);
@@ -724,9 +736,11 @@ HTML;
 					ob_flush();
 					$pos += $chunk;
 				}
+
+				fclose($f);
 			} else {
 				ob_end_clean();
-				header("Content-Type: video/webm");
+				header("Content-Type: video/mp4");
 				header("Content-Length: ".filesize($video->path));
 				readfile($video->path);
 			}

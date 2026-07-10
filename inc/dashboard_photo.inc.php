@@ -189,7 +189,7 @@ class Dashboard_Photo extends Record {
         }
 		$plants_list .= "</ul>";
 
-		$link = "<a href='{$GLOBALS['config']['base_path']}/photo/{$photo->place_id}/{$photo->id}'><img src='{$GLOBALS['config']['base_path']}/photo/{$photo->place_id}/{$photo->id}' /></a>";
+		$link = "<a href='{$GLOBALS['config']['base_path']}/photo/{$photo->place_id}/latest'><img src='{$GLOBALS['config']['base_path']}/photo/{$photo->place_id}/{$photo->id}' /></a>";
 
 		return <<<HTML
 			<div id="dashboard-photo-{$this->id}" style="flex-basis: {$basis};" class="dashboard-element dashboard-photo">
